@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "cloudprice": {
+      "command": "cloudprice-mcp"
+    }
+  }
+}

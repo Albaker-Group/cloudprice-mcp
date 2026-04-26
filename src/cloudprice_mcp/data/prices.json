@@ -1,0 +1,65 @@
+{
+  "as_of": "2026-04-26",
+  "currency": "USD",
+  "notes": "On-demand Linux pricing for representative SKUs. Sourced from public AWS/Azure/GCP price lists. v0.2 will fetch live from each cloud's public pricing API.",
+  "aws": {
+    "region": "us-east-1",
+    "instances": [
+      { "sku": "t3.micro",    "vcpus": 2,  "memory_gb": 1,    "hourly_usd": 0.0104 },
+      { "sku": "t3.small",    "vcpus": 2,  "memory_gb": 2,    "hourly_usd": 0.0208 },
+      { "sku": "t3.medium",   "vcpus": 2,  "memory_gb": 4,    "hourly_usd": 0.0416 },
+      { "sku": "t3.large",    "vcpus": 2,  "memory_gb": 8,    "hourly_usd": 0.0832 },
+      { "sku": "t3.xlarge",   "vcpus": 4,  "memory_gb": 16,   "hourly_usd": 0.1664 },
+      { "sku": "t3.2xlarge",  "vcpus": 8,  "memory_gb": 32,   "hourly_usd": 0.3328 },
+      { "sku": "m5.large",    "vcpus": 2,  "memory_gb": 8,    "hourly_usd": 0.096 },
+      { "sku": "m5.xlarge",   "vcpus": 4,  "memory_gb": 16,   "hourly_usd": 0.192 },
+      { "sku": "m5.2xlarge",  "vcpus": 8,  "memory_gb": 32,   "hourly_usd": 0.384 },
+      { "sku": "m5.4xlarge",  "vcpus": 16, "memory_gb": 64,   "hourly_usd": 0.768 },
+      { "sku": "c5.large",    "vcpus": 2,  "memory_gb": 4,    "hourly_usd": 0.085 },
+      { "sku": "c5.xlarge",   "vcpus": 4,  "memory_gb": 8,    "hourly_usd": 0.17 },
+      { "sku": "c5.2xlarge",  "vcpus": 8,  "memory_gb": 16,   "hourly_usd": 0.34 },
+      { "sku": "r5.large",    "vcpus": 2,  "memory_gb": 16,   "hourly_usd": 0.126 },
+      { "sku": "r5.xlarge",   "vcpus": 4,  "memory_gb": 32,   "hourly_usd": 0.252 },
+      { "sku": "r5.2xlarge",  "vcpus": 8,  "memory_gb": 64,   "hourly_usd": 0.504 }
+    ]
+  },
+  "azure": {
+    "region": "eastus",
+    "instances": [
+      { "sku": "B1s",        "vcpus": 1,  "memory_gb": 1,    "hourly_usd": 0.0104 },
+      { "sku": "B2s",        "vcpus": 2,  "memory_gb": 4,    "hourly_usd": 0.0416 },
+      { "sku": "B2ms",       "vcpus": 2,  "memory_gb": 8,    "hourly_usd": 0.0832 },
+      { "sku": "B4ms",       "vcpus": 4,  "memory_gb": 16,   "hourly_usd": 0.166 },
+      { "sku": "D2s_v5",     "vcpus": 2,  "memory_gb": 8,    "hourly_usd": 0.096 },
+      { "sku": "D4s_v5",     "vcpus": 4,  "memory_gb": 16,   "hourly_usd": 0.192 },
+      { "sku": "D8s_v5",     "vcpus": 8,  "memory_gb": 32,   "hourly_usd": 0.384 },
+      { "sku": "D16s_v5",    "vcpus": 16, "memory_gb": 64,   "hourly_usd": 0.768 },
+      { "sku": "F2s_v2",     "vcpus": 2,  "memory_gb": 4,    "hourly_usd": 0.0846 },
+      { "sku": "F4s_v2",     "vcpus": 4,  "memory_gb": 8,    "hourly_usd": 0.169 },
+      { "sku": "F8s_v2",     "vcpus": 8,  "memory_gb": 16,   "hourly_usd": 0.338 },
+      { "sku": "E2s_v5",     "vcpus": 2,  "memory_gb": 16,   "hourly_usd": 0.126 },
+      { "sku": "E4s_v5",     "vcpus": 4,  "memory_gb": 32,   "hourly_usd": 0.252 },
+      { "sku": "E8s_v5",     "vcpus": 8,  "memory_gb": 64,   "hourly_usd": 0.504 }
+    ]
+  },
+  "gcp": {
+    "region": "us-east1",
+    "instances": [
+      { "sku": "e2-micro",        "vcpus": 2,  "memory_gb": 1,    "hourly_usd": 0.00838 },
+      { "sku": "e2-small",        "vcpus": 2,  "memory_gb": 2,    "hourly_usd": 0.01675 },
+      { "sku": "e2-medium",       "vcpus": 2,  "memory_gb": 4,    "hourly_usd": 0.0335 },
+      { "sku": "e2-standard-2",   "vcpus": 2,  "memory_gb": 8,    "hourly_usd": 0.067 },
+      { "sku": "e2-standard-4",   "vcpus": 4,  "memory_gb": 16,   "hourly_usd": 0.134 },
+      { "sku": "e2-standard-8",   "vcpus": 8,  "memory_gb": 32,   "hourly_usd": 0.268 },
+      { "sku": "e2-standard-16",  "vcpus": 16, "memory_gb": 64,   "hourly_usd": 0.536 },
+      { "sku": "n2-standard-2",   "vcpus": 2,  "memory_gb": 8,    "hourly_usd": 0.0971 },
+      { "sku": "n2-standard-4",   "vcpus": 4,  "memory_gb": 16,   "hourly_usd": 0.1942 },
+      { "sku": "n2-standard-8",   "vcpus": 8,  "memory_gb": 32,   "hourly_usd": 0.3885 },
+      { "sku": "c2-standard-4",   "vcpus": 4,  "memory_gb": 16,   "hourly_usd": 0.2088 },
+      { "sku": "c2-standard-8",   "vcpus": 8,  "memory_gb": 32,   "hourly_usd": 0.4176 },
+      { "sku": "n2-highmem-2",    "vcpus": 2,  "memory_gb": 16,   "hourly_usd": 0.131 },
+      { "sku": "n2-highmem-4",    "vcpus": 4,  "memory_gb": 32,   "hourly_usd": 0.262 },
+      { "sku": "n2-highcpu-4",    "vcpus": 4,  "memory_gb": 4,    "hourly_usd": 0.1432 }
+    ]
+  }
+}
