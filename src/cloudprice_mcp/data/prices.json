@@ -1,7 +1,7 @@
 {
   "as_of": "2026-04-26",
   "currency": "USD",
-  "notes": "On-demand Linux pricing for representative SKUs. Sourced from public AWS/Azure/GCP price lists. v0.2 will fetch live from each cloud's public pricing API.",
+  "notes": "On-demand Linux compute + block-storage pricing for representative SKUs. Sourced from public AWS/Azure/GCP price lists. Future: live-fetch mode that hits each cloud's public pricing API.",
   "aws": {
     "region": "us-east-1",
     "instances": [
@@ -21,6 +21,10 @@
       { "sku": "r5.large",    "vcpus": 2,  "memory_gb": 16,   "hourly_usd": 0.126 },
       { "sku": "r5.xlarge",   "vcpus": 4,  "memory_gb": 32,   "hourly_usd": 0.252 },
       { "sku": "r5.2xlarge",  "vcpus": 8,  "memory_gb": 64,   "hourly_usd": 0.504 }
+    ],
+    "storage": [
+      { "sku": "gp3",  "disk_type": "ssd", "price_per_gb_month_usd": 0.08  },
+      { "sku": "st1",  "disk_type": "hdd", "price_per_gb_month_usd": 0.045 }
     ]
   },
   "azure": {
@@ -40,6 +44,10 @@
       { "sku": "E2s_v5",     "vcpus": 2,  "memory_gb": 16,   "hourly_usd": 0.126 },
       { "sku": "E4s_v5",     "vcpus": 4,  "memory_gb": 32,   "hourly_usd": 0.252 },
       { "sku": "E8s_v5",     "vcpus": 8,  "memory_gb": 64,   "hourly_usd": 0.504 }
+    ],
+    "storage": [
+      { "sku": "Standard SSD", "disk_type": "ssd", "price_per_gb_month_usd": 0.075 },
+      { "sku": "Standard HDD", "disk_type": "hdd", "price_per_gb_month_usd": 0.045 }
     ]
   },
   "gcp": {
@@ -60,6 +68,10 @@
       { "sku": "n2-highmem-2",    "vcpus": 2,  "memory_gb": 16,   "hourly_usd": 0.131 },
       { "sku": "n2-highmem-4",    "vcpus": 4,  "memory_gb": 32,   "hourly_usd": 0.262 },
       { "sku": "n2-highcpu-4",    "vcpus": 4,  "memory_gb": 4,    "hourly_usd": 0.1432 }
+    ],
+    "storage": [
+      { "sku": "pd-balanced", "disk_type": "ssd", "price_per_gb_month_usd": 0.10 },
+      { "sku": "pd-standard", "disk_type": "hdd", "price_per_gb_month_usd": 0.04 }
     ]
   }
 }

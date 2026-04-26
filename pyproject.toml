@@ -1,7 +1,7 @@
 [project]
 name = "cloudprice-mcp"
-version = "0.1.0"
-description = "MCP server that compares VM/instance pricing across AWS, Azure, and GCP in real time."
+version = "0.2.0"
+description = "MCP server that compares on-demand compute + storage pricing across AWS, Azure, and GCP. Single-spec lookups plus bulk inventory and workload (compute + storage) compare."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }

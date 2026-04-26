@@ -1,4 +1,8 @@
-from cloudprice_mcp.pricing import HOURS_PER_MONTH, load_catalog
+from cloudprice_mcp.pricing import HOURS_PER_MONTH, load_catalog, reset_catalog_cache
+
+
+def setup_function():
+    reset_catalog_cache()
 
 
 def test_catalog_loads_all_three_clouds():
@@ -34,3 +38,22 @@ def test_catalog_is_cached_singleton():
     a = load_catalog()
     b = load_catalog()
     assert a is b
+
+
+def test_storage_skus_loaded_for_every_cloud():
+    catalog = load_catalog()
+    for cloud in ("aws", "azure", "gcp"):
+        ssd = catalog.storage_for(cloud, "ssd")
+        hdd = catalog.storage_for(cloud, "hdd")
+        assert ssd is not None and ssd.disk_type == "ssd"
+        assert hdd is not None and hdd.disk_type == "hdd"
+        assert ssd.price_per_gb_month_usd > 0
+        assert hdd.price_per_gb_month_usd > 0
+
+
+def test_storage_monthly_cost_scales_with_capacity_and_quantity():
+    catalog = load_catalog()
+    aws_ssd = catalog.storage_for("aws", "ssd")
+    assert aws_ssd is not None
+    expected = round(aws_ssd.price_per_gb_month_usd * 100 * 3, 2)
+    assert aws_ssd.monthly_cost(capacity_gb=100, quantity=3) == expected

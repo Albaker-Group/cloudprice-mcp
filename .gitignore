@@ -10,3 +10,10 @@ dist/
 build/
 *.cache
 .DS_Store
+
+# Reference spreadsheets (proprietary or third-party) — never commit
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+reference/
