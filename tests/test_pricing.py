@@ -57,3 +57,20 @@ def test_storage_monthly_cost_scales_with_capacity_and_quantity():
     assert aws_ssd is not None
     expected = round(aws_ssd.price_per_gb_month_usd * 100 * 3, 2)
     assert aws_ssd.monthly_cost(capacity_gb=100, quantity=3) == expected
+
+
+def test_storage_skus_have_snapshot_rates():
+    catalog = load_catalog()
+    for cloud in ("aws", "azure", "gcp"):
+        for disk_type in ("ssd", "hdd"):
+            sku = catalog.storage_for(cloud, disk_type)
+            assert sku is not None
+            assert sku.snapshot_per_gb_month_usd > 0
+
+
+def test_snapshot_monthly_cost_calc():
+    catalog = load_catalog()
+    aws_ssd = catalog.storage_for("aws", "ssd")
+    assert aws_ssd is not None
+    expected = round(aws_ssd.snapshot_per_gb_month_usd * 500 * 2 * 7, 2)
+    assert aws_ssd.snapshot_monthly_cost(capacity_gb=500, quantity=2, snapshot_count=7) == expected

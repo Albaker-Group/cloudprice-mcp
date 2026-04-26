@@ -1,4 +1,5 @@
 from cloudprice_mcp.compare import (
+    COMMITMENT_DISCOUNT,
     ComputeRequest,
     StorageRequest,
     best_match,
@@ -140,12 +141,83 @@ def test_bulk_storage_ssd_is_more_expensive_than_hdd():
         assert ssd_result["totals_by_cloud"][cloud] >= hdd_result["totals_by_cloud"][cloud]
 
 
-def test_bulk_storage_warns_about_unpriced_snapshots():
+def test_bulk_storage_charges_snapshots_v021():
     catalog = load_catalog()
-    volumes = [StorageRequest(name="vol", capacity_gb=100, snapshot_count=5)]
-    result = bulk_compare_storage(catalog, volumes)
-    assert "notes" in result
-    assert "snapshot" in result["notes"].lower()
+    no_snap = bulk_compare_storage(
+        catalog, [StorageRequest(name="vol", capacity_gb=100)]
+    )
+    with_snap = bulk_compare_storage(
+        catalog, [StorageRequest(name="vol", capacity_gb=100, snapshot_count=5)]
+    )
+    for cloud in ("aws", "azure", "gcp"):
+        ssd = catalog.storage_for(cloud, "ssd")
+        assert ssd is not None
+        expected_extra = round(ssd.snapshot_per_gb_month_usd * 100 * 5, 2)
+        delta = round(with_snap["totals_by_cloud"][cloud] - no_snap["totals_by_cloud"][cloud], 2)
+        assert delta == expected_extra
+    # The "snapshots not priced" note from v0.2 must be gone.
+    assert "notes" not in with_snap
+
+
+def test_compute_os_disk_snapshots_priced():
+    catalog = load_catalog()
+    no_snap = bulk_compare_compute(
+        catalog,
+        [ComputeRequest(name="x", vcpus=4, memory_gb=16, os_disk_gb=200)],
+    )
+    with_snap = bulk_compare_compute(
+        catalog,
+        [ComputeRequest(name="x", vcpus=4, memory_gb=16, os_disk_gb=200, os_disk_snapshot_count=7)],
+    )
+    for cloud in ("aws", "azure", "gcp"):
+        ssd = catalog.storage_for(cloud, "ssd")
+        assert ssd is not None
+        expected_extra = round(ssd.snapshot_per_gb_month_usd * 200 * 7, 2)
+        delta = round(with_snap["totals_by_cloud"][cloud] - no_snap["totals_by_cloud"][cloud], 2)
+        assert delta == expected_extra
+
+
+def test_commitment_discounts_compute_only():
+    catalog = load_catalog()
+    compute = [ComputeRequest(name="api", vcpus=4, memory_gb=16, quantity=4)]
+    storage = [StorageRequest(name="data", capacity_gb=1000, disk_type="ssd")]
+    on_demand = compare_workload(catalog, compute, storage, commitment="none")
+    one_year = compare_workload(catalog, compute, storage, commitment="1yr_no_upfront")
+
+    assert "commitment" not in on_demand
+    assert "commitment" in one_year
+    assert one_year["commitment"]["type"] == "1yr_no_upfront"
+    assert one_year["commitment"]["compute_discount_pct"] == 30.0
+
+    discount = COMMITMENT_DISCOUNT["1yr_no_upfront"]
+    for cloud in ("aws", "azure", "gcp"):
+        compute_od = on_demand["compute"]["totals_by_cloud"][cloud]
+        storage_od = on_demand["storage"]["totals_by_cloud"][cloud]
+        expected_committed = round(compute_od * (1 - discount) + storage_od, 2)
+        actual = one_year["commitment"]["totals_by_cloud"][cloud]
+        # Storage is unchanged; compute is reduced by the discount.
+        assert abs(actual - expected_committed) < 0.05
+
+
+def test_three_year_commitment_is_bigger_discount_than_one_year():
+    catalog = load_catalog()
+    compute = [ComputeRequest(name="api", vcpus=8, memory_gb=32, quantity=10)]
+    one_yr = compare_workload(catalog, compute, [], commitment="1yr_no_upfront")
+    three_yr = compare_workload(catalog, compute, [], commitment="3yr_partial_upfront")
+    for cloud in ("aws", "azure", "gcp"):
+        assert (
+            three_yr["commitment"]["totals_by_cloud"][cloud]
+            < one_yr["commitment"]["totals_by_cloud"][cloud]
+        )
+
+
+def test_summary_includes_annual_savings():
+    catalog = load_catalog()
+    result = compare_workload(catalog, [ComputeRequest(name="x", vcpus=4, memory_gb=16)], [])
+    assert "annual_savings_vs_priciest_usd" in result["combined"]
+    monthly = result["combined"]["savings_vs_priciest_usd"]
+    annual = result["combined"]["annual_savings_vs_priciest_usd"]
+    assert annual == round(monthly * 12, 2)
 
 
 # --- combined workload ---

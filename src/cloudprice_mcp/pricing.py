@@ -39,10 +39,18 @@ class StorageSku:
     sku: str
     disk_type: DiskType
     price_per_gb_month_usd: float
+    snapshot_per_gb_month_usd: float
     region: str
 
     def monthly_cost(self, capacity_gb: float, quantity: int = 1) -> float:
         return round(self.price_per_gb_month_usd * capacity_gb * quantity, 2)
+
+    def snapshot_monthly_cost(
+        self, capacity_gb: float, quantity: int = 1, snapshot_count: int = 1
+    ) -> float:
+        return round(
+            self.snapshot_per_gb_month_usd * capacity_gb * quantity * snapshot_count, 2
+        )
 
     def to_dict(self) -> dict:
         return {
@@ -51,6 +59,7 @@ class StorageSku:
             "region": self.region,
             "disk_type": self.disk_type,
             "price_per_gb_month_usd": self.price_per_gb_month_usd,
+            "snapshot_per_gb_month_usd": self.snapshot_per_gb_month_usd,
         }
 
 
@@ -115,6 +124,7 @@ def load_catalog() -> PriceCatalog:
                     sku=entry["sku"],
                     disk_type=entry["disk_type"],
                     price_per_gb_month_usd=float(entry["price_per_gb_month_usd"]),
+                    snapshot_per_gb_month_usd=float(entry.get("snapshot_per_gb_month_usd", 0.0)),
                     region=region,
                 )
             )

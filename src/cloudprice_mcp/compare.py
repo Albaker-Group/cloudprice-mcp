@@ -1,5 +1,5 @@
-from dataclasses import dataclass, field
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, Literal
 
 from .pricing import (
     HOURS_PER_MONTH,
@@ -11,6 +11,17 @@ from .pricing import (
 )
 
 CLOUDS: tuple[Cloud, ...] = ("aws", "azure", "gcp")
+
+Commitment = Literal["none", "1yr_no_upfront", "3yr_partial_upfront"]
+
+# Representative compute discount tiers averaged across AWS RI/SP, Azure RI,
+# and GCP CUD. Real discount depends on instance family, payment option, and
+# region; these are conservative round numbers good for estimation.
+COMMITMENT_DISCOUNT: dict[Commitment, float] = {
+    "none": 0.0,
+    "1yr_no_upfront": 0.30,
+    "3yr_partial_upfront": 0.50,
+}
 
 
 @dataclass(frozen=True)
@@ -37,6 +48,7 @@ class ComputeRequest:
     group: str | None = None
     os_disk_gb: float | None = None
     os_disk_type: DiskType = "ssd"
+    os_disk_snapshot_count: int = 0
 
     def to_dict(self) -> dict:
         return {
@@ -49,6 +61,7 @@ class ComputeRequest:
             "hours_per_month": self.hours_per_month,
             "os_disk_gb": self.os_disk_gb,
             "os_disk_type": self.os_disk_type,
+            "os_disk_snapshot_count": self.os_disk_snapshot_count,
         }
 
 
@@ -139,6 +152,7 @@ def _compute_row_cost(
     compute_total = round(compute_unit_monthly * req.quantity, 2)
 
     os_disk_total = 0.0
+    os_disk_snapshot_total = 0.0
     os_disk_sku: str | None = None
     if req.os_disk_gb and req.os_disk_gb > 0:
         storage = catalog.storage_for(cloud, req.os_disk_type)
@@ -146,6 +160,12 @@ def _compute_row_cost(
             os_disk_unit = round(storage.price_per_gb_month_usd * req.os_disk_gb, 2)
             os_disk_total = round(os_disk_unit * req.quantity, 2)
             os_disk_sku = storage.sku
+            if req.os_disk_snapshot_count > 0:
+                os_disk_snapshot_total = storage.snapshot_monthly_cost(
+                    capacity_gb=req.os_disk_gb,
+                    quantity=req.quantity,
+                    snapshot_count=req.os_disk_snapshot_count,
+                )
 
     return {
         "cloud": cloud,
@@ -158,7 +178,8 @@ def _compute_row_cost(
         "compute_monthly_total": compute_total,
         "os_disk_sku": os_disk_sku,
         "os_disk_monthly_total": os_disk_total,
-        "row_monthly_total": round(compute_total + os_disk_total, 2),
+        "os_disk_snapshot_monthly_total": os_disk_snapshot_total,
+        "row_monthly_total": round(compute_total + os_disk_total + os_disk_snapshot_total, 2),
     }
 
 
@@ -172,14 +193,20 @@ def _storage_row_cost(
         return None
     unit_monthly = round(sku.price_per_gb_month_usd * req.capacity_gb, 2)
     total_monthly = round(unit_monthly * req.quantity, 2)
+    snapshot_total = (
+        sku.snapshot_monthly_cost(req.capacity_gb, req.quantity, req.snapshot_count)
+        if req.snapshot_count > 0 else 0.0
+    )
     return {
         "cloud": cloud,
         "sku": sku.sku,
         "region": sku.region,
         "disk_type": sku.disk_type,
         "price_per_gb_month_usd": sku.price_per_gb_month_usd,
+        "snapshot_per_gb_month_usd": sku.snapshot_per_gb_month_usd,
         "monthly_per_unit": unit_monthly,
-        "row_monthly_total": total_monthly,
+        "snapshot_monthly_total": snapshot_total,
+        "row_monthly_total": round(total_monthly + snapshot_total, 2),
     }
 
 
@@ -200,6 +227,7 @@ def _summarize(per_cloud_totals: dict[Cloud, float]) -> dict[str, Any]:
         "priciest_cloud": priciest,
         "savings_vs_priciest_usd": spread,
         "savings_vs_priciest_pct": pct,
+        "annual_savings_vs_priciest_usd": round(spread * 12, 2),
     }
 
 
@@ -208,7 +236,7 @@ def bulk_compare_compute(
     workloads: list[ComputeRequest],
 ) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
-    totals: dict[Cloud, float] = {c: 0.0 for c in CLOUDS}
+    totals: dict[Cloud, float] = dict.fromkeys(CLOUDS, 0.0)
 
     for req in workloads:
         per_cloud: dict[str, Any] = {}
@@ -230,8 +258,7 @@ def bulk_compare_storage(
     volumes: list[StorageRequest],
 ) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
-    totals: dict[Cloud, float] = {c: 0.0 for c in CLOUDS}
-    snapshot_warnings: list[str] = []
+    totals: dict[Cloud, float] = dict.fromkeys(CLOUDS, 0.0)
 
     for req in volumes:
         per_cloud: dict[str, Any] = {}
@@ -241,37 +268,67 @@ def bulk_compare_storage(
                 per_cloud[cloud] = cost
                 totals[cloud] += cost["row_monthly_total"]
         rows.append({"request": req.to_dict(), "per_cloud": per_cloud})
-        if req.snapshot_count > 0:
-            snapshot_warnings.append(req.name)
 
-    out: dict[str, Any] = {
-        "rows": rows,
-        **_summarize(totals),
+    return {"rows": rows, **_summarize(totals)}
+
+
+def _build_commitment_section(
+    commitment: Commitment,
+    combined: dict[Cloud, float],
+    compute_result: dict[str, Any] | None,
+    storage_result: dict[str, Any] | None,
+) -> dict[str, Any]:
+    discount = COMMITMENT_DISCOUNT[commitment]
+    compute_totals = (
+        compute_result["totals_by_cloud"] if compute_result else dict.fromkeys(CLOUDS, 0.0)
+    )
+    storage_totals = (
+        storage_result["totals_by_cloud"] if storage_result else dict.fromkeys(CLOUDS, 0.0)
+    )
+    committed: dict[Cloud, float] = {
+        c: compute_totals.get(c, 0) * (1 - discount) + storage_totals.get(c, 0)
+        for c in CLOUDS
     }
-    if snapshot_warnings:
-        out["notes"] = (
-            f"Snapshot pricing is not modeled in v0.2 — {len(snapshot_warnings)} "
-            "row(s) declared snapshots but their cost is not included in the totals."
-        )
-    return out
+    on_demand_priciest = max(combined.values())
+    committed_cheapest = min(committed.values())
+    return {
+        "type": commitment,
+        "compute_discount_pct": round(discount * 100, 1),
+        "note": (
+            "Discount applied to compute only. Storage and snapshots stay at on-demand rates "
+            "(most clouds don't offer meaningful storage commitments)."
+        ),
+        **_summarize(committed),
+        "annual_savings_cheapest_vs_on_demand_priciest_usd": round(
+            (on_demand_priciest - committed_cheapest) * 12, 2
+        ),
+    }
 
 
 def compare_workload(
     catalog: PriceCatalog,
     compute: list[ComputeRequest],
     storage: list[StorageRequest],
+    commitment: Commitment = "none",
 ) -> dict[str, Any]:
     compute_result = bulk_compare_compute(catalog, compute) if compute else None
     storage_result = bulk_compare_storage(catalog, storage) if storage else None
 
-    combined: dict[Cloud, float] = {c: 0.0 for c in CLOUDS}
+    combined: dict[Cloud, float] = dict.fromkeys(CLOUDS, 0.0)
     for sub in (compute_result, storage_result):
         if sub and "totals_by_cloud" in sub:
             for cloud, value in sub["totals_by_cloud"].items():
                 combined[cloud] += value
 
-    return {
+    out: dict[str, Any] = {
         "compute": compute_result,
         "storage": storage_result,
         "combined": _summarize(combined) if any(combined.values()) else {},
     }
+
+    if commitment != "none" and any(combined.values()):
+        out["commitment"] = _build_commitment_section(
+            commitment, combined, compute_result, storage_result
+        )
+
+    return out

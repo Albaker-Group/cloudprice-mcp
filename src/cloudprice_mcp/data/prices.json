@@ -23,8 +23,8 @@
       { "sku": "r5.2xlarge",  "vcpus": 8,  "memory_gb": 64,   "hourly_usd": 0.504 }
     ],
     "storage": [
-      { "sku": "gp3",  "disk_type": "ssd", "price_per_gb_month_usd": 0.08  },
-      { "sku": "st1",  "disk_type": "hdd", "price_per_gb_month_usd": 0.045 }
+      { "sku": "gp3",  "disk_type": "ssd", "price_per_gb_month_usd": 0.08,  "snapshot_per_gb_month_usd": 0.05 },
+      { "sku": "st1",  "disk_type": "hdd", "price_per_gb_month_usd": 0.045, "snapshot_per_gb_month_usd": 0.05 }
     ]
   },
   "azure": {
@@ -46,8 +46,8 @@
       { "sku": "E8s_v5",     "vcpus": 8,  "memory_gb": 64,   "hourly_usd": 0.504 }
     ],
     "storage": [
-      { "sku": "Standard SSD", "disk_type": "ssd", "price_per_gb_month_usd": 0.075 },
-      { "sku": "Standard HDD", "disk_type": "hdd", "price_per_gb_month_usd": 0.045 }
+      { "sku": "Standard SSD", "disk_type": "ssd", "price_per_gb_month_usd": 0.075, "snapshot_per_gb_month_usd": 0.05 },
+      { "sku": "Standard HDD", "disk_type": "hdd", "price_per_gb_month_usd": 0.045, "snapshot_per_gb_month_usd": 0.05 }
     ]
   },
   "gcp": {
@@ -70,8 +70,8 @@
       { "sku": "n2-highcpu-4",    "vcpus": 4,  "memory_gb": 4,    "hourly_usd": 0.1432 }
     ],
     "storage": [
-      { "sku": "pd-balanced", "disk_type": "ssd", "price_per_gb_month_usd": 0.10 },
-      { "sku": "pd-standard", "disk_type": "hdd", "price_per_gb_month_usd": 0.04 }
+      { "sku": "pd-balanced", "disk_type": "ssd", "price_per_gb_month_usd": 0.10, "snapshot_per_gb_month_usd": 0.026 },
+      { "sku": "pd-standard", "disk_type": "hdd", "price_per_gb_month_usd": 0.04, "snapshot_per_gb_month_usd": 0.026 }
     ]
   }
 }

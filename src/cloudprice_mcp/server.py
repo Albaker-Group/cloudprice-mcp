@@ -37,6 +37,10 @@ _COMPUTE_ITEM_SCHEMA = {
         "group": {"type": ["string", "null"], "description": "Optional sub-grouping label"},
         "os_disk_gb": {"type": ["number", "null"], "minimum": 0},
         "os_disk_type": {"type": "string", "enum": ["ssd", "hdd"], "default": "ssd"},
+        "os_disk_snapshot_count": {
+            "type": "integer", "minimum": 0, "default": 0,
+            "description": "Number of OS-disk snapshots retained. Each priced at the cloud's snapshot per-GB rate × disk size × instance quantity.",
+        },
     },
     "required": ["name", "vcpus", "memory_gb"],
     "additionalProperties": False,
@@ -53,7 +57,7 @@ _STORAGE_ITEM_SCHEMA = {
         "group": {"type": ["string", "null"]},
         "iops": {"type": ["integer", "null"], "minimum": 0, "description": "Carried as metadata; not used for SKU matching in v0.2"},
         "throughput_mbs": {"type": ["number", "null"], "minimum": 0, "description": "Carried as metadata; not used for SKU matching in v0.2"},
-        "snapshot_count": {"type": "integer", "minimum": 0, "default": 0, "description": "Declared but not priced in v0.2 (you'll get a note in the response)"},
+        "snapshot_count": {"type": "integer", "minimum": 0, "default": 0, "description": "Number of snapshots retained. Priced at the cloud's snapshot per-GB rate × capacity × volume quantity."},
     },
     "required": ["name", "capacity_gb"],
     "additionalProperties": False,
@@ -183,7 +187,10 @@ async def list_tools() -> list[Tool]:
                 "Pass a compute list and a storage list (either may be empty). "
                 "Returns nested per-row breakdowns plus combined per-cloud totals "
                 "and the overall cheapest cloud. Mirrors the structure of a "
-                "two-sheet sizing workbook (compute BoM + storage BoM)."
+                "two-sheet sizing workbook (compute BoM + storage BoM). "
+                "Optional `commitment` parameter estimates 1-year or 3-year "
+                "Reserved Instance / Savings Plan / Committed Use discount on "
+                "compute (storage stays at on-demand)."
             ),
             inputSchema={
                 "type": "object",
@@ -197,6 +204,12 @@ async def list_tools() -> list[Tool]:
                         "type": "array",
                         "items": _STORAGE_ITEM_SCHEMA,
                         "default": [],
+                    },
+                    "commitment": {
+                        "type": "string",
+                        "enum": ["none", "1yr_no_upfront", "3yr_partial_upfront"],
+                        "default": "none",
+                        "description": "Compute commitment tier. 'none' = on-demand only. '1yr_no_upfront' applies a representative 30% compute discount. '3yr_partial_upfront' applies 50%. Storage and snapshots are not discounted.",
                     },
                 },
             },
@@ -235,6 +248,7 @@ def _build_compute_requests(items: list[dict[str, Any]]) -> list[ComputeRequest]
             group=item.get("group"),
             os_disk_gb=float(item["os_disk_gb"]) if item.get("os_disk_gb") else None,
             os_disk_type=item.get("os_disk_type", "ssd"),
+            os_disk_snapshot_count=int(item.get("os_disk_snapshot_count", 0)),
         )
         for item in items
     ]
@@ -308,7 +322,8 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
         storage = _build_storage_requests(arguments.get("storage", []))
         if not compute and not storage:
             return _err("compare_workload needs at least one of compute or storage to be non-empty.")
-        result = compare_workload(catalog, compute, storage)
+        commitment = arguments.get("commitment", "none")
+        result = compare_workload(catalog, compute, storage, commitment=commitment)
         return _ok({"as_of": catalog.as_of, **result})
 
     return _err(f"Unknown tool: {name}")

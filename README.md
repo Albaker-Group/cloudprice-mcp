@@ -84,7 +84,25 @@ Restart Claude Desktop. The seven tools below will show up as available.
 }
 ```
 
-Optional fields on storage rows (`iops`, `throughput_mbs`, `snapshot_count`) are accepted as metadata but **not** priced in v0.2 — you'll get a note in the response if any are set.
+### Snapshots (v0.2.1)
+
+`snapshot_count` on storage rows and `os_disk_snapshot_count` on compute rows **are now priced**. Snapshot rates per cloud per disk type are bundled (~$0.05/GB-mo for AWS/Azure, ~$0.026/GB-mo for GCP).
+
+**Caveat — upper-bound estimate:** snapshots are priced as `snapshot_per_gb_month × full_capacity × quantity × snapshot_count`. Real-world snapshots are **incremental** (only changed blocks), so actual cost is typically 20-50% of this model's number. If snapshots dominate your total, ask the cloud's calculator for a tighter estimate.
+
+`iops` and `throughput_mbs` on storage rows are still accepted as metadata only — not used for SKU matching in this release.
+
+### Reserved Instance / Savings Plan estimator (v0.2.1)
+
+`compare_workload` accepts an optional `commitment` parameter:
+
+| Value | Compute discount | Use case |
+|---|---|---|
+| `none` (default) | 0% | On-demand only |
+| `1yr_no_upfront` | 30% | 1-year AWS Savings Plan / Azure RI / GCP CUD (no upfront) |
+| `3yr_partial_upfront` | 50% | 3-year, partial upfront — typical "we know our baseline" deals |
+
+Storage and snapshots are not discounted (most clouds don't offer meaningful storage commitments). Discount tiers are conservative averages — your actual rate depends on instance family, payment option, and region.
 
 ## Pricing data
 
