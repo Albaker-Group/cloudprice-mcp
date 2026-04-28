@@ -17,3 +17,6 @@ build/
 *.xlsm
 *.csv
 reference/
+
+# Local developer tool binaries (mcp-publisher etc.) — not part of the package
+bin/
