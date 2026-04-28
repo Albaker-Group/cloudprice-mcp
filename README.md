@@ -1,5 +1,7 @@
 # cloudprice-mcp
 
+<!-- mcp-name: io.github.alialbaker/cloudprice-mcp -->
+
 [![PyPI version](https://img.shields.io/pypi/v/cloudprice-mcp.svg)](https://pypi.org/project/cloudprice-mcp/)
 [![Python versions](https://img.shields.io/pypi/pyversions/cloudprice-mcp.svg)](https://pypi.org/project/cloudprice-mcp/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)

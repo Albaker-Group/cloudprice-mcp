@@ -1,0 +1,22 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.alialbaker/cloudprice-mcp",
+  "title": "Cloudprice",
+  "description": "Compare on-demand compute + storage pricing across AWS, Azure, and GCP. Bulk workload compare.",
+  "repository": {
+    "url": "https://github.com/alialbaker/cloudprice-mcp",
+    "source": "github"
+  },
+  "version": "0.2.2",
+  "websiteUrl": "https://albaker.info",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "cloudprice-mcp",
+      "version": "0.2.2",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
