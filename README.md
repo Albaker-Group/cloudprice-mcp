@@ -6,6 +6,8 @@
 
 An MCP server that lets Claude (or any MCP-compatible client) compare on-demand **compute + storage** pricing across **AWS, Azure, and GCP** in real time.
 
+![demo](demo.gif)
+
 Ask things like:
 
 > *"How much does a 4 vCPU / 16 GB Linux VM cost across AWS, Azure, and GCP in us-east?"*
