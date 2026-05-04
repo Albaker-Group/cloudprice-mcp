@@ -24,10 +24,11 @@ def test_oci_compute_skus_loaded():
     catalog = load_catalog()
     oci = catalog.by_cloud("oci")
     assert len(oci) > 0
-    # Must include both x86 (E4) and Arm (A1) families
+    # Must include current x86 (E5) + paid Arm (A2) + Always Free (A1) families
     families = {sku.sku.split(".")[2] for sku in oci}
-    assert "E4" in families
-    assert "A1" in families
+    assert "E5" in families  # current AMD default (was E4 in v0.3 placeholder)
+    assert "A2" in families  # current paid Arm default
+    assert "A1" in families  # Always Free Arm
 
 
 def test_oci_storage_skus_loaded():

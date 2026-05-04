@@ -76,20 +76,22 @@
   },
   "oci": {
     "region": "us-ashburn-1",
-    "_notes": "Placeholder pricing — needs verification when OCI account is active. OCPU-based pricing converted to vCPU-equivalents: 1 OCPU = 2 vCPU on x86 shapes (E4.Flex). VM.Standard.E4.Flex is the workhorse general-purpose family.",
+    "_notes": "Verified against Oracle Public Pricing API (https://apexapps.oracle.com/pls/apex/cetools/api/v1/products/) on 2026-05-04. OCPU-based pricing: 1 OCPU = 2 vCPU on x86 (E4/E5/E6.Flex), 1 OCPU = 1 vCPU on Arm Ampere (A1/A2.Flex). Cost = (OCPU rate * num_OCPU + Memory rate * GB) * hours. E5.Flex is the current AMD default ($0.11019/OCPU + $0.007346/GB). A1.Flex Always Free covers up to 4 OCPU + 24 GB total — listed at $0/hr. A2.Flex is the current paid Arm default ($0.051422/OCPU + $0.007346/GB).",
     "instances": [
-      { "sku": "VM.Standard.E4.Flex.1OCPU",  "vcpus": 2,  "memory_gb": 8,    "hourly_usd": 0.037 },
-      { "sku": "VM.Standard.E4.Flex.2OCPU",  "vcpus": 4,  "memory_gb": 16,   "hourly_usd": 0.074 },
-      { "sku": "VM.Standard.E4.Flex.4OCPU",  "vcpus": 8,  "memory_gb": 32,   "hourly_usd": 0.148 },
-      { "sku": "VM.Standard.E4.Flex.8OCPU",  "vcpus": 16, "memory_gb": 64,   "hourly_usd": 0.296 },
-      { "sku": "VM.Standard.E4.Flex.16OCPU", "vcpus": 32, "memory_gb": 128,  "hourly_usd": 0.592 },
-      { "sku": "VM.Standard.A1.Flex.1OCPU",  "vcpus": 1,  "memory_gb": 6,    "hourly_usd": 0.01 },
-      { "sku": "VM.Standard.A1.Flex.2OCPU",  "vcpus": 2,  "memory_gb": 12,   "hourly_usd": 0.02 },
-      { "sku": "VM.Standard.A1.Flex.4OCPU",  "vcpus": 4,  "memory_gb": 24,   "hourly_usd": 0.04 }
+      { "sku": "VM.Standard.E5.Flex.1OCPU",  "vcpus": 2,  "memory_gb": 8,    "hourly_usd": 0.169 },
+      { "sku": "VM.Standard.E5.Flex.2OCPU",  "vcpus": 4,  "memory_gb": 16,   "hourly_usd": 0.338 },
+      { "sku": "VM.Standard.E5.Flex.4OCPU",  "vcpus": 8,  "memory_gb": 32,   "hourly_usd": 0.676 },
+      { "sku": "VM.Standard.E5.Flex.8OCPU",  "vcpus": 16, "memory_gb": 64,   "hourly_usd": 1.352 },
+      { "sku": "VM.Standard.E5.Flex.16OCPU", "vcpus": 32, "memory_gb": 128,  "hourly_usd": 2.704 },
+      { "sku": "VM.Standard.A2.Flex.1OCPU",  "vcpus": 1,  "memory_gb": 6,    "hourly_usd": 0.0955 },
+      { "sku": "VM.Standard.A2.Flex.2OCPU",  "vcpus": 2,  "memory_gb": 12,   "hourly_usd": 0.1910 },
+      { "sku": "VM.Standard.A2.Flex.4OCPU",  "vcpus": 4,  "memory_gb": 24,   "hourly_usd": 0.3820 },
+      { "sku": "VM.Standard.A2.Flex.8OCPU",  "vcpus": 8,  "memory_gb": 48,   "hourly_usd": 0.7640 },
+      { "sku": "VM.Standard.A1.Flex.AlwaysFree", "vcpus": 4, "memory_gb": 24, "hourly_usd": 0.0 }
     ],
     "storage": [
-      { "sku": "Block Volume Higher Performance", "disk_type": "ssd", "price_per_gb_month_usd": 0.0425, "snapshot_per_gb_month_usd": 0.0255 },
-      { "sku": "Block Volume Standard",           "disk_type": "hdd", "price_per_gb_month_usd": 0.0255, "snapshot_per_gb_month_usd": 0.0255 }
+      { "sku": "Block Volume",          "disk_type": "ssd", "price_per_gb_month_usd": 0.0937, "snapshot_per_gb_month_usd": 0.0255 },
+      { "sku": "Block Volume Standard", "disk_type": "hdd", "price_per_gb_month_usd": 0.0937, "snapshot_per_gb_month_usd": 0.0255 }
     ]
   }
 }

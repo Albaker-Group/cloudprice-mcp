@@ -53,13 +53,13 @@
   "oci": {
     "service": "Database with PostgreSQL",
     "region": "us-ashburn-1",
+    "_notes": "Verified against Oracle Public Pricing API on 2026-05-04. SKU 'Database with PostgreSQL - X86' bills at $0.359954/OCPU-hour. Memory cost may be additional (separate SKU not visible in public API as of verification date). These rates are conservative — actual bill could be 10-30% higher once memory + extra storage tiers factor in. Storage charged at standard Block Volume rate.",
     "instances": [
-      { "sku": "OCI.Postgres.1OCPU",   "vcpus": 2,  "memory_gb": 8,    "hourly_usd": 0.0431 },
-      { "sku": "OCI.Postgres.2OCPU",   "vcpus": 4,  "memory_gb": 16,   "hourly_usd": 0.0862 },
-      { "sku": "OCI.Postgres.4OCPU",   "vcpus": 8,  "memory_gb": 32,   "hourly_usd": 0.1724 },
-      { "sku": "OCI.Postgres.8OCPU",   "vcpus": 16, "memory_gb": 64,   "hourly_usd": 0.3448 },
-      { "sku": "OCI.Postgres.16OCPU",  "vcpus": 32, "memory_gb": 128,  "hourly_usd": 0.6896 }
+      { "sku": "OCI.Postgres.1OCPU",   "vcpus": 2,  "memory_gb": 8,    "hourly_usd": 0.360 },
+      { "sku": "OCI.Postgres.2OCPU",   "vcpus": 4,  "memory_gb": 16,   "hourly_usd": 0.720 },
+      { "sku": "OCI.Postgres.4OCPU",   "vcpus": 8,  "memory_gb": 32,   "hourly_usd": 1.440 },
+      { "sku": "OCI.Postgres.8OCPU",   "vcpus": 16, "memory_gb": 64,   "hourly_usd": 2.880 }
     ],
-    "storage_per_gb_month_usd": 0.0425
+    "storage_per_gb_month_usd": 0.0937
   }
 }
