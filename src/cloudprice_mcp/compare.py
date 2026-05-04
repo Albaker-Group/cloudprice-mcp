@@ -6,11 +6,12 @@ from .pricing import (
     Cloud,
     DiskType,
     Instance,
+    PostgresSku,
     PriceCatalog,
     StorageSku,
 )
 
-CLOUDS: tuple[Cloud, ...] = ("aws", "azure", "gcp")
+CLOUDS: tuple[Cloud, ...] = ("aws", "azure", "gcp", "oci")
 
 Commitment = Literal["none", "1yr_no_upfront", "3yr_partial_upfront"]
 
@@ -303,6 +304,92 @@ def _build_commitment_section(
             (on_demand_priciest - committed_cheapest) * 12, 2
         ),
     }
+
+
+@dataclass(frozen=True)
+class PostgresRequest:
+    name: str
+    vcpus: int
+    memory_gb: float
+    storage_gb: float = 0.0
+    quantity: int = 1
+    hours_per_month: int = HOURS_PER_MONTH
+    tier: str | None = None
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "tier": self.tier,
+            "vcpus": self.vcpus,
+            "memory_gb": self.memory_gb,
+            "storage_gb": self.storage_gb,
+            "quantity": self.quantity,
+            "hours_per_month": self.hours_per_month,
+        }
+
+
+def _postgres_spec_distance(
+    want_vcpus: int, want_memory_gb: float, candidate: PostgresSku
+) -> float:
+    vcpu_gap = candidate.vcpus - want_vcpus
+    mem_gap = candidate.memory_gb - want_memory_gb
+    vcpu_penalty = vcpu_gap if vcpu_gap >= 0 else (10 + abs(vcpu_gap))
+    mem_penalty = mem_gap if mem_gap >= 0 else (10 + abs(mem_gap))
+    return vcpu_penalty + mem_penalty
+
+
+def best_postgres_match(
+    catalog: PriceCatalog, cloud: Cloud, vcpus: int, memory_gb: float
+) -> PostgresSku | None:
+    eligible = [
+        p for p in catalog.postgres_by_cloud(cloud)
+        if p.vcpus >= vcpus and p.memory_gb >= memory_gb
+    ]
+    candidates = eligible if eligible else list(catalog.postgres_by_cloud(cloud))
+    if not candidates:
+        return None
+    scored = [(_postgres_spec_distance(vcpus, memory_gb, c), c) for c in candidates]
+    scored.sort(key=lambda x: (x[1].hourly_usd, x[0]))
+    return scored[0][1]
+
+
+def _postgres_row_cost(
+    catalog: PriceCatalog, cloud: Cloud, req: PostgresRequest
+) -> dict[str, Any] | None:
+    sku = best_postgres_match(catalog, cloud, req.vcpus, req.memory_gb)
+    if sku is None:
+        return None
+    compute_unit = round(sku.hourly_usd * req.hours_per_month, 2)
+    compute_total = round(compute_unit * req.quantity, 2)
+    storage_total = round(sku.storage_per_gb_month_usd * req.storage_gb * req.quantity, 2)
+    return {
+        "cloud": cloud,
+        "service": sku.service,
+        "sku": sku.sku,
+        "region": sku.region,
+        "vcpus": sku.vcpus,
+        "memory_gb": sku.memory_gb,
+        "hourly_usd": sku.hourly_usd,
+        "compute_monthly_total": compute_total,
+        "storage_monthly_total": storage_total,
+        "row_monthly_total": round(compute_total + storage_total, 2),
+    }
+
+
+def compare_postgres(
+    catalog: PriceCatalog, requests: list[PostgresRequest]
+) -> dict[str, Any]:
+    rows: list[dict[str, Any]] = []
+    totals: dict[Cloud, float] = dict.fromkeys(CLOUDS, 0.0)
+    for req in requests:
+        per_cloud: dict[str, Any] = {}
+        for cloud in CLOUDS:
+            cost = _postgres_row_cost(catalog, cloud, req)
+            if cost is not None:
+                per_cloud[cloud] = cost
+                totals[cloud] += cost["row_monthly_total"]
+        rows.append({"request": req.to_dict(), "per_cloud": per_cloud})
+    return {"rows": rows, **_summarize(totals)}
 
 
 def compare_workload(

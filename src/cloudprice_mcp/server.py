@@ -9,10 +9,12 @@ from mcp.types import TextContent, Tool
 from . import __version__
 from .compare import (
     ComputeRequest,
+    PostgresRequest,
     StorageRequest,
     bulk_compare_compute,
     bulk_compare_storage,
     compare_all_clouds,
+    compare_postgres,
     compare_workload,
 )
 from .pricing import HOURS_PER_MONTH, Cloud, load_catalog
@@ -45,6 +47,22 @@ _COMPUTE_ITEM_SCHEMA = {
     "required": ["name", "vcpus", "memory_gb"],
     "additionalProperties": False,
 }
+
+_POSTGRES_ITEM_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "name": {"type": "string", "description": "Friendly label for this database, e.g. 'orders-prod'"},
+        "vcpus": {"type": "integer", "minimum": 1},
+        "memory_gb": {"type": "number", "minimum": 0.5},
+        "storage_gb": {"type": "number", "minimum": 0, "default": 0, "description": "Persistent storage size in GB"},
+        "quantity": {"type": "integer", "minimum": 1, "default": 1},
+        "hours_per_month": {"type": "integer", "minimum": 1, "default": HOURS_PER_MONTH},
+        "tier": {"type": ["string", "null"], "description": "Optional grouping label (e.g. Prod/Stage/Dev)"},
+    },
+    "required": ["name", "vcpus", "memory_gb"],
+    "additionalProperties": False,
+}
+
 
 _STORAGE_ITEM_SCHEMA = {
     "type": "object",
@@ -178,6 +196,28 @@ async def list_tools() -> list[Tool]:
                     }
                 },
                 "required": ["volumes"],
+            },
+        ),
+        Tool(
+            name="compare_postgres_database",
+            description=(
+                "Compare managed PostgreSQL pricing across AWS RDS, Azure Database for "
+                "PostgreSQL, GCP Cloud SQL, and OCI Database with PostgreSQL. Each "
+                "request specifies vCPUs, memory, and storage_gb; the tool picks the "
+                "cheapest matching SKU per cloud and totals compute + storage. v0.3 "
+                "preview — pricing is bundled placeholder data; verify against current "
+                "cloud pricing pages before relying on numbers."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "databases": {
+                        "type": "array",
+                        "items": _POSTGRES_ITEM_SCHEMA,
+                        "minItems": 1,
+                    }
+                },
+                "required": ["databases"],
             },
         ),
         Tool(
@@ -315,6 +355,23 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
     if name == "compare_storage_inventory":
         volumes = _build_storage_requests(arguments["volumes"])
         result = bulk_compare_storage(catalog, volumes)
+        return _ok({"as_of": catalog.as_of, **result})
+
+    if name == "compare_postgres_database":
+        items = arguments["databases"]
+        requests = [
+            PostgresRequest(
+                name=item["name"],
+                vcpus=int(item["vcpus"]),
+                memory_gb=float(item["memory_gb"]),
+                storage_gb=float(item.get("storage_gb", 0)),
+                quantity=int(item.get("quantity", 1)),
+                hours_per_month=int(item.get("hours_per_month", HOURS_PER_MONTH)),
+                tier=item.get("tier"),
+            )
+            for item in items
+        ]
+        result = compare_postgres(catalog, requests)
         return _ok({"as_of": catalog.as_of, **result})
 
     if name == "compare_workload":

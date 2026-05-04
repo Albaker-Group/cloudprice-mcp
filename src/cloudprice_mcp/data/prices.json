@@ -73,5 +73,23 @@
       { "sku": "pd-balanced", "disk_type": "ssd", "price_per_gb_month_usd": 0.10, "snapshot_per_gb_month_usd": 0.026 },
       { "sku": "pd-standard", "disk_type": "hdd", "price_per_gb_month_usd": 0.04, "snapshot_per_gb_month_usd": 0.026 }
     ]
+  },
+  "oci": {
+    "region": "us-ashburn-1",
+    "_notes": "Placeholder pricing — needs verification when OCI account is active. OCPU-based pricing converted to vCPU-equivalents: 1 OCPU = 2 vCPU on x86 shapes (E4.Flex). VM.Standard.E4.Flex is the workhorse general-purpose family.",
+    "instances": [
+      { "sku": "VM.Standard.E4.Flex.1OCPU",  "vcpus": 2,  "memory_gb": 8,    "hourly_usd": 0.037 },
+      { "sku": "VM.Standard.E4.Flex.2OCPU",  "vcpus": 4,  "memory_gb": 16,   "hourly_usd": 0.074 },
+      { "sku": "VM.Standard.E4.Flex.4OCPU",  "vcpus": 8,  "memory_gb": 32,   "hourly_usd": 0.148 },
+      { "sku": "VM.Standard.E4.Flex.8OCPU",  "vcpus": 16, "memory_gb": 64,   "hourly_usd": 0.296 },
+      { "sku": "VM.Standard.E4.Flex.16OCPU", "vcpus": 32, "memory_gb": 128,  "hourly_usd": 0.592 },
+      { "sku": "VM.Standard.A1.Flex.1OCPU",  "vcpus": 1,  "memory_gb": 6,    "hourly_usd": 0.01 },
+      { "sku": "VM.Standard.A1.Flex.2OCPU",  "vcpus": 2,  "memory_gb": 12,   "hourly_usd": 0.02 },
+      { "sku": "VM.Standard.A1.Flex.4OCPU",  "vcpus": 4,  "memory_gb": 24,   "hourly_usd": 0.04 }
+    ],
+    "storage": [
+      { "sku": "Block Volume Higher Performance", "disk_type": "ssd", "price_per_gb_month_usd": 0.0425, "snapshot_per_gb_month_usd": 0.0255 },
+      { "sku": "Block Volume Standard",           "disk_type": "hdd", "price_per_gb_month_usd": 0.0255, "snapshot_per_gb_month_usd": 0.0255 }
+    ]
   }
 }

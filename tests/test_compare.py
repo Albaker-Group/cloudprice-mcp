@@ -28,9 +28,10 @@ def test_best_match_meets_or_exceeds_spec():
 def test_compare_returns_one_per_cloud_sorted_by_price():
     catalog = load_catalog()
     matches = compare_all_clouds(catalog, vcpus=4, memory_gb=16)
-    assert len(matches) == 3
+    # 4 clouds active in v0.3: aws, azure, gcp, oci
+    assert len(matches) == 4
     clouds = {m.cloud for m in matches}
-    assert clouds == {"aws", "azure", "gcp"}
+    assert clouds == {"aws", "azure", "gcp", "oci"}
     prices = [m.instance.monthly_usd for m in matches]
     assert prices == sorted(prices)
 
