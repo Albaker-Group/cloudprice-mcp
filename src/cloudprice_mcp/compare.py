@@ -6,6 +6,8 @@ from .pricing import (
     Cloud,
     DiskType,
     Instance,
+    ObjectStorageSku,
+    ObjectStorageTier,
     PostgresSku,
     PriceCatalog,
     StorageSku,
@@ -385,6 +387,79 @@ def compare_postgres(
         per_cloud: dict[str, Any] = {}
         for cloud in CLOUDS:
             cost = _postgres_row_cost(catalog, cloud, req)
+            if cost is not None:
+                per_cloud[cloud] = cost
+                totals[cloud] += cost["row_monthly_total"]
+        rows.append({"request": req.to_dict(), "per_cloud": per_cloud})
+    return {"rows": rows, **_summarize(totals)}
+
+
+@dataclass(frozen=True)
+class ObjectStorageRequest:
+    name: str
+    capacity_gb: float
+    tier: ObjectStorageTier = "hot"
+    quantity: int = 1
+    tier_label: str | None = None  # optional grouping
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "tier_label": self.tier_label,
+            "capacity_gb": self.capacity_gb,
+            "tier": self.tier,
+            "quantity": self.quantity,
+        }
+
+
+def _best_object_storage_sku(
+    catalog: PriceCatalog, cloud: Cloud, tier: ObjectStorageTier, capacity_gb: float
+) -> ObjectStorageSku | None:
+    """Pick the cheapest SKU on this cloud that matches tier AND can serve capacity.
+    Always-Free SKUs (with capacity_gb_limit) only qualify if capacity_gb is within limit."""
+    candidates = [
+        sku for sku in catalog.object_storage_by_cloud(cloud)
+        if sku.tier == tier
+        and (sku.capacity_gb_limit is None or capacity_gb <= sku.capacity_gb_limit)
+    ]
+    if not candidates:
+        # Fall back to any tier match without the limit constraint
+        candidates = [
+            sku for sku in catalog.object_storage_by_cloud(cloud) if sku.tier == tier
+        ]
+    if not candidates:
+        return None
+    return min(candidates, key=lambda s: s.price_per_gb_month_usd)
+
+
+def _object_storage_row_cost(
+    catalog: PriceCatalog, cloud: Cloud, req: ObjectStorageRequest
+) -> dict[str, Any] | None:
+    sku = _best_object_storage_sku(catalog, cloud, req.tier, req.capacity_gb)
+    if sku is None:
+        return None
+    monthly_total = sku.monthly_cost(req.capacity_gb, req.quantity)
+    return {
+        "cloud": cloud,
+        "service": sku.service,
+        "sku": sku.sku,
+        "region": sku.region,
+        "tier": sku.tier,
+        "price_per_gb_month_usd": sku.price_per_gb_month_usd,
+        "row_monthly_total": monthly_total,
+        "is_free_tier": sku.capacity_gb_limit is not None,
+    }
+
+
+def compare_object_storage(
+    catalog: PriceCatalog, requests: list[ObjectStorageRequest]
+) -> dict[str, Any]:
+    rows: list[dict[str, Any]] = []
+    totals: dict[Cloud, float] = dict.fromkeys(CLOUDS, 0.0)
+    for req in requests:
+        per_cloud: dict[str, Any] = {}
+        for cloud in CLOUDS:
+            cost = _object_storage_row_cost(catalog, cloud, req)
             if cost is not None:
                 per_cloud[cloud] = cost
                 totals[cloud] += cost["row_monthly_total"]

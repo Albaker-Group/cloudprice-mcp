@@ -63,6 +63,36 @@ class StorageSku:
         }
 
 
+ObjectStorageTier = Literal["hot", "cool", "archive"]
+
+
+@dataclass(frozen=True)
+class ObjectStorageSku:
+    cloud: Cloud
+    service: str
+    sku: str
+    tier: ObjectStorageTier
+    price_per_gb_month_usd: float
+    region: str
+    capacity_gb_limit: float | None = None  # set on Always-Free SKUs (e.g., OCI 20 GB)
+
+    def monthly_cost(self, capacity_gb: float, quantity: int = 1) -> float:
+        return round(self.price_per_gb_month_usd * capacity_gb * quantity, 2)
+
+    def to_dict(self) -> dict:
+        out = {
+            "cloud": self.cloud,
+            "service": self.service,
+            "sku": self.sku,
+            "tier": self.tier,
+            "region": self.region,
+            "price_per_gb_month_usd": self.price_per_gb_month_usd,
+        }
+        if self.capacity_gb_limit is not None:
+            out["capacity_gb_limit"] = self.capacity_gb_limit
+        return out
+
+
 @dataclass(frozen=True)
 class PostgresSku:
     cloud: Cloud
@@ -99,6 +129,7 @@ class PriceCatalog:
     instances: tuple[Instance, ...]
     storage: tuple[StorageSku, ...]
     postgres: tuple[PostgresSku, ...] = ()
+    object_storage: tuple[ObjectStorageSku, ...] = ()
 
     def by_cloud(self, cloud: Cloud) -> tuple[Instance, ...]:
         return tuple(i for i in self.instances if i.cloud == cloud)
@@ -108,6 +139,9 @@ class PriceCatalog:
 
     def postgres_by_cloud(self, cloud: Cloud) -> tuple[PostgresSku, ...]:
         return tuple(p for p in self.postgres if p.cloud == cloud)
+
+    def object_storage_by_cloud(self, cloud: Cloud) -> tuple[ObjectStorageSku, ...]:
+        return tuple(o for o in self.object_storage if o.cloud == cloud)
 
     def find(self, cloud: Cloud, sku: str) -> Instance | None:
         sku_lower = sku.lower()
@@ -165,6 +199,7 @@ def load_catalog() -> PriceCatalog:
             )
 
     postgres = _load_postgres_catalog()
+    object_storage = _load_object_storage_catalog()
 
     _catalog = PriceCatalog(
         as_of=raw["as_of"],
@@ -172,6 +207,7 @@ def load_catalog() -> PriceCatalog:
         instances=tuple(instances),
         storage=tuple(storage),
         postgres=tuple(postgres),
+        object_storage=tuple(object_storage),
     )
     return _catalog
 
@@ -205,6 +241,41 @@ def _load_postgres_catalog() -> list[PostgresSku]:
                     hourly_usd=float(entry["hourly_usd"]),
                     storage_per_gb_month_usd=storage_rate,
                     region=region,
+                )
+            )
+    return out
+
+
+def _load_object_storage_catalog() -> list[ObjectStorageSku]:
+    """Load object storage pricing data. Optional file — if missing, returns []."""
+    try:
+        data_text = (
+            resources.files("cloudprice_mcp.data")
+            .joinpath("object_storage_prices.json")
+            .read_text()
+        )
+    except FileNotFoundError:
+        return []
+
+    raw = json.loads(data_text)
+    out: list[ObjectStorageSku] = []
+    for cloud in ("aws", "azure", "gcp", "oci"):
+        if cloud not in raw:
+            continue
+        block = raw[cloud]
+        service = block["service"]
+        region = block["region"]
+        for entry in block["tiers"]:
+            cap_limit = entry.get("capacity_gb_limit")
+            out.append(
+                ObjectStorageSku(
+                    cloud=cloud,
+                    service=service,
+                    sku=entry["sku"],
+                    tier=entry["tier"],
+                    price_per_gb_month_usd=float(entry["price_per_gb_month_usd"]),
+                    region=region,
+                    capacity_gb_limit=float(cap_limit) if cap_limit is not None else None,
                 )
             )
     return out

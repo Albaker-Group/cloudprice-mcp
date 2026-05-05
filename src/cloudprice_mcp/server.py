@@ -9,11 +9,13 @@ from mcp.types import TextContent, Tool
 from . import __version__
 from .compare import (
     ComputeRequest,
+    ObjectStorageRequest,
     PostgresRequest,
     StorageRequest,
     bulk_compare_compute,
     bulk_compare_storage,
     compare_all_clouds,
+    compare_object_storage,
     compare_postgres,
     compare_workload,
 )
@@ -47,6 +49,25 @@ _COMPUTE_ITEM_SCHEMA = {
     "required": ["name", "vcpus", "memory_gb"],
     "additionalProperties": False,
 }
+
+_OBJECT_STORAGE_ITEM_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "name": {"type": "string", "description": "Friendly label for this bucket/container, e.g. 'app-uploads'"},
+        "capacity_gb": {"type": "number", "minimum": 1},
+        "tier": {
+            "type": "string",
+            "enum": ["hot", "cool", "archive"],
+            "default": "hot",
+            "description": "Access tier: 'hot' = frequent (eg S3 Standard), 'cool' = infrequent, 'archive' = deep archive (eg Glacier)",
+        },
+        "quantity": {"type": "integer", "minimum": 1, "default": 1},
+        "tier_label": {"type": ["string", "null"], "description": "Optional grouping label"},
+    },
+    "required": ["name", "capacity_gb"],
+    "additionalProperties": False,
+}
+
 
 _POSTGRES_ITEM_SCHEMA = {
     "type": "object",
@@ -192,6 +213,29 @@ async def list_tools() -> list[Tool]:
                     "volumes": {
                         "type": "array",
                         "items": _STORAGE_ITEM_SCHEMA,
+                        "minItems": 1,
+                    }
+                },
+                "required": ["volumes"],
+            },
+        ),
+        Tool(
+            name="compare_object_storage",
+            description=(
+                "Compare object-storage pricing across AWS S3, Azure Blob, GCP Cloud "
+                "Storage, and OCI Object Storage. Each request specifies capacity_gb "
+                "and access tier (hot/cool/archive); the tool picks the cheapest SKU "
+                "per cloud at that tier. OCI offers 20 GB Always Free in the 'hot' "
+                "tier — surfaced when capacity fits. NOTE: egress, request, and "
+                "retrieval costs are not modeled (often the actual hidden killer). "
+                "v0.3 preview — placeholder pricing, verify before relying on numbers."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "volumes": {
+                        "type": "array",
+                        "items": _OBJECT_STORAGE_ITEM_SCHEMA,
                         "minItems": 1,
                     }
                 },
@@ -355,6 +399,21 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
     if name == "compare_storage_inventory":
         volumes = _build_storage_requests(arguments["volumes"])
         result = bulk_compare_storage(catalog, volumes)
+        return _ok({"as_of": catalog.as_of, **result})
+
+    if name == "compare_object_storage":
+        items = arguments["volumes"]
+        requests = [
+            ObjectStorageRequest(
+                name=item["name"],
+                capacity_gb=float(item["capacity_gb"]),
+                tier=item.get("tier", "hot"),
+                quantity=int(item.get("quantity", 1)),
+                tier_label=item.get("tier_label"),
+            )
+            for item in items
+        ]
+        result = compare_object_storage(catalog, requests)
         return _ok({"as_of": catalog.as_of, **result})
 
     if name == "compare_postgres_database":

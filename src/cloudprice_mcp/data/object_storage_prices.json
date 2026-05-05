@@ -1,0 +1,43 @@
+{
+  "as_of": "2026-05-04",
+  "currency": "USD",
+  "notes": "Object storage pricing per GB-month, single region. Three tiers normalized across clouds: 'hot' (frequent access, eg S3 Standard), 'cool' (infrequent access, eg S3 IA / Blob Cool), 'archive' (eg S3 Glacier Deep Archive / Blob Archive). EGRESS, REQUEST, and RETRIEVAL costs are NOT modeled — these are often the hidden killer in real-world bills. OCI Always Free includes 20 GB Object Storage perpetually; we represent this with an Always-Free SKU at $0/GB-mo with capacity_gb_limit=20.",
+  "aws": {
+    "service": "S3",
+    "region": "us-east-1",
+    "tiers": [
+      { "sku": "S3 Standard",                "tier": "hot",     "price_per_gb_month_usd": 0.023 },
+      { "sku": "S3 Standard-IA",             "tier": "cool",    "price_per_gb_month_usd": 0.0125 },
+      { "sku": "S3 Glacier Deep Archive",    "tier": "archive", "price_per_gb_month_usd": 0.00099 }
+    ]
+  },
+  "azure": {
+    "service": "Blob Storage",
+    "region": "eastus",
+    "tiers": [
+      { "sku": "Blob Hot (LRS)",     "tier": "hot",     "price_per_gb_month_usd": 0.018 },
+      { "sku": "Blob Cool (LRS)",    "tier": "cool",    "price_per_gb_month_usd": 0.01 },
+      { "sku": "Blob Archive (LRS)", "tier": "archive", "price_per_gb_month_usd": 0.00099 }
+    ]
+  },
+  "gcp": {
+    "service": "Cloud Storage",
+    "region": "us-east1",
+    "tiers": [
+      { "sku": "Standard",  "tier": "hot",     "price_per_gb_month_usd": 0.020 },
+      { "sku": "Nearline",  "tier": "cool",    "price_per_gb_month_usd": 0.010 },
+      { "sku": "Archive",   "tier": "archive", "price_per_gb_month_usd": 0.0012 }
+    ]
+  },
+  "oci": {
+    "service": "Object Storage",
+    "region": "us-ashburn-1",
+    "_notes": "Verified against Oracle Public Pricing API on 2026-05-04. OCI offers Always Free 20 GB perpetual; we expose that as a separate SKU. Beyond Always Free, paid Standard rate is $0.0255/GB-mo (sourced from Oracle pricing page; the public API shows $0 for the Always-Free SKU which is misleading without context).",
+    "tiers": [
+      { "sku": "Object Storage - Always Free (≤20 GB)", "tier": "hot",     "price_per_gb_month_usd": 0.0,    "capacity_gb_limit": 20 },
+      { "sku": "Object Storage Standard",                "tier": "hot",     "price_per_gb_month_usd": 0.0255 },
+      { "sku": "Object Storage Infrequent Access",       "tier": "cool",    "price_per_gb_month_usd": 0.01 },
+      { "sku": "Archive Storage",                        "tier": "archive", "price_per_gb_month_usd": 0.0026 }
+    ]
+  }
+}
