@@ -1,0 +1,65 @@
+{
+  "as_of": "2026-05-04",
+  "currency": "USD",
+  "notes": "Managed PostgreSQL on-demand pricing (single-AZ baseline, no HA multiplier). Storage priced separately, per GB-month. Prices are placeholder estimates and need verification against current cloud pricing pages before v0.3 ships. AWS RDS uses db.* SKUs. Azure uses Flexible Server tiers. GCP Cloud SQL uses predefined db-* machine types. OCI uses managed PostgreSQL with OCPU-based pricing (1 OCPU = 2 vCPU on x86).",
+  "aws": {
+    "service": "RDS for PostgreSQL",
+    "region": "us-east-1",
+    "instances": [
+      { "sku": "db.t3.micro",   "vcpus": 2, "memory_gb": 1,   "hourly_usd": 0.018 },
+      { "sku": "db.t3.small",   "vcpus": 2, "memory_gb": 2,   "hourly_usd": 0.034 },
+      { "sku": "db.t3.medium",  "vcpus": 2, "memory_gb": 4,   "hourly_usd": 0.068 },
+      { "sku": "db.t3.large",   "vcpus": 2, "memory_gb": 8,   "hourly_usd": 0.136 },
+      { "sku": "db.m5.large",   "vcpus": 2, "memory_gb": 8,   "hourly_usd": 0.171 },
+      { "sku": "db.m5.xlarge",  "vcpus": 4, "memory_gb": 16,  "hourly_usd": 0.342 },
+      { "sku": "db.m5.2xlarge", "vcpus": 8, "memory_gb": 32,  "hourly_usd": 0.684 },
+      { "sku": "db.r5.large",   "vcpus": 2, "memory_gb": 16,  "hourly_usd": 0.250 },
+      { "sku": "db.r5.xlarge",  "vcpus": 4, "memory_gb": 32,  "hourly_usd": 0.500 },
+      { "sku": "db.r5.2xlarge", "vcpus": 8, "memory_gb": 64,  "hourly_usd": 1.000 }
+    ],
+    "storage_per_gb_month_usd": 0.115
+  },
+  "azure": {
+    "service": "Database for PostgreSQL Flexible Server",
+    "region": "eastus",
+    "instances": [
+      { "sku": "B1ms",       "vcpus": 1, "memory_gb": 2,   "hourly_usd": 0.0254 },
+      { "sku": "B2s",        "vcpus": 2, "memory_gb": 4,   "hourly_usd": 0.0508 },
+      { "sku": "B2ms",       "vcpus": 2, "memory_gb": 8,   "hourly_usd": 0.1015 },
+      { "sku": "D2ds_v5",    "vcpus": 2, "memory_gb": 8,   "hourly_usd": 0.1542 },
+      { "sku": "D4ds_v5",    "vcpus": 4, "memory_gb": 16,  "hourly_usd": 0.3083 },
+      { "sku": "D8ds_v5",    "vcpus": 8, "memory_gb": 32,  "hourly_usd": 0.6167 },
+      { "sku": "E4ds_v5",    "vcpus": 4, "memory_gb": 32,  "hourly_usd": 0.4042 },
+      { "sku": "E8ds_v5",    "vcpus": 8, "memory_gb": 64,  "hourly_usd": 0.8083 }
+    ],
+    "storage_per_gb_month_usd": 0.115
+  },
+  "gcp": {
+    "service": "Cloud SQL for PostgreSQL",
+    "region": "us-east1",
+    "instances": [
+      { "sku": "db-f1-micro",         "vcpus": 1, "memory_gb": 0.6,  "hourly_usd": 0.015 },
+      { "sku": "db-g1-small",         "vcpus": 1, "memory_gb": 1.7,  "hourly_usd": 0.035 },
+      { "sku": "db-n1-standard-1",    "vcpus": 1, "memory_gb": 3.75, "hourly_usd": 0.0413 },
+      { "sku": "db-n1-standard-2",    "vcpus": 2, "memory_gb": 7.5,  "hourly_usd": 0.0826 },
+      { "sku": "db-n1-standard-4",    "vcpus": 4, "memory_gb": 15,   "hourly_usd": 0.1652 },
+      { "sku": "db-n1-standard-8",    "vcpus": 8, "memory_gb": 30,   "hourly_usd": 0.3304 },
+      { "sku": "db-n1-highmem-2",     "vcpus": 2, "memory_gb": 13,   "hourly_usd": 0.1112 },
+      { "sku": "db-n1-highmem-4",     "vcpus": 4, "memory_gb": 26,   "hourly_usd": 0.2224 },
+      { "sku": "db-n1-highmem-8",     "vcpus": 8, "memory_gb": 52,   "hourly_usd": 0.4448 }
+    ],
+    "storage_per_gb_month_usd": 0.17
+  },
+  "oci": {
+    "service": "Database with PostgreSQL",
+    "region": "us-ashburn-1",
+    "_notes": "Verified against Oracle Public Pricing API on 2026-05-04. SKU 'Database with PostgreSQL - X86' bills at $0.359954/OCPU-hour. Memory cost may be additional (separate SKU not visible in public API as of verification date). These rates are conservative — actual bill could be 10-30% higher once memory + extra storage tiers factor in. Storage charged at standard Block Volume rate.",
+    "instances": [
+      { "sku": "OCI.Postgres.1OCPU",   "vcpus": 2,  "memory_gb": 8,    "hourly_usd": 0.360 },
+      { "sku": "OCI.Postgres.2OCPU",   "vcpus": 4,  "memory_gb": 16,   "hourly_usd": 0.720 },
+      { "sku": "OCI.Postgres.4OCPU",   "vcpus": 8,  "memory_gb": 32,   "hourly_usd": 1.440 },
+      { "sku": "OCI.Postgres.8OCPU",   "vcpus": 16, "memory_gb": 64,   "hourly_usd": 2.880 }
+    ],
+    "storage_per_gb_month_usd": 0.0937
+  }
+}

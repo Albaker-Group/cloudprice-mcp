@@ -9,10 +9,14 @@ from mcp.types import TextContent, Tool
 from . import __version__
 from .compare import (
     ComputeRequest,
+    ObjectStorageRequest,
+    PostgresRequest,
     StorageRequest,
     bulk_compare_compute,
     bulk_compare_storage,
     compare_all_clouds,
+    compare_object_storage,
+    compare_postgres,
     compare_workload,
 )
 from .pricing import HOURS_PER_MONTH, Cloud, load_catalog
@@ -46,6 +50,41 @@ _COMPUTE_ITEM_SCHEMA = {
     "additionalProperties": False,
 }
 
+_OBJECT_STORAGE_ITEM_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "name": {"type": "string", "description": "Friendly label for this bucket/container, e.g. 'app-uploads'"},
+        "capacity_gb": {"type": "number", "minimum": 1},
+        "tier": {
+            "type": "string",
+            "enum": ["hot", "cool", "archive"],
+            "default": "hot",
+            "description": "Access tier: 'hot' = frequent (eg S3 Standard), 'cool' = infrequent, 'archive' = deep archive (eg Glacier)",
+        },
+        "quantity": {"type": "integer", "minimum": 1, "default": 1},
+        "tier_label": {"type": ["string", "null"], "description": "Optional grouping label"},
+    },
+    "required": ["name", "capacity_gb"],
+    "additionalProperties": False,
+}
+
+
+_POSTGRES_ITEM_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "name": {"type": "string", "description": "Friendly label for this database, e.g. 'orders-prod'"},
+        "vcpus": {"type": "integer", "minimum": 1},
+        "memory_gb": {"type": "number", "minimum": 0.5},
+        "storage_gb": {"type": "number", "minimum": 0, "default": 0, "description": "Persistent storage size in GB"},
+        "quantity": {"type": "integer", "minimum": 1, "default": 1},
+        "hours_per_month": {"type": "integer", "minimum": 1, "default": HOURS_PER_MONTH},
+        "tier": {"type": ["string", "null"], "description": "Optional grouping label (e.g. Prod/Stage/Dev)"},
+    },
+    "required": ["name", "vcpus", "memory_gb"],
+    "additionalProperties": False,
+}
+
+
 _STORAGE_ITEM_SCHEMA = {
     "type": "object",
     "properties": {
@@ -72,7 +111,8 @@ async def list_tools() -> list[Tool]:
             description=(
                 "Look up the on-demand Linux hourly + monthly price for an AWS EC2 "
                 "instance type in us-east-1. Returns vCPUs, memory, hourly USD, and "
-                "monthly USD (730 hours)."
+                "monthly USD (730 hours). For multi-cloud comparisons including OCI, "
+                "Azure, and GCP, use compare_clouds instead."
             ),
             inputSchema={
                 "type": "object",
@@ -123,10 +163,12 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="compare_clouds",
             description=(
-                "Find the cheapest equivalent VM across AWS, Azure, and GCP for a "
-                "single target spec (vCPUs and memory). Returns the best-fit SKU per "
-                "cloud sorted by monthly cost, plus the absolute and percent savings "
-                "of the cheapest vs the most expensive option."
+                "Find the cheapest equivalent VM across AWS, Azure, GCP, and OCI for "
+                "a single target spec (vCPUs and memory). Returns the best-fit SKU "
+                "per cloud sorted by monthly cost, plus the absolute and percent "
+                "savings of the cheapest vs the most expensive option. OCI A1 Always "
+                "Free is included — for specs that fit within 4 OCPU + 24 GB Arm, "
+                "OCI returns $0/mo (real perpetual free tier, not a quirk)."
             ),
             inputSchema={
                 "type": "object",
@@ -140,9 +182,9 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="compare_compute_inventory",
             description=(
-                "Bulk-compare a list of compute workloads across AWS, Azure, and GCP. "
-                "Each row is independently sized to the cheapest VM that meets its "
-                "vCPU/memory spec on each cloud, multiplied by quantity and "
+                "Bulk-compare a list of compute workloads across AWS, Azure, GCP, and "
+                "OCI. Each row is independently sized to the cheapest VM that meets "
+                "its vCPU/memory spec on each cloud, multiplied by quantity and "
                 "hours_per_month. Optional os_disk_gb adds attached storage cost. "
                 "Returns per-row matches, per-cloud totals, and the cheapest cloud "
                 "overall. Useful for sizing-sheet style inputs."
@@ -162,11 +204,12 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="compare_storage_inventory",
             description=(
-                "Bulk-compare a list of storage volumes across AWS, Azure, and GCP. "
-                "Each row picks the cheapest SKU matching its disk_type (ssd or hdd) "
-                "on each cloud, then prices it at capacity_gb × quantity. Returns "
-                "per-row matches, per-cloud totals, and cheapest cloud. IOPS, "
-                "throughput, and snapshots are accepted but not priced in v0.2."
+                "Bulk-compare a list of block-storage volumes across AWS, Azure, GCP, "
+                "and OCI. Each row picks the cheapest SKU matching its disk_type "
+                "(ssd or hdd) on each cloud, then prices it at capacity_gb × quantity. "
+                "Returns per-row matches, per-cloud totals, and cheapest cloud. IOPS "
+                "and throughput are accepted but not used for SKU matching. Snapshot "
+                "pricing is upper-bound (real-world incremental snapshots cost less)."
             ),
             inputSchema={
                 "type": "object",
@@ -181,16 +224,62 @@ async def list_tools() -> list[Tool]:
             },
         ),
         Tool(
+            name="compare_object_storage",
+            description=(
+                "Compare object-storage pricing across AWS S3, Azure Blob, GCP Cloud "
+                "Storage, and OCI Object Storage. Each request specifies capacity_gb "
+                "and access tier (hot/cool/archive); the tool picks the cheapest SKU "
+                "per cloud at that tier. OCI offers 20 GB Always Free in the 'hot' "
+                "tier — surfaced when capacity fits. NOTE: egress, request, and "
+                "retrieval costs are not modeled (often the actual hidden killer). "
+                "v0.3 preview — placeholder pricing, verify before relying on numbers."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "volumes": {
+                        "type": "array",
+                        "items": _OBJECT_STORAGE_ITEM_SCHEMA,
+                        "minItems": 1,
+                    }
+                },
+                "required": ["volumes"],
+            },
+        ),
+        Tool(
+            name="compare_postgres_database",
+            description=(
+                "Compare managed PostgreSQL pricing across AWS RDS, Azure Database for "
+                "PostgreSQL, GCP Cloud SQL, and OCI Database with PostgreSQL. Each "
+                "request specifies vCPUs, memory, and storage_gb; the tool picks the "
+                "cheapest matching SKU per cloud and totals compute + storage. v0.3 "
+                "preview — pricing is bundled placeholder data; verify against current "
+                "cloud pricing pages before relying on numbers."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "databases": {
+                        "type": "array",
+                        "items": _POSTGRES_ITEM_SCHEMA,
+                        "minItems": 1,
+                    }
+                },
+                "required": ["databases"],
+            },
+        ),
+        Tool(
             name="compare_workload",
             description=(
-                "Combined compute + storage compare across AWS, Azure, and GCP. "
-                "Pass a compute list and a storage list (either may be empty). "
-                "Returns nested per-row breakdowns plus combined per-cloud totals "
-                "and the overall cheapest cloud. Mirrors the structure of a "
-                "two-sheet sizing workbook (compute BoM + storage BoM). "
-                "Optional `commitment` parameter estimates 1-year or 3-year "
-                "Reserved Instance / Savings Plan / Committed Use discount on "
-                "compute (storage stays at on-demand)."
+                "Combined compute + block-storage compare across AWS, Azure, GCP, "
+                "and OCI. Pass a compute list and a storage list (either may be "
+                "empty). Returns nested per-row breakdowns plus combined per-cloud "
+                "totals and the overall cheapest cloud. Mirrors the structure of a "
+                "two-sheet sizing workbook (compute BoM + storage BoM). Optional "
+                "`commitment` parameter estimates 1-year or 3-year Reserved Instance "
+                "/ Savings Plan / Committed Use discount on compute (storage stays "
+                "at on-demand). For object storage, use compare_object_storage. "
+                "For managed databases, use compare_postgres_database."
             ),
             inputSchema={
                 "type": "object",
@@ -315,6 +404,38 @@ async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
     if name == "compare_storage_inventory":
         volumes = _build_storage_requests(arguments["volumes"])
         result = bulk_compare_storage(catalog, volumes)
+        return _ok({"as_of": catalog.as_of, **result})
+
+    if name == "compare_object_storage":
+        items = arguments["volumes"]
+        requests = [
+            ObjectStorageRequest(
+                name=item["name"],
+                capacity_gb=float(item["capacity_gb"]),
+                tier=item.get("tier", "hot"),
+                quantity=int(item.get("quantity", 1)),
+                tier_label=item.get("tier_label"),
+            )
+            for item in items
+        ]
+        result = compare_object_storage(catalog, requests)
+        return _ok({"as_of": catalog.as_of, **result})
+
+    if name == "compare_postgres_database":
+        items = arguments["databases"]
+        requests = [
+            PostgresRequest(
+                name=item["name"],
+                vcpus=int(item["vcpus"]),
+                memory_gb=float(item["memory_gb"]),
+                storage_gb=float(item.get("storage_gb", 0)),
+                quantity=int(item.get("quantity", 1)),
+                hours_per_month=int(item.get("hours_per_month", HOURS_PER_MONTH)),
+                tier=item.get("tier"),
+            )
+            for item in items
+        ]
+        result = compare_postgres(catalog, requests)
         return _ok({"as_of": catalog.as_of, **result})
 
     if name == "compare_workload":
