@@ -111,7 +111,8 @@ async def list_tools() -> list[Tool]:
             description=(
                 "Look up the on-demand Linux hourly + monthly price for an AWS EC2 "
                 "instance type in us-east-1. Returns vCPUs, memory, hourly USD, and "
-                "monthly USD (730 hours)."
+                "monthly USD (730 hours). For multi-cloud comparisons including OCI, "
+                "Azure, and GCP, use compare_clouds instead."
             ),
             inputSchema={
                 "type": "object",
@@ -162,10 +163,12 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="compare_clouds",
             description=(
-                "Find the cheapest equivalent VM across AWS, Azure, and GCP for a "
-                "single target spec (vCPUs and memory). Returns the best-fit SKU per "
-                "cloud sorted by monthly cost, plus the absolute and percent savings "
-                "of the cheapest vs the most expensive option."
+                "Find the cheapest equivalent VM across AWS, Azure, GCP, and OCI for "
+                "a single target spec (vCPUs and memory). Returns the best-fit SKU "
+                "per cloud sorted by monthly cost, plus the absolute and percent "
+                "savings of the cheapest vs the most expensive option. OCI A1 Always "
+                "Free is included — for specs that fit within 4 OCPU + 24 GB Arm, "
+                "OCI returns $0/mo (real perpetual free tier, not a quirk)."
             ),
             inputSchema={
                 "type": "object",
@@ -179,9 +182,9 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="compare_compute_inventory",
             description=(
-                "Bulk-compare a list of compute workloads across AWS, Azure, and GCP. "
-                "Each row is independently sized to the cheapest VM that meets its "
-                "vCPU/memory spec on each cloud, multiplied by quantity and "
+                "Bulk-compare a list of compute workloads across AWS, Azure, GCP, and "
+                "OCI. Each row is independently sized to the cheapest VM that meets "
+                "its vCPU/memory spec on each cloud, multiplied by quantity and "
                 "hours_per_month. Optional os_disk_gb adds attached storage cost. "
                 "Returns per-row matches, per-cloud totals, and the cheapest cloud "
                 "overall. Useful for sizing-sheet style inputs."
@@ -201,11 +204,12 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="compare_storage_inventory",
             description=(
-                "Bulk-compare a list of storage volumes across AWS, Azure, and GCP. "
-                "Each row picks the cheapest SKU matching its disk_type (ssd or hdd) "
-                "on each cloud, then prices it at capacity_gb × quantity. Returns "
-                "per-row matches, per-cloud totals, and cheapest cloud. IOPS, "
-                "throughput, and snapshots are accepted but not priced in v0.2."
+                "Bulk-compare a list of block-storage volumes across AWS, Azure, GCP, "
+                "and OCI. Each row picks the cheapest SKU matching its disk_type "
+                "(ssd or hdd) on each cloud, then prices it at capacity_gb × quantity. "
+                "Returns per-row matches, per-cloud totals, and cheapest cloud. IOPS "
+                "and throughput are accepted but not used for SKU matching. Snapshot "
+                "pricing is upper-bound (real-world incremental snapshots cost less)."
             ),
             inputSchema={
                 "type": "object",
@@ -267,14 +271,15 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="compare_workload",
             description=(
-                "Combined compute + storage compare across AWS, Azure, and GCP. "
-                "Pass a compute list and a storage list (either may be empty). "
-                "Returns nested per-row breakdowns plus combined per-cloud totals "
-                "and the overall cheapest cloud. Mirrors the structure of a "
-                "two-sheet sizing workbook (compute BoM + storage BoM). "
-                "Optional `commitment` parameter estimates 1-year or 3-year "
-                "Reserved Instance / Savings Plan / Committed Use discount on "
-                "compute (storage stays at on-demand)."
+                "Combined compute + block-storage compare across AWS, Azure, GCP, "
+                "and OCI. Pass a compute list and a storage list (either may be "
+                "empty). Returns nested per-row breakdowns plus combined per-cloud "
+                "totals and the overall cheapest cloud. Mirrors the structure of a "
+                "two-sheet sizing workbook (compute BoM + storage BoM). Optional "
+                "`commitment` parameter estimates 1-year or 3-year Reserved Instance "
+                "/ Savings Plan / Committed Use discount on compute (storage stays "
+                "at on-demand). For object storage, use compare_object_storage. "
+                "For managed databases, use compare_postgres_database."
             ),
             inputSchema={
                 "type": "object",

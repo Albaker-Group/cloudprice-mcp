@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![alialbaker/cloudprice-mcp MCP server](https://glama.ai/mcp/servers/alialbaker/cloudprice-mcp/badges/score.svg)](https://glama.ai/mcp/servers/alialbaker/cloudprice-mcp)
 
-An MCP server that lets Claude (or any MCP-compatible client) compare on-demand **compute + storage** pricing across **AWS, Azure, and GCP** in real time.
+An MCP server that lets Claude (or any MCP-compatible client) compare on-demand **compute + block storage + object storage + managed Postgres** pricing across **AWS, Azure, GCP, and OCI** in real time. **9 tools.** OCI Always Free tier surfaced explicitly.
 
 ![demo](demo.gif)
 
@@ -56,7 +56,7 @@ Add:
 }
 ```
 
-Restart Claude Desktop. The seven tools below will show up as available.
+Restart Claude Desktop. The nine tools below will show up as available.
 
 ## Tools exposed
 
@@ -67,15 +67,22 @@ Restart Claude Desktop. The seven tools below will show up as available.
 | `get_aws_price` | Look up an EC2 instance type → vCPUs, memory, hourly + monthly USD (us-east-1) |
 | `get_azure_price` | Look up an Azure VM size → vCPUs, memory, hourly + monthly USD (eastus) |
 | `get_gcp_price` | Look up a GCP Compute Engine machine type → vCPUs, memory, hourly + monthly USD (us-east1) |
-| `compare_clouds` | Given a target spec (vCPUs + GB), return the cheapest matching SKU on each cloud, sorted by monthly cost, with savings summary |
+| `compare_clouds` | Given a target spec (vCPUs + GB), return the cheapest matching SKU across **AWS / Azure / GCP / OCI**, sorted by monthly cost, with savings summary |
 
 ### Bulk + workload compare (v0.2)
 
 | Tool | What it does |
 |---|---|
-| `compare_compute_inventory` | Bulk-compare a list of compute workloads (each with vCPUs / memory / quantity / hours / optional OS disk). Returns per-row matches, per-cloud totals, and the cheapest cloud overall. |
-| `compare_storage_inventory` | Bulk-compare a list of storage volumes (each with capacity / disk type / quantity). Returns per-row matches, per-cloud totals, and cheapest cloud. |
-| `compare_workload` | Combined compute + storage in one call. Mirrors a two-sheet sizing workbook (compute BoM + storage BoM). Returns nested per-section breakdowns plus combined per-cloud totals. |
+| `compare_compute_inventory` | Bulk-compare a list of compute workloads (each with vCPUs / memory / quantity / hours / optional OS disk) across all 4 clouds. Returns per-row matches, per-cloud totals, cheapest cloud. |
+| `compare_storage_inventory` | Bulk-compare a list of block-storage volumes (each with capacity / disk type / quantity) across all 4 clouds. |
+| `compare_workload` | Combined compute + block storage in one call. Mirrors a two-sheet sizing workbook (compute BoM + storage BoM). Optional `commitment` overlay applies 1-year (30%) or 3-year (50%) compute discount. |
+
+### Object storage + managed Postgres (v0.3, NEW)
+
+| Tool | What it does |
+|---|---|
+| `compare_object_storage` | Bulk-compare object-storage buckets across **AWS S3 / Azure Blob / GCP Cloud Storage / OCI Object Storage**. Each row specifies capacity_gb + tier (`hot` / `cool` / `archive`). **OCI Always Free 20 GB tier surfaced explicitly** — capacity ≤ 20 GB on OCI hot tier returns $0/mo. |
+| `compare_postgres_database` | Bulk-compare managed PostgreSQL pricing across **AWS RDS / Azure Database for PostgreSQL / GCP Cloud SQL / OCI Database with PostgreSQL**. Each row specifies vCPUs / memory / storage_gb. Storage cost is calculated separately from compute. |
 
 ### Example: compare_workload input shape
 
@@ -115,9 +122,26 @@ Storage and snapshots are not discounted (most clouds don't offer meaningful sto
 
 ## Pricing data
 
-Prices are bundled as a curated dataset of common SKUs per cloud — VMs (≈45 SKUs across 3 clouds) and block storage (SSD + HDD per cloud) — sourced from the public AWS / Azure / GCP price lists. Each response includes an `as_of` date so you know how fresh the data is.
+Prices are bundled as a curated dataset of common SKUs across **4 clouds**:
+- **Compute** (~50 VM SKUs across AWS / Azure / GCP / OCI, including OCI A1 Always Free + A2 Arm Ampere + E5 Flex)
+- **Block storage** (SSD + HDD per cloud)
+- **Object storage** (Hot / Cool / Archive tiers per cloud, including OCI Always Free 20 GB)
+- **Managed PostgreSQL** (RDS / Azure DB / Cloud SQL / OCI Database with PostgreSQL)
 
-**A future release will add a live mode** that fetches prices directly from each cloud's public pricing API:
+OCI pricing is verified against [Oracle's public pricing API](https://apexapps.oracle.com/pls/apex/cetools/api/v1/products/). Each response includes an `as_of` date so you know how fresh the data is.
+
+### What's NOT modeled (real-world TCO killers)
+- **Egress / data transfer** (often the actual hidden cost — especially for object storage)
+- **Multi-AZ / HA replicas** (production usually doubles compute cost)
+- **Reserved/Savings Plan SKU detail** (we apply a flat tier discount, not per-region/per-family detail)
+- **IOPS-based storage matching** (capacity-only)
+- **Backup storage charges** (some clouds free, others billed)
+- **Request costs** (PUT/GET pricing for object storage)
+- **Retrieval costs** for archive tiers (Glacier-style retrieval can be 10× the storage cost)
+
+These are tracked roadmap items. **Use cloudprice-mcp for the on-demand list-price baseline; do final TCO analysis with each cloud's own calculator before relying on numbers for big decisions.**
+
+**Live API mode is on the roadmap** (issue #1) — would fetch prices directly from each cloud's public pricing API:
 - AWS: [Price List Bulk API](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/price-changes.html)
 - Azure: [Retail Prices API](https://learn.microsoft.com/en-us/rest/api/cost-management/retail-prices/azure-retail-prices)
 - GCP: [Cloud Billing Catalog API](https://cloud.google.com/billing/docs/reference/rest/v1/services.skus)
@@ -152,4 +176,4 @@ MIT — see [LICENSE](LICENSE).
 
 ## Credits
 
-Built by [Ali Albaker](https://albaker.info), Cloud Architect — runs a live three-cloud portfolio at ~$1.80/month across AWS, Azure, and GCP.
+Built by [Ali Albaker](https://cloud.albaker.info), multi-cloud architect — runs a live three-cloud portfolio at ~$1.80/month across AWS, Azure, and GCP, with OCI joining as the 4th cloud in 2026.
