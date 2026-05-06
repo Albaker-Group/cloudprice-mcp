@@ -9,12 +9,14 @@ from mcp.types import TextContent, Tool
 from . import __version__
 from .compare import (
     ComputeRequest,
+    EgressRequest,
     ObjectStorageRequest,
     PostgresRequest,
     StorageRequest,
     bulk_compare_compute,
     bulk_compare_storage,
     compare_all_clouds,
+    compare_egress,
     compare_object_storage,
     compare_postgres,
     compare_workload,
@@ -45,10 +47,32 @@ _COMPUTE_ITEM_SCHEMA = {
             "type": "integer", "minimum": 0, "default": 0,
             "description": "Number of OS-disk snapshots retained. Each priced at the cloud's snapshot per-GB rate × disk size × instance quantity.",
         },
+        "os_disk_snapshot_incremental_factor": {
+            "type": "number", "minimum": 0, "maximum": 1, "default": 1.0,
+            "description": "Multiplier on OS-disk snapshot upper-bound cost. 1.0 = full, 0.3 = typical incremental, 0.0 = exclude. Defaults to 1.0.",
+        },
     },
     "required": ["name", "vcpus", "memory_gb"],
     "additionalProperties": False,
 }
+
+_EGRESS_ITEM_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "name": {"type": "string", "description": "Friendly label, e.g. 'api-egress' or 'cdn-bandwidth'"},
+        "gb_per_month": {"type": "number", "minimum": 0, "description": "Data transfer volume in GB/month"},
+        "direction": {
+            "type": "string",
+            "enum": ["out_to_internet", "inter_region"],
+            "default": "out_to_internet",
+            "description": "out_to_internet: outbound to public internet (honors free tier — AWS/Azure 100 GB, OCI 10 TB). inter_region: cross-region transfer within the same cloud (no free tier, flat rate ~$0.02/GB on hyperscalers, $0.0085 on OCI).",
+        },
+        "tier_label": {"type": ["string", "null"]},
+    },
+    "required": ["name", "gb_per_month"],
+    "additionalProperties": False,
+}
+
 
 _OBJECT_STORAGE_ITEM_SCHEMA = {
     "type": "object",
@@ -97,6 +121,13 @@ _STORAGE_ITEM_SCHEMA = {
         "iops": {"type": ["integer", "null"], "minimum": 0, "description": "Carried as metadata; not used for SKU matching in v0.2"},
         "throughput_mbs": {"type": ["number", "null"], "minimum": 0, "description": "Carried as metadata; not used for SKU matching in v0.2"},
         "snapshot_count": {"type": "integer", "minimum": 0, "default": 0, "description": "Number of snapshots retained. Priced at the cloud's snapshot per-GB rate × capacity × volume quantity."},
+        "snapshot_incremental_factor": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 1.0,
+            "description": "Multiplier on the upper-bound snapshot cost. 1.0 = full upper-bound (each snapshot full capacity). 0.3 = typical real-world incremental dedup (~30%). 0.0 = exclude snapshots from total. Defaults to 1.0 for backward compatibility.",
+        },
     },
     "required": ["name", "capacity_gb"],
     "additionalProperties": False,
@@ -224,6 +255,29 @@ async def list_tools() -> list[Tool]:
             },
         ),
         Tool(
+            name="compare_egress",
+            description=(
+                "Compare data-transfer costs across AWS, Azure, GCP, and OCI for a "
+                "given monthly volume. Two directions supported: 'out_to_internet' "
+                "(tiered pricing with free-tier credits — AWS/Azure 100 GB, OCI 10 TB "
+                "free) and 'inter_region' (flat rate for cross-region transfer within "
+                "the same cloud). At 50 TB/mo of internet egress OCI is ~12× cheaper "
+                "than the hyperscalers — a real competitive moat for content/CDN "
+                "workloads. VPC peering is NOT yet modeled."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "transfers": {
+                        "type": "array",
+                        "items": _EGRESS_ITEM_SCHEMA,
+                        "minItems": 1,
+                    }
+                },
+                "required": ["transfers"],
+            },
+        ),
+        Tool(
             name="compare_object_storage",
             description=(
                 "Compare object-storage pricing across AWS S3, Azure Blob, GCP Cloud "
@@ -300,6 +354,11 @@ async def list_tools() -> list[Tool]:
                         "default": "none",
                         "description": "Compute commitment tier. 'none' = on-demand only. '1yr_no_upfront' applies a representative 30% compute discount. '3yr_partial_upfront' applies 50%. Storage and snapshots are not discounted.",
                     },
+                    "multi_az": {
+                        "type": "boolean",
+                        "default": False,
+                        "description": "If true, double compute cost on every cloud to model Multi-AZ / HA deployments (sync replicas across two zones). Storage stays at 1x because object/block storage is usually cross-AZ at base price already.",
+                    },
                 },
             },
         ),
@@ -338,6 +397,9 @@ def _build_compute_requests(items: list[dict[str, Any]]) -> list[ComputeRequest]
             os_disk_gb=float(item["os_disk_gb"]) if item.get("os_disk_gb") else None,
             os_disk_type=item.get("os_disk_type", "ssd"),
             os_disk_snapshot_count=int(item.get("os_disk_snapshot_count", 0)),
+            os_disk_snapshot_incremental_factor=float(
+                item.get("os_disk_snapshot_incremental_factor", 1.0)
+            ),
         )
         for item in items
     ]
@@ -355,99 +417,142 @@ def _build_storage_requests(items: list[dict[str, Any]]) -> list[StorageRequest]
             iops=int(item["iops"]) if item.get("iops") is not None else None,
             throughput_mbs=float(item["throughput_mbs"]) if item.get("throughput_mbs") is not None else None,
             snapshot_count=int(item.get("snapshot_count", 0)),
+            snapshot_incremental_factor=float(item.get("snapshot_incremental_factor", 1.0)),
         )
         for item in items
     ]
 
 
+# --- Per-tool handlers — keeps call_tool simple via a dispatch table ---
+
+
+def _handle_get_aws_price(catalog, args):  # noqa: ARG001 (catalog passed for uniformity)
+    return _lookup("aws", "instance_type", args["instance_type"])
+
+
+def _handle_get_azure_price(catalog, args):  # noqa: ARG001
+    return _lookup("azure", "vm_size", args["vm_size"])
+
+
+def _handle_get_gcp_price(catalog, args):  # noqa: ARG001
+    return _lookup("gcp", "machine_type", args["machine_type"])
+
+
+def _handle_compare_clouds(catalog, args):
+    vcpus = int(args["vcpus"])
+    memory_gb = float(args["memory_gb"])
+    matches = compare_all_clouds(catalog, vcpus, memory_gb)
+    if not matches:
+        return _err("No matches found in catalog.")
+    cheapest = matches[0]
+    priciest = matches[-1]
+    spread = priciest.instance.monthly_usd - cheapest.instance.monthly_usd
+    pct = (spread / priciest.instance.monthly_usd * 100) if priciest.instance.monthly_usd else 0
+    return _ok(
+        {
+            "as_of": catalog.as_of,
+            "request": {"vcpus": vcpus, "memory_gb": memory_gb},
+            "matches": [m.to_dict() for m in matches],
+            "summary": {
+                "cheapest_cloud": cheapest.cloud,
+                "monthly_savings_usd": round(spread, 2),
+                "monthly_savings_pct": round(pct, 1),
+            },
+        }
+    )
+
+
+def _handle_compare_compute_inventory(catalog, args):
+    workloads = _build_compute_requests(args["workloads"])
+    result = bulk_compare_compute(catalog, workloads)
+    return _ok({"as_of": catalog.as_of, **result})
+
+
+def _handle_compare_storage_inventory(catalog, args):
+    volumes = _build_storage_requests(args["volumes"])
+    result = bulk_compare_storage(catalog, volumes)
+    return _ok({"as_of": catalog.as_of, **result})
+
+
+def _handle_compare_egress(catalog, args):
+    requests = [
+        EgressRequest(
+            name=item["name"],
+            gb_per_month=float(item["gb_per_month"]),
+            direction=item.get("direction", "out_to_internet"),
+            tier_label=item.get("tier_label"),
+        )
+        for item in args["transfers"]
+    ]
+    result = compare_egress(catalog, requests)
+    return _ok({"as_of": catalog.as_of, **result})
+
+
+def _handle_compare_object_storage(catalog, args):
+    requests = [
+        ObjectStorageRequest(
+            name=item["name"],
+            capacity_gb=float(item["capacity_gb"]),
+            tier=item.get("tier", "hot"),
+            quantity=int(item.get("quantity", 1)),
+            tier_label=item.get("tier_label"),
+        )
+        for item in args["volumes"]
+    ]
+    result = compare_object_storage(catalog, requests)
+    return _ok({"as_of": catalog.as_of, **result})
+
+
+def _handle_compare_postgres_database(catalog, args):
+    requests = [
+        PostgresRequest(
+            name=item["name"],
+            vcpus=int(item["vcpus"]),
+            memory_gb=float(item["memory_gb"]),
+            storage_gb=float(item.get("storage_gb", 0)),
+            quantity=int(item.get("quantity", 1)),
+            hours_per_month=int(item.get("hours_per_month", HOURS_PER_MONTH)),
+            tier=item.get("tier"),
+        )
+        for item in args["databases"]
+    ]
+    result = compare_postgres(catalog, requests)
+    return _ok({"as_of": catalog.as_of, **result})
+
+
+def _handle_compare_workload(catalog, args):
+    compute = _build_compute_requests(args.get("compute", []))
+    storage = _build_storage_requests(args.get("storage", []))
+    if not compute and not storage:
+        return _err("compare_workload needs at least one of compute or storage to be non-empty.")
+    commitment = args.get("commitment", "none")
+    multi_az = bool(args.get("multi_az", False))
+    result = compare_workload(catalog, compute, storage, commitment=commitment, multi_az=multi_az)
+    return _ok({"as_of": catalog.as_of, **result})
+
+
+# Tool name → handler dispatch table. Adding a new tool = add one entry.
+_TOOL_HANDLERS = {
+    "get_aws_price": _handle_get_aws_price,
+    "get_azure_price": _handle_get_azure_price,
+    "get_gcp_price": _handle_get_gcp_price,
+    "compare_clouds": _handle_compare_clouds,
+    "compare_compute_inventory": _handle_compare_compute_inventory,
+    "compare_storage_inventory": _handle_compare_storage_inventory,
+    "compare_egress": _handle_compare_egress,
+    "compare_object_storage": _handle_compare_object_storage,
+    "compare_postgres_database": _handle_compare_postgres_database,
+    "compare_workload": _handle_compare_workload,
+}
+
+
 @server.call_tool()
 async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
+    handler = _TOOL_HANDLERS.get(name)
+    if handler is None:
+        return _err(f"Unknown tool: {name}")
     catalog = load_catalog()
-
-    if name == "get_aws_price":
-        return _lookup("aws", "instance_type", arguments["instance_type"])
-
-    if name == "get_azure_price":
-        return _lookup("azure", "vm_size", arguments["vm_size"])
-
-    if name == "get_gcp_price":
-        return _lookup("gcp", "machine_type", arguments["machine_type"])
-
-    if name == "compare_clouds":
-        vcpus = int(arguments["vcpus"])
-        memory_gb = float(arguments["memory_gb"])
-        matches = compare_all_clouds(catalog, vcpus, memory_gb)
-        if not matches:
-            return _err("No matches found in catalog.")
-        cheapest = matches[0]
-        priciest = matches[-1]
-        spread = priciest.instance.monthly_usd - cheapest.instance.monthly_usd
-        pct = (spread / priciest.instance.monthly_usd * 100) if priciest.instance.monthly_usd else 0
-        return _ok(
-            {
-                "as_of": catalog.as_of,
-                "request": {"vcpus": vcpus, "memory_gb": memory_gb},
-                "matches": [m.to_dict() for m in matches],
-                "summary": {
-                    "cheapest_cloud": cheapest.cloud,
-                    "monthly_savings_usd": round(spread, 2),
-                    "monthly_savings_pct": round(pct, 1),
-                },
-            }
-        )
-
-    if name == "compare_compute_inventory":
-        workloads = _build_compute_requests(arguments["workloads"])
-        result = bulk_compare_compute(catalog, workloads)
-        return _ok({"as_of": catalog.as_of, **result})
-
-    if name == "compare_storage_inventory":
-        volumes = _build_storage_requests(arguments["volumes"])
-        result = bulk_compare_storage(catalog, volumes)
-        return _ok({"as_of": catalog.as_of, **result})
-
-    if name == "compare_object_storage":
-        items = arguments["volumes"]
-        requests = [
-            ObjectStorageRequest(
-                name=item["name"],
-                capacity_gb=float(item["capacity_gb"]),
-                tier=item.get("tier", "hot"),
-                quantity=int(item.get("quantity", 1)),
-                tier_label=item.get("tier_label"),
-            )
-            for item in items
-        ]
-        result = compare_object_storage(catalog, requests)
-        return _ok({"as_of": catalog.as_of, **result})
-
-    if name == "compare_postgres_database":
-        items = arguments["databases"]
-        requests = [
-            PostgresRequest(
-                name=item["name"],
-                vcpus=int(item["vcpus"]),
-                memory_gb=float(item["memory_gb"]),
-                storage_gb=float(item.get("storage_gb", 0)),
-                quantity=int(item.get("quantity", 1)),
-                hours_per_month=int(item.get("hours_per_month", HOURS_PER_MONTH)),
-                tier=item.get("tier"),
-            )
-            for item in items
-        ]
-        result = compare_postgres(catalog, requests)
-        return _ok({"as_of": catalog.as_of, **result})
-
-    if name == "compare_workload":
-        compute = _build_compute_requests(arguments.get("compute", []))
-        storage = _build_storage_requests(arguments.get("storage", []))
-        if not compute and not storage:
-            return _err("compare_workload needs at least one of compute or storage to be non-empty.")
-        commitment = arguments.get("commitment", "none")
-        result = compare_workload(catalog, compute, storage, commitment=commitment)
-        return _ok({"as_of": catalog.as_of, **result})
-
-    return _err(f"Unknown tool: {name}")
+    return handler(catalog, arguments)
 
 
 async def _run() -> None:

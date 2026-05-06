@@ -5,6 +5,7 @@ from .pricing import (
     HOURS_PER_MONTH,
     Cloud,
     DiskType,
+    EgressPricing,
     Instance,
     ObjectStorageSku,
     ObjectStorageTier,
@@ -24,6 +25,21 @@ COMMITMENT_DISCOUNT: dict[Commitment, float] = {
     "none": 0.0,
     "1yr_no_upfront": 0.30,
     "3yr_partial_upfront": 0.50,
+}
+
+# Multi-AZ / HA multipliers — applied to compute totals when multi_az=True.
+# These represent the rough cost premium of running active-active across AZs:
+#   AWS:  RDS Multi-AZ doubles, EC2 in 2 AZs doubles (sync replicas) → 2.0
+#   Azure: zone-redundant zones, often ~1.5-2x. Use 2.0 for parity.
+#   GCP:  regional persistent disks + replicas typically ~2.0
+#   OCI:  similar HA pairs ~2.0; OCI has fewer nuanced tiers
+# Storage stays at 1.0 (most clouds offer redundancy in the storage product itself,
+# not as a multiplier; e.g., S3 is already cross-AZ at base price).
+MULTI_AZ_COMPUTE_MULTIPLIER: dict[Cloud, float] = {
+    "aws": 2.0,
+    "azure": 2.0,
+    "gcp": 2.0,
+    "oci": 2.0,
 }
 
 
@@ -52,6 +68,7 @@ class ComputeRequest:
     os_disk_gb: float | None = None
     os_disk_type: DiskType = "ssd"
     os_disk_snapshot_count: int = 0
+    os_disk_snapshot_incremental_factor: float = 1.0
 
     def to_dict(self) -> dict:
         return {
@@ -65,6 +82,7 @@ class ComputeRequest:
             "os_disk_gb": self.os_disk_gb,
             "os_disk_type": self.os_disk_type,
             "os_disk_snapshot_count": self.os_disk_snapshot_count,
+            "os_disk_snapshot_incremental_factor": self.os_disk_snapshot_incremental_factor,
         }
 
 
@@ -79,6 +97,7 @@ class StorageRequest:
     iops: int | None = None
     throughput_mbs: float | None = None
     snapshot_count: int = 0
+    snapshot_incremental_factor: float = 1.0  # 1.0 = upper-bound, 0.3 = realistic incremental
 
     def to_dict(self) -> dict:
         return {
@@ -91,6 +110,7 @@ class StorageRequest:
             "iops": self.iops,
             "throughput_mbs": self.throughput_mbs,
             "snapshot_count": self.snapshot_count,
+            "snapshot_incremental_factor": self.snapshot_incremental_factor,
         }
 
 
@@ -168,6 +188,7 @@ def _compute_row_cost(
                     capacity_gb=req.os_disk_gb,
                     quantity=req.quantity,
                     snapshot_count=req.os_disk_snapshot_count,
+                    incremental_factor=req.os_disk_snapshot_incremental_factor,
                 )
 
     return {
@@ -197,7 +218,12 @@ def _storage_row_cost(
     unit_monthly = round(sku.price_per_gb_month_usd * req.capacity_gb, 2)
     total_monthly = round(unit_monthly * req.quantity, 2)
     snapshot_total = (
-        sku.snapshot_monthly_cost(req.capacity_gb, req.quantity, req.snapshot_count)
+        sku.snapshot_monthly_cost(
+            req.capacity_gb,
+            req.quantity,
+            req.snapshot_count,
+            req.snapshot_incremental_factor,
+        )
         if req.snapshot_count > 0 else 0.0
     )
     return {
@@ -467,14 +493,87 @@ def compare_object_storage(
     return {"rows": rows, **_summarize(totals)}
 
 
+@dataclass(frozen=True)
+class EgressRequest:
+    name: str
+    gb_per_month: float
+    direction: str = "out_to_internet"  # currently only 'out_to_internet' is modeled
+    tier_label: str | None = None
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "tier_label": self.tier_label,
+            "gb_per_month": self.gb_per_month,
+            "direction": self.direction,
+        }
+
+
+def compare_egress(
+    catalog: PriceCatalog, requests: list[EgressRequest]
+) -> dict[str, Any]:
+    rows: list[dict[str, Any]] = []
+    totals: dict[Cloud, float] = dict.fromkeys(CLOUDS, 0.0)
+    for req in requests:
+        per_cloud: dict[str, Any] = {}
+        for cloud in CLOUDS:
+            sku = catalog.egress_for(cloud)
+            if sku is None:
+                continue
+            cost = sku.cost_for_gb(req.gb_per_month)
+            per_cloud[cloud] = {
+                "cloud": cloud,
+                "service": sku.service,
+                "region": sku.region,
+                "free_tier_gb": sku.free_tier_gb,
+                "billed_gb": max(0.0, req.gb_per_month - sku.free_tier_gb),
+                "row_monthly_total": cost,
+            }
+            totals[cloud] += cost
+        rows.append({"request": req.to_dict(), "per_cloud": per_cloud})
+    return {"rows": rows, **_summarize(totals)}
+
+
+def _apply_multi_az_to_compute(compute_result: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Multiply each cloud's compute totals by its multi-AZ multiplier.
+    Returns a NEW result dict (does not mutate the original).
+    Per-row totals are also multiplied so callers see consistent numbers."""
+    if compute_result is None:
+        return None
+    new_totals: dict[Cloud, float] = {
+        cloud: round(value * MULTI_AZ_COMPUTE_MULTIPLIER.get(cloud, 1.0), 2)
+        for cloud, value in compute_result["totals_by_cloud"].items()
+    }
+    new_rows: list[dict[str, Any]] = []
+    for row in compute_result["rows"]:
+        new_per_cloud: dict[str, Any] = {}
+        for cloud, cost in row["per_cloud"].items():
+            mult = MULTI_AZ_COMPUTE_MULTIPLIER.get(cloud, 1.0)
+            scaled = dict(cost)
+            scaled["compute_monthly_total"] = round(cost["compute_monthly_total"] * mult, 2)
+            scaled["row_monthly_total"] = round(cost["row_monthly_total"] * mult, 2)
+            new_per_cloud[cloud] = scaled
+        new_rows.append({"request": row["request"], "per_cloud": new_per_cloud})
+    return {
+        "rows": new_rows,
+        "multi_az_applied": True,
+        "multi_az_multipliers": dict(MULTI_AZ_COMPUTE_MULTIPLIER),
+        **_summarize(new_totals),
+    }
+
+
 def compare_workload(
     catalog: PriceCatalog,
     compute: list[ComputeRequest],
     storage: list[StorageRequest],
     commitment: Commitment = "none",
+    multi_az: bool = False,
 ) -> dict[str, Any]:
     compute_result = bulk_compare_compute(catalog, compute) if compute else None
     storage_result = bulk_compare_storage(catalog, storage) if storage else None
+
+    if multi_az:
+        compute_result = _apply_multi_az_to_compute(compute_result)
 
     combined: dict[Cloud, float] = dict.fromkeys(CLOUDS, 0.0)
     for sub in (compute_result, storage_result):
@@ -487,6 +586,8 @@ def compare_workload(
         "storage": storage_result,
         "combined": _summarize(combined) if any(combined.values()) else {},
     }
+    if multi_az:
+        out["multi_az_applied"] = True
 
     if commitment != "none" and any(combined.values()):
         out["commitment"] = _build_commitment_section(

@@ -1,0 +1,51 @@
+{
+  "as_of": "2026-05-06",
+  "currency": "USD",
+  "notes": "Data Transfer Out to Internet — tiered pricing per cloud. Verified May 2026 from each cloud's published rates. OCI's 10 TB/month free egress is its single biggest cost differentiator vs the hyperscalers. Free tier (free_tier_gb) is consumed first; remaining usage fills tiers in order, each priced at price_per_gb_usd up to up_to_gb (cumulative). Final tier with up_to_gb=null applies to all overage. inter_region_per_gb_usd is the rate for cross-region transfer within the same cloud (e.g. us-east-1 → us-west-2). Inter-region transfer typically has NO free tier (Always Free egress applies only to internet).",
+  "aws": {
+    "service": "Data Transfer Out to Internet",
+    "region": "us-east-1",
+    "free_tier_gb": 100,
+    "tiers": [
+      { "up_to_gb": 10000,  "price_per_gb_usd": 0.09  },
+      { "up_to_gb": 50000,  "price_per_gb_usd": 0.085 },
+      { "up_to_gb": 150000, "price_per_gb_usd": 0.07  },
+      { "up_to_gb": null,   "price_per_gb_usd": 0.05  }
+    ],
+    "inter_region_per_gb_usd": 0.02
+  },
+  "azure": {
+    "service": "Bandwidth (Egress)",
+    "region": "eastus",
+    "free_tier_gb": 100,
+    "tiers": [
+      { "up_to_gb": 10000,  "price_per_gb_usd": 0.087 },
+      { "up_to_gb": 50000,  "price_per_gb_usd": 0.083 },
+      { "up_to_gb": 150000, "price_per_gb_usd": 0.07  },
+      { "up_to_gb": null,   "price_per_gb_usd": 0.05  }
+    ],
+    "inter_region_per_gb_usd": 0.02
+  },
+  "gcp": {
+    "service": "Network Egress to Internet",
+    "region": "us-east1",
+    "free_tier_gb": 0,
+    "_notes": "GCP doesn't have a flat 100GB-free tier like AWS/Azure; Always Free accounts get 200GB but that's account-level not service-level. We model 0 free for fairer comparison.",
+    "tiers": [
+      { "up_to_gb": 1000,  "price_per_gb_usd": 0.12 },
+      { "up_to_gb": 10000, "price_per_gb_usd": 0.11 },
+      { "up_to_gb": null,  "price_per_gb_usd": 0.08 }
+    ],
+    "inter_region_per_gb_usd": 0.02
+  },
+  "oci": {
+    "service": "Outbound Data Transfer",
+    "region": "us-ashburn-1",
+    "free_tier_gb": 10000,
+    "_notes": "OCI's 10 TB/month free egress is its single biggest cost differentiator. Beyond 10 TB, it's $0.0085/GB — roughly 10x cheaper than AWS/Azure/GCP at the same volume.",
+    "tiers": [
+      { "up_to_gb": null, "price_per_gb_usd": 0.0085 }
+    ],
+    "inter_region_per_gb_usd": 0.0085
+  }
+}

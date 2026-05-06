@@ -7,6 +7,9 @@ Cloud = Literal["aws", "azure", "gcp", "oci"]
 DiskType = Literal["ssd", "hdd"]
 HOURS_PER_MONTH = 730
 
+# Resource package name where bundled JSON datasets live
+DATA_PACKAGE = "cloudprice_mcp.data"
+
 
 @dataclass(frozen=True)
 class Instance:
@@ -46,10 +49,22 @@ class StorageSku:
         return round(self.price_per_gb_month_usd * capacity_gb * quantity, 2)
 
     def snapshot_monthly_cost(
-        self, capacity_gb: float, quantity: int = 1, snapshot_count: int = 1
+        self,
+        capacity_gb: float,
+        quantity: int = 1,
+        snapshot_count: int = 1,
+        incremental_factor: float = 1.0,
     ) -> float:
+        """Snapshot cost. By default returns the upper-bound (full capacity).
+        Pass incremental_factor=0.3 to model typical real-world incremental
+        deduplication (~30% of full capacity for most workloads)."""
         return round(
-            self.snapshot_per_gb_month_usd * capacity_gb * quantity * snapshot_count, 2
+            self.snapshot_per_gb_month_usd
+            * capacity_gb
+            * quantity
+            * snapshot_count
+            * incremental_factor,
+            2,
         )
 
     def to_dict(self) -> dict:
@@ -123,6 +138,64 @@ class PostgresSku:
 
 
 @dataclass(frozen=True)
+class EgressTier:
+    up_to_gb: float | None  # None = unbounded (final tier)
+    price_per_gb_usd: float
+
+
+@dataclass(frozen=True)
+class EgressPricing:
+    cloud: Cloud
+    service: str
+    region: str
+    free_tier_gb: float
+    tiers: tuple[EgressTier, ...]
+    inter_region_per_gb_usd: float = 0.0  # cross-region transfer within same cloud
+
+    def cost_for_gb(self, gb_per_month: float) -> float:
+        """Compute egress cost for the given monthly GB, applying free-tier + tiered rates."""
+        remaining = gb_per_month - self.free_tier_gb
+        if remaining <= 0:
+            return 0.0
+        cost = 0.0
+        last_threshold = self.free_tier_gb
+        for tier in self.tiers:
+            if tier.up_to_gb is None:
+                # Final unbounded tier
+                cost += remaining * tier.price_per_gb_usd
+                remaining = 0
+                break
+            tier_size = tier.up_to_gb - last_threshold
+            billable = min(remaining, tier_size)
+            cost += billable * tier.price_per_gb_usd
+            remaining -= billable
+            last_threshold = tier.up_to_gb
+            if remaining <= 0:
+                break
+        return round(cost, 2)
+
+    def inter_region_cost_for_gb(self, gb_per_month: float) -> float:
+        """Cost of cross-region transfer within this cloud. No free tier on inter-region."""
+        return round(self.inter_region_per_gb_usd * gb_per_month, 2)
+
+    def to_dict(self) -> dict:
+        return {
+            "cloud": self.cloud,
+            "service": self.service,
+            "region": self.region,
+            "free_tier_gb": self.free_tier_gb,
+            "inter_region_per_gb_usd": self.inter_region_per_gb_usd,
+            "tiers": [
+                {
+                    "up_to_gb": t.up_to_gb,
+                    "price_per_gb_usd": t.price_per_gb_usd,
+                }
+                for t in self.tiers
+            ],
+        }
+
+
+@dataclass(frozen=True)
 class PriceCatalog:
     as_of: str
     currency: str
@@ -130,6 +203,7 @@ class PriceCatalog:
     storage: tuple[StorageSku, ...]
     postgres: tuple[PostgresSku, ...] = ()
     object_storage: tuple[ObjectStorageSku, ...] = ()
+    egress: tuple[EgressPricing, ...] = ()
 
     def by_cloud(self, cloud: Cloud) -> tuple[Instance, ...]:
         return tuple(i for i in self.instances if i.cloud == cloud)
@@ -142,6 +216,12 @@ class PriceCatalog:
 
     def object_storage_by_cloud(self, cloud: Cloud) -> tuple[ObjectStorageSku, ...]:
         return tuple(o for o in self.object_storage if o.cloud == cloud)
+
+    def egress_for(self, cloud: Cloud) -> EgressPricing | None:
+        for e in self.egress:
+            if e.cloud == cloud:
+                return e
+        return None
 
     def find(self, cloud: Cloud, sku: str) -> Instance | None:
         sku_lower = sku.lower()
@@ -165,7 +245,7 @@ def load_catalog() -> PriceCatalog:
     if _catalog is not None:
         return _catalog
 
-    data_text = resources.files("cloudprice_mcp.data").joinpath("prices.json").read_text()
+    data_text = resources.files(DATA_PACKAGE).joinpath("prices.json").read_text()
     raw = json.loads(data_text)
 
     instances: list[Instance] = []
@@ -200,6 +280,7 @@ def load_catalog() -> PriceCatalog:
 
     postgres = _load_postgres_catalog()
     object_storage = _load_object_storage_catalog()
+    egress = _load_egress_catalog()
 
     _catalog = PriceCatalog(
         as_of=raw["as_of"],
@@ -208,15 +289,52 @@ def load_catalog() -> PriceCatalog:
         storage=tuple(storage),
         postgres=tuple(postgres),
         object_storage=tuple(object_storage),
+        egress=tuple(egress),
     )
     return _catalog
+
+
+def _load_egress_catalog() -> list[EgressPricing]:
+    """Load egress pricing data. Optional file — if missing, returns []."""
+    try:
+        data_text = (
+            resources.files(DATA_PACKAGE)
+            .joinpath("egress_prices.json")
+            .read_text()
+        )
+    except FileNotFoundError:
+        return []
+    raw = json.loads(data_text)
+    out: list[EgressPricing] = []
+    for cloud in ("aws", "azure", "gcp", "oci"):
+        if cloud not in raw:
+            continue
+        block = raw[cloud]
+        tiers = tuple(
+            EgressTier(
+                up_to_gb=(float(t["up_to_gb"]) if t.get("up_to_gb") is not None else None),
+                price_per_gb_usd=float(t["price_per_gb_usd"]),
+            )
+            for t in block["tiers"]
+        )
+        out.append(
+            EgressPricing(
+                cloud=cloud,
+                service=block["service"],
+                region=block["region"],
+                free_tier_gb=float(block.get("free_tier_gb", 0)),
+                tiers=tiers,
+                inter_region_per_gb_usd=float(block.get("inter_region_per_gb_usd", 0)),
+            )
+        )
+    return out
 
 
 def _load_postgres_catalog() -> list[PostgresSku]:
     """Load managed-Postgres pricing data. Optional file — if missing, returns []."""
     try:
         data_text = (
-            resources.files("cloudprice_mcp.data").joinpath("postgres_prices.json").read_text()
+            resources.files(DATA_PACKAGE).joinpath("postgres_prices.json").read_text()
         )
     except FileNotFoundError:
         return []
@@ -250,7 +368,7 @@ def _load_object_storage_catalog() -> list[ObjectStorageSku]:
     """Load object storage pricing data. Optional file — if missing, returns []."""
     try:
         data_text = (
-            resources.files("cloudprice_mcp.data")
+            resources.files(DATA_PACKAGE)
             .joinpath("object_storage_prices.json")
             .read_text()
         )
