@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![alialbaker/cloudprice-mcp MCP server](https://glama.ai/mcp/servers/alialbaker/cloudprice-mcp/badges/score.svg)](https://glama.ai/mcp/servers/alialbaker/cloudprice-mcp)
 
-An MCP server that lets Claude (or any MCP-compatible client) compare on-demand **compute + block storage + object storage + managed Postgres** pricing across **AWS, Azure, GCP, and OCI** in real time. **9 tools.** OCI Always Free tier surfaced explicitly.
+An MCP server that lets Claude (or any MCP-compatible client) compare cloud pricing across **AWS, Azure, GCP, and OCI** in real time. **10 tools** covering compute, block storage, object storage, managed Postgres, **egress** (internet + inter-region), Multi-AZ workloads, snapshots with realistic incremental modeling, and Reserved Instance / Savings Plan discounts. OCI Always Free tier (4 OCPU compute, 20 GB object storage, 10 TB egress) surfaced explicitly.
 
 ![demo](demo.gif)
 
@@ -75,12 +75,20 @@ For step-by-step manual install (Windows / macOS / Linux), see **[INSTALL.md](IN
 | `compare_storage_inventory` | Bulk-compare a list of block-storage volumes (each with capacity / disk type / quantity) across all 4 clouds. |
 | `compare_workload` | Combined compute + block storage in one call. Mirrors a two-sheet sizing workbook (compute BoM + storage BoM). Optional `commitment` overlay applies 1-year (30%) or 3-year (50%) compute discount. |
 
-### Object storage + managed Postgres (v0.3, NEW)
+### Object storage + managed Postgres (v0.3)
 
 | Tool | What it does |
 |---|---|
 | `compare_object_storage` | Bulk-compare object-storage buckets across **AWS S3 / Azure Blob / GCP Cloud Storage / OCI Object Storage**. Each row specifies capacity_gb + tier (`hot` / `cool` / `archive`). **OCI Always Free 20 GB tier surfaced explicitly** — capacity ≤ 20 GB on OCI hot tier returns $0/mo. |
 | `compare_postgres_database` | Bulk-compare managed PostgreSQL pricing across **AWS RDS / Azure Database for PostgreSQL / GCP Cloud SQL / OCI Database with PostgreSQL**. Each row specifies vCPUs / memory / storage_gb. Storage cost is calculated separately from compute. |
+
+### Egress + Multi-AZ + better snapshots (v0.5, NEW)
+
+| Tool / Feature | What it does |
+|---|---|
+| `compare_egress` | Compare data-transfer costs across all 4 clouds. Two directions: `out_to_internet` (tiered pricing with free-tier credits — AWS/Azure 100 GB, **OCI 10 TB**) and `inter_region` (cross-region within the same cloud). At 50 TB/month internet egress, **OCI is ~12× cheaper than the hyperscalers** — a real moat for content/CDN workloads. |
+| `compare_workload` `multi_az: true` | New flag doubles compute totals on every cloud to model Multi-AZ / HA deployments (sync replicas across two zones). Storage stays at 1× because object/block storage is usually cross-AZ at base price. |
+| `snapshot_incremental_factor` | New per-row field on storage and OS-disk snapshots. Default `1.0` keeps the v0.2 upper-bound estimate. Set to `0.3` for typical real-world incremental dedup, or `0.0` to exclude snapshots from the total. |
 
 ### Example: compare_workload input shape
 
@@ -129,13 +137,16 @@ Prices are bundled as a curated dataset of common SKUs across **4 clouds**:
 OCI pricing is verified against [Oracle's public pricing API](https://apexapps.oracle.com/pls/apex/cetools/api/v1/products/). Each response includes an `as_of` date so you know how fresh the data is.
 
 ### What's NOT modeled (real-world TCO killers)
-- **Egress / data transfer** (often the actual hidden cost — especially for object storage)
-- **Multi-AZ / HA replicas** (production usually doubles compute cost)
-- **Reserved/Savings Plan SKU detail** (we apply a flat tier discount, not per-region/per-family detail)
-- **IOPS-based storage matching** (capacity-only)
-- **Backup storage charges** (some clouds free, others billed)
-- **Request costs** (PUT/GET pricing for object storage)
-- **Retrieval costs** for archive tiers (Glacier-style retrieval can be 10× the storage cost)
+- ✅ ~~Egress / data transfer~~ — **modeled in v0.5** (`compare_egress`)
+- ✅ ~~Multi-AZ / HA replicas~~ — **modeled in v0.5** (`multi_az: true` on `compare_workload`)
+- ✅ ~~Snapshots upper-bound only~~ — **fixed in v0.5** (`snapshot_incremental_factor`)
+- **Reserved/Savings Plan SKU detail** (we apply a flat tier discount, not per-region/per-family detail) — roadmap
+- **Multi-region pricing** (currently us-east only; us-west / eu-west planned for v0.5.1) — roadmap
+- **IOPS-based storage matching** (capacity-only) — roadmap
+- **Backup storage charges** (some clouds free, others billed) — roadmap
+- **Request costs** (PUT/GET pricing for object storage) — roadmap
+- **Retrieval costs** for archive tiers (Glacier-style retrieval can be 10× the storage cost) — roadmap
+- **VPC peering / interconnect costs** — roadmap
 
 These are tracked roadmap items. **Use cloudprice-mcp for the on-demand list-price baseline; do final TCO analysis with each cloud's own calculator before relying on numbers for big decisions.**
 

@@ -1,7 +1,7 @@
 [project]
 name = "cloudprice-mcp"
-version = "0.4.0"
-description = "MCP server that compares on-demand compute + storage + object storage + managed Postgres pricing across AWS, Azure, GCP, and OCI. 9 tools covering single-spec lookups, bulk inventory, combined workloads, and managed services. OCI Always Free tier surfaced explicitly."
+version = "0.5.0"
+description = "MCP server that compares cloud pricing across AWS, Azure, GCP, and OCI. 10 tools covering compute, block storage, object storage, managed Postgres, egress (with OCI 10TB-free shown), Multi-AZ workloads, and Reserved Instance / Savings Plan discounts. Ships with cloudprice-mcp setup auto-config CLI and doctor diagnostic command. OCI Always Free tier surfaced explicitly."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
