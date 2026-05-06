@@ -1,6 +1,6 @@
 [project]
 name = "cloudprice-mcp"
-version = "0.3.0"
+version = "0.4.0"
 description = "MCP server that compares on-demand compute + storage + object storage + managed Postgres pricing across AWS, Azure, GCP, and OCI. 9 tools covering single-spec lookups, bulk inventory, combined workloads, and managed services. OCI Always Free tier surfaced explicitly."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -29,7 +29,7 @@ dev = [
 ]
 
 [project.scripts]
-cloudprice-mcp = "cloudprice_mcp.server:main"
+cloudprice-mcp = "cloudprice_mcp.cli:main"
 
 [project.urls]
 Homepage = "https://albaker.info"

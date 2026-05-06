@@ -25,38 +25,36 @@ Claude calls the right tool, you get a clean answer with per-row + per-cloud + c
 
 ## Install
 
+**Recommended (auto-config):**
+
 ```bash
 pip install cloudprice-mcp
+cloudprice-mcp setup     # auto-configures Claude Desktop, asks Y/N before writing
 ```
 
-Or run without installing:
+Then fully restart Claude Desktop. **9 tools appear in Connectors.** Done.
+
+**Trust spectrum:**
+
+| Command | When to use |
+|---|---|
+| `cloudprice-mcp setup` | Default — interactive prompt before writing |
+| `cloudprice-mcp setup --yes` | Skip prompt (CI / scripts) |
+| `cloudprice-mcp setup --dry-run` | Show what would change without writing |
+| `cloudprice-mcp setup --print-config` | Just output the JSON for manual paste |
+| Manual edit | Don't trust running new tools — see [INSTALL.md](INSTALL.md) |
+
+If something doesn't work, run:
 
 ```bash
-pipx run cloudprice-mcp
+cloudprice-mcp doctor
 ```
+
+It tells you exactly what's broken (Python version, install path, config location, tool registration, command path validity).
 
 Python 3.10+ required.
 
-## Wire it into Claude Desktop
-
-Edit your Claude Desktop config:
-
-- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
-
-Add:
-
-```json
-{
-  "mcpServers": {
-    "cloudprice": {
-      "command": "cloudprice-mcp"
-    }
-  }
-}
-```
-
-Restart Claude Desktop. The nine tools below will show up as available.
+For step-by-step manual install (Windows / macOS / Linux), see **[INSTALL.md](INSTALL.md)**.
 
 ## Tools exposed
 
