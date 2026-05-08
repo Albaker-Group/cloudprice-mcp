@@ -11,13 +11,14 @@ import sys
 from pathlib import Path
 
 from . import __version__ as cloudprice_version
-from . import clients
+from . import clients, path_fix
 from .setup_cmd import build_cloudprice_args, detect_python_command
 
 
 CHECK = "✓"
 CROSS = "✗"
 WARN = "⚠"
+_ENTRY_LABEL = "    cloudprice entry"
 
 
 def _ok(label: str, detail: str = "") -> None:
@@ -80,14 +81,14 @@ def _check_one_client(adapter: clients.ClientAdapter) -> bool:
 
     if existing is None:
         _fail(
-            "    cloudprice entry",
+            _ENTRY_LABEL,
             f"config file does not exist. Run `cloudprice-mcp setup --client {adapter.name}`.",
         )
         return False
 
     if not adapter.already_present(existing):
         _fail(
-            "    cloudprice entry",
+            _ENTRY_LABEL,
             f"missing — Run `cloudprice-mcp setup --client {adapter.name}`.",
         )
         return False
@@ -95,12 +96,12 @@ def _check_one_client(adapter: clients.ClientAdapter) -> bool:
     expected_command = detect_python_command()
     expected_args = build_cloudprice_args()
     if adapter.existing_matches(existing, expected_command, expected_args):
-        _ok("    cloudprice entry", "present and up to date")
+        _ok(_ENTRY_LABEL, "present and up to date")
         return True
 
     # Entry present but doesn't match expected — could be dev install, or stale path.
     _warn(
-        "    cloudprice entry",
+        _ENTRY_LABEL,
         "present but command/args don't match this Python install. "
         f"Run `cloudprice-mcp setup --client {adapter.name} --force` to refresh.",
     )
@@ -135,6 +136,49 @@ def _extract_command(adapter: clients.ClientAdapter, existing: dict) -> str | No
     return None
 
 
+def _check_shell_shim() -> None:
+    """Hint-only: report whether cloudprice-mcp is callable as a bare shell command.
+
+    Never returns a failure — even if the shim isn't on PATH, `python -m cloudprice_mcp.cli`
+    works, and the configs setup writes use absolute Python paths regardless. This check
+    exists purely to suggest `cloudprice-mcp fix-path` when it would help.
+    """
+    print("\nShell shim (optional — affects only your shell, not the MCP clients):")
+    scripts_dir = path_fix.get_scripts_dir()
+
+    if not path_fix.shim_exists():
+        print(f"  {WARN} cloudprice-mcp shim not found in {scripts_dir}")
+        print("       (Maybe you installed via `pip install -e .` in a different venv.)")
+        return
+
+    _ok("cloudprice-mcp shim", str(path_fix.shim_path()))
+
+    on_current = path_fix.is_on_current_path(scripts_dir)
+    if on_current:
+        _ok(f"Scripts dir ({scripts_dir})", "on current shell PATH — bare `cloudprice-mcp` resolves")
+        return
+
+    if sys.platform == "win32":
+        in_persistent = path_fix.is_in_user_path(scripts_dir)
+        if in_persistent:
+            print(
+                f"  {WARN} Scripts dir is in persistent user PATH but not in this shell yet.\n"
+                "       Open a fresh PowerShell window — then `cloudprice-mcp` will resolve."
+            )
+            return
+        print(
+            f"  ℹ Scripts dir not on PATH — bare `cloudprice-mcp` won't resolve in your shell.\n"
+            "       This does NOT affect MCP clients (their configs use absolute paths).\n"
+            "       To fix:  cloudprice-mcp fix-path     (or keep using `python -m cloudprice_mcp.cli ...`)"
+        )
+        return
+
+    print(
+        f"  ℹ Scripts dir ({scripts_dir}) not on PATH — bare `cloudprice-mcp` won't resolve.\n"
+        "       Add it to your shell rc, or keep using `python -m cloudprice_mcp.cli ...`."
+    )
+
+
 def run_doctor(_args: argparse.Namespace) -> int:
     print("🩺 cloudprice-mcp doctor — running checks\n")
 
@@ -142,6 +186,8 @@ def run_doctor(_args: argparse.Namespace) -> int:
     py_ok = _check_python_version()
     pkg_ok = _check_package_install()
     tools_ok, _ = _check_tool_registration()
+
+    _check_shell_shim()
 
     print("\nClients:")
     detected_any = False

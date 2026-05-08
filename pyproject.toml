@@ -1,6 +1,6 @@
 [project]
 name = "cloudprice-mcp"
-version = "0.5.1"
+version = "0.5.2"
 description = "MCP server that compares cloud pricing across AWS, Azure, GCP, and OCI. 10 tools covering compute, block storage, object storage, managed Postgres, egress (with OCI 10TB-free shown), Multi-AZ workloads, and Reserved Instance / Savings Plan discounts. Auto-configures Claude Desktop, GitHub Copilot, Cursor, Windsurf, Cline, Continue, and Zed via `cloudprice-mcp setup`. OCI Always Free tier surfaced explicitly."
 readme = "README.md"
 requires-python = ">=3.10"

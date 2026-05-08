@@ -495,7 +495,19 @@ This is also what `cloudprice-mcp setup` writes into the client config files by 
 
 ### "I want PATH-wide access on Windows after `pip install`"
 
-Add Python's `Scripts\` folder to your PATH:
+**Easiest (v0.5.2+):**
+
+```powershell
+python -m cloudprice_mcp.cli fix-path
+```
+
+This adds Python's `Scripts\` folder to your user PATH (writes to `HKCU\Environment` via Windows registry, then broadcasts `WM_SETTINGCHANGE` so new shells pick it up). Reversible with `--remove`. Run with `--check` to inspect without modifying.
+
+> This is **opt-in**. The default `cloudprice-mcp setup` flow doesn't need it — it writes absolute Python paths into client configs, so MCP clients work regardless of your shell PATH. `fix-path` is purely for your own shell ergonomics.
+
+After running, **open a fresh PowerShell window** for the change to take effect (existing shells don't refresh PATH — Windows limitation).
+
+**Manual alternative:**
 
 ```powershell
 # Find your Scripts folder

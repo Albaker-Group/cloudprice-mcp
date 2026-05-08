@@ -48,6 +48,13 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Diagnose install + per-client config issues.",
     )
 
+    p_fix_path = sub.add_parser(
+        "fix-path",
+        help="(Windows) Add Python's Scripts folder to user PATH so `cloudprice-mcp` resolves as a bare shell command. Opt-in.",
+    )
+    from .fix_path_cmd import add_fix_path_arguments
+    add_fix_path_arguments(p_fix_path)
+
     return parser
 
 
@@ -72,6 +79,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "doctor":
         from .doctor_cmd import run_doctor
         return run_doctor(args)
+    if args.cmd == "fix-path":
+        from .fix_path_cmd import run_fix_path
+        return run_fix_path(args)
     parser.print_help()
     return 2
 
