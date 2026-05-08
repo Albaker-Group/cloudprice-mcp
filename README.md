@@ -7,7 +7,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![alialbaker/cloudprice-mcp MCP server](https://glama.ai/mcp/servers/alialbaker/cloudprice-mcp/badges/score.svg)](https://glama.ai/mcp/servers/alialbaker/cloudprice-mcp)
 
-An MCP server that lets Claude (or any MCP-compatible client) compare cloud pricing across **AWS, Azure, GCP, and OCI** in real time. **10 tools** covering compute, block storage, object storage, managed Postgres, **egress** (internet + inter-region), Multi-AZ workloads, snapshots with realistic incremental modeling, and Reserved Instance / Savings Plan discounts. OCI Always Free tier (4 OCPU compute, 20 GB object storage, 10 TB egress) surfaced explicitly.
+An MCP server that lets Claude, GitHub Copilot, Cursor, Windsurf, Cline, Continue, Zed — or any MCP-compatible AI — compare cloud pricing across **AWS, Azure, GCP, and OCI** in real time. **10 tools** covering compute, block storage, object storage, managed Postgres, **egress** (internet + inter-region), Multi-AZ workloads, snapshots with realistic incremental modeling, and Reserved Instance / Savings Plan discounts. OCI Always Free tier (4 OCPU compute, 20 GB object storage, 10 TB egress) surfaced explicitly.
+
+**One-line install configures every AI client you have:** `pip install cloudprice-mcp && cloudprice-mcp setup` — auto-detects Claude Desktop, GitHub Copilot Agent Mode, Cursor, Windsurf, Cline, Continue.dev, and Zed, then asks Y/N before writing each config.
 
 ![demo](demo.gif)
 
@@ -29,20 +31,24 @@ Claude calls the right tool, you get a clean answer with per-row + per-cloud + c
 
 ```bash
 pip install cloudprice-mcp
-cloudprice-mcp setup     # auto-configures Claude Desktop, asks Y/N before writing
+cloudprice-mcp setup     # auto-configures every detected MCP client, asks Y/N before writing
 ```
 
-Then fully restart Claude Desktop. **9 tools appear in Connectors.** Done.
+Then fully restart whichever clients were configured. **10 tools appear** in each. Done.
 
 **Trust spectrum:**
 
 | Command | When to use |
 |---|---|
-| `cloudprice-mcp setup` | Default — interactive prompt before writing |
+| `cloudprice-mcp setup` | Default — detects every installed client, shows the plan, asks Y/N once |
 | `cloudprice-mcp setup --yes` | Skip prompt (CI / scripts) |
-| `cloudprice-mcp setup --dry-run` | Show what would change without writing |
-| `cloudprice-mcp setup --print-config` | Just output the JSON for manual paste |
-| Manual edit | Don't trust running new tools — see [INSTALL.md](INSTALL.md) |
+| `cloudprice-mcp setup --client copilot` | Configure a specific client (repeatable: `--client copilot --client cursor`) |
+| `cloudprice-mcp setup --all` | Configure every known client even if not detected |
+| `cloudprice-mcp setup --force` | Refresh existing entries — useful after upgrade or moving Python |
+| `cloudprice-mcp setup --dry-run` | Show per-client diffs without writing |
+| `cloudprice-mcp setup --print-config` | Emit per-client JSON to stdout for manual paste |
+| `cloudprice-mcp setup --list-clients` | Detection table — which clients are known + installed on this system |
+| Manual edit | Don't trust running new tools — see [INSTALL.md](INSTALL.md) per-client sections |
 
 If something doesn't work, run:
 

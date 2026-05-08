@@ -1,11 +1,17 @@
 """
-`cloudprice-mcp setup` command — auto-configure Claude Desktop on Windows / macOS / Linux.
+`cloudprice-mcp setup` — auto-configure cloudprice-mcp in any installed MCP-compatible client.
 
 Trust spectrum:
-  cloudprice-mcp setup                 # interactive (shows config, asks Y/N)
-  cloudprice-mcp setup --yes           # skip prompt, just do it
-  cloudprice-mcp setup --dry-run       # show what would change, don't write
-  cloudprice-mcp setup --print-config  # output the JSON to stdout for manual paste
+  cloudprice-mcp setup                       # interactive — detect + show + ask Y/N for the batch
+  cloudprice-mcp setup --yes                 # skip prompt, configure all detected
+  cloudprice-mcp setup --client copilot      # configure just one client (repeatable)
+  cloudprice-mcp setup --all                 # configure ALL known clients (creates dirs)
+  cloudprice-mcp setup --force               # overwrite existing cloudprice entry without merging
+  cloudprice-mcp setup --dry-run             # show diffs, write nothing
+  cloudprice-mcp setup --print-config        # emit per-client JSON to stdout
+  cloudprice-mcp setup --list-clients        # show detection table
+
+Supports: Claude Desktop, GitHub Copilot Agent Mode (VS Code), Cursor, Windsurf, Cline, Continue.dev, Zed.
 """
 from __future__ import annotations
 
@@ -15,110 +21,48 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Iterable
+
+from . import clients
 
 
-def _windows_config_paths() -> list[Path]:
-    """Return possible Claude Desktop config paths on Windows, most-specific first."""
-    appdata = os.environ.get("APPDATA")
-    localappdata = os.environ.get("LOCALAPPDATA")
-    paths: list[Path] = []
-    # Microsoft Store install (sandboxed) — try first because it's more common now
-    if localappdata:
-        paths.append(
-            Path(localappdata)
-            / "Packages"
-            / "Claude_pzs8sxrjxfjjc"
-            / "LocalCache"
-            / "Roaming"
-            / "Claude"
-            / "claude_desktop_config.json"
-        )
-    # Direct .exe install
-    if appdata:
-        paths.append(Path(appdata) / "Claude" / "claude_desktop_config.json")
-    return paths
-
-
-def _mac_config_path() -> Path:
-    return (
-        Path.home()
-        / "Library"
-        / "Application Support"
-        / "Claude"
-        / "claude_desktop_config.json"
-    )
-
-
-def _linux_config_path() -> Path:
-    xdg = os.environ.get("XDG_CONFIG_HOME")
-    base = Path(xdg) if xdg else Path.home() / ".config"
-    return base / "Claude" / "claude_desktop_config.json"
-
-
-def detect_config_path() -> tuple[Path, str]:
-    """Return (path, install_kind_label). Prefers existing files; falls back to default."""
-    if sys.platform == "win32":
-        candidates = _windows_config_paths()
-        for path in candidates:
-            if path.exists():
-                kind = "Microsoft Store" if "Packages" in str(path) else "direct .exe"
-                return path, f"Windows ({kind})"
-        # Neither exists yet — default to MS Store path (more common in 2026)
-        return candidates[0], "Windows (MS Store, config dir not yet created)"
-    if sys.platform == "darwin":
-        return _mac_config_path(), "macOS"
-    return _linux_config_path(), "Linux"
+# -------- Backward-compat exports (used by doctor_cmd before the v0.5.1 refactor) --------
 
 
 def detect_python_command() -> str:
-    """Return the absolute path to the current Python interpreter.
+    """Absolute path to the current Python interpreter.
 
-    Why absolute: macOS Claude Desktop launches with a minimal PATH that often
-    doesn't include where `python3` lives. Using sys.executable is bulletproof.
+    Why absolute: macOS / Linux MCP clients launch with a minimal PATH that often
+    doesn't include where `python3` lives. sys.executable is bulletproof.
     """
     return sys.executable
 
 
-def build_cloudprice_entry() -> dict:
-    """The MCP server entry to merge into claude_desktop_config.json."""
-    return {
-        "command": detect_python_command(),
-        "args": ["-m", "cloudprice_mcp.server"],
-    }
+def detect_config_path() -> tuple[Path, str]:
+    """Backward-compat shim. Returns Claude Desktop's config path + a label."""
+    adapter = clients.ClaudeDesktopAdapter()
+    path = adapter.config_path()
+    if sys.platform == "win32":
+        kind = "Microsoft Store" if "Packages" in str(path) else "direct .exe"
+        if not path.exists():
+            return path, f"Windows ({kind}, config dir not yet created)"
+        return path, f"Windows ({kind})"
+    if sys.platform == "darwin":
+        return path, "macOS"
+    return path, "Linux"
 
 
-def merge_config(existing: dict | None, cloudprice_entry: dict) -> dict:
-    """Merge cloudprice into existing config, preserving everything else."""
-    config = dict(existing) if existing else {}
-    mcp_servers = dict(config.get("mcpServers") or {})
-    mcp_servers["cloudprice"] = cloudprice_entry
-    config["mcpServers"] = mcp_servers
-    return config
-
-
-def read_existing_config(path: Path) -> dict | None:
-    if not path.exists():
-        return None
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as e:
-        print(
-            f"⚠️  Existing config at {path} is not valid JSON: {e}",
-            file=sys.stderr,
-        )
-        print("    Refusing to overwrite. Fix manually or back it up first.", file=sys.stderr)
-        sys.exit(2)
+def build_cloudprice_args() -> list[str]:
+    """The args list for invoking the MCP server module."""
+    return ["-m", "cloudprice_mcp.server"]
 
 
 def kill_cached_subprocesses() -> int:
-    """Kill any lingering cloudprice-mcp subprocesses so Claude Desktop respawns fresh."""
+    """Kill any lingering cloudprice-mcp subprocesses so clients respawn fresh."""
     killed = 0
     if sys.platform == "win32":
-        # PowerShell-based kill
         try:
             cmd = (
-                "Get-Process | Where-Object { $_.Path -like \"*cloudprice-mcp*\" } "
+                'Get-Process | Where-Object { $_.Path -like "*cloudprice-mcp*" } '
                 "| ForEach-Object { Stop-Process -Id $_.Id -Force; 1 }"
             )
             result = subprocess.run(
@@ -131,7 +75,6 @@ def kill_cached_subprocesses() -> int:
         except (subprocess.SubprocessError, FileNotFoundError):
             pass
     else:
-        # macOS / Linux: pkill
         for pattern in ("cloudprice-mcp", "cloudprice_mcp"):
             try:
                 result = subprocess.run(
@@ -144,34 +87,7 @@ def kill_cached_subprocesses() -> int:
     return killed
 
 
-def restart_instructions(install_kind: str) -> str:
-    if "Windows" in install_kind:
-        return (
-            "1. Right-click Claude Desktop in the system tray (bottom-right of taskbar) → Quit\n"
-            "   (For Microsoft Store install: also try File → Exit inside Claude window if tray Quit doesn't work.)\n"
-            "2. Wait 5 seconds.\n"
-            "3. Reopen Claude Desktop from Start Menu.\n"
-            "4. Click the + button in the chat composer → Connectors → cloudprice should appear with 9 tools."
-        )
-    if "macOS" in install_kind:
-        return (
-            "1. In Claude Desktop, press Cmd+Q to fully quit (NOT just close the window).\n"
-            "2. Wait 5 seconds.\n"
-            "3. Reopen from Applications or Spotlight (Cmd+Space → 'Claude').\n"
-            "4. Click the + button in the chat composer → Connectors → cloudprice should appear with 9 tools."
-        )
-    return (
-        "1. Quit Claude Desktop fully.\n"
-        "2. Wait 5 seconds.\n"
-        "3. Reopen Claude Desktop.\n"
-        "4. Click the + button → Connectors → cloudprice should appear with 9 tools."
-    )
-
-
-def _print_section(title: str, lines: Iterable[str] = ()) -> None:
-    print(f"\n  {title}")
-    for line in lines:
-        print(f"    {line}")
+# -------- Helpers --------
 
 
 def _confirm(prompt: str) -> bool:
@@ -183,57 +99,211 @@ def _confirm(prompt: str) -> bool:
     return answer in ("", "y", "yes")
 
 
-def run_setup(args: argparse.Namespace) -> int:
-    """Top-level handler for `cloudprice-mcp setup`."""
-    config_path, install_kind = detect_config_path()
-    python_cmd = detect_python_command()
-    cloudprice_entry = build_cloudprice_entry()
-    existing = read_existing_config(config_path)
-    merged = merge_config(existing, cloudprice_entry)
-    merged_json = json.dumps(merged, indent=2)
+def _action_label(action: str) -> str:
+    return {
+        clients.ACTION_WROTE_NEW: "wrote new config file",
+        clients.ACTION_MERGED: "merged into existing config",
+        clients.ACTION_REFRESHED: "refreshed existing cloudprice entry",
+        clients.ACTION_SKIPPED_IDENTICAL: "skipped (already up to date)",
+        clients.ACTION_WOULD_WRITE_NEW: "would write new config file",
+        clients.ACTION_WOULD_MERGE: "would merge into existing config",
+        clients.ACTION_WOULD_REFRESH: "would refresh existing cloudprice entry",
+        clients.ACTION_WOULD_SKIP_IDENTICAL: "would skip (already up to date)",
+    }.get(action, action)
 
-    if args.print_config:
-        # Just print the JSON. No detection chatter, no prompts. Pure paste-ability.
-        print(merged_json)
-        return 0
 
-    print("🔍 cloudprice-mcp setup")
-    _print_section(f"Platform detected: {install_kind}")
-    _print_section(f"Python interpreter (will be used in config): {python_cmd}")
-    _print_section(f"Claude Desktop config path: {config_path}")
-    if existing is None:
-        _print_section("Existing config: NOT FOUND — a new file will be created")
-    else:
-        existing_keys = list(existing.keys())
-        _print_section(
-            f"Existing config: FOUND ({len(existing_keys)} top-level keys: "
-            f"{', '.join(existing_keys) or '<empty>'})"
+def _is_dry_run_action(action: str) -> bool:
+    return action.startswith("would_")
+
+
+# -------- Target selection --------
+
+
+def _select_targets(args: argparse.Namespace) -> list[clients.ClientAdapter]:
+    """Decide which adapters to configure based on flags + detection."""
+    if args.client:
+        out: list[clients.ClientAdapter] = []
+        for name in args.client:
+            adapter = clients.adapter_by_name(name)
+            if adapter is None:
+                known = ", ".join(clients.known_client_names())
+                print(f"⚠ Unknown client '{name}'. Known: {known}", file=sys.stderr)
+                continue
+            out.append(adapter)
+        return out
+    if args.all:
+        return clients.all_adapters()
+    return clients.detect_installed()
+
+
+# -------- Subcommand handlers --------
+
+
+def _list_clients_command() -> int:
+    print("Known MCP-compatible clients (✓ = appears installed on this system):\n")
+    print(f"  {'name':<10} {'installed':<10} {'config path'}")
+    print(f"  {'----':<10} {'---------':<10} {'-----------'}")
+    for adapter in clients.all_adapters():
+        installed = "✓" if adapter.is_installed() else " "
+        print(f"  {adapter.name:<10} {installed:<10} {adapter.config_path()}")
+    print(
+        "\nRun `cloudprice-mcp setup` to configure all detected clients, "
+        "or `cloudprice-mcp setup --client <name>` to pick one."
+    )
+    return 0
+
+
+def _print_config_command(args: argparse.Namespace) -> int:
+    """Emit per-client JSON to stdout. No prompts, no detection chatter."""
+    targets = _select_targets(args)
+    if not targets:
+        print(
+            "⚠ No clients selected. Pass --client <name>, --all, or run from a system with a client installed.",
+            file=sys.stderr,
         )
-        _print_section("All existing keys will be preserved.")
+        return 1
+    command = detect_python_command()
+    args_list = build_cloudprice_args()
+    out = {}
+    for adapter in targets:
+        try:
+            existing = adapter.read_existing_config()
+        except ValueError:
+            existing = None
+        merged = adapter.merge_entry(existing, command, args_list)
+        out[adapter.name] = {
+            "config_path": str(adapter.config_path()),
+            "config": merged,
+        }
+    print(json.dumps(out, indent=2))
+    return 0
 
-    print("\n📝 Config that will be written:")
-    for line in merged_json.splitlines():
-        print(f"    {line}")
 
-    if args.dry_run:
-        print("\n--dry-run set: no file written.")
-        return 0
+# -------- Main orchestrator --------
 
-    if not args.yes and not _confirm("\nProceed?"):
-        print("Aborted. No changes made.")
+
+def run_setup(args: argparse.Namespace) -> int:
+    if getattr(args, "list_clients", False):
+        return _list_clients_command()
+    if args.print_config:
+        return _print_config_command(args)
+
+    targets = _select_targets(args)
+    if not targets:
+        print(
+            "⚠ No clients detected. Pass --client <name> or --all to override.\n"
+            "   Run `cloudprice-mcp setup --list-clients` to see what's known.",
+            file=sys.stderr,
+        )
         return 1
 
-    config_path.parent.mkdir(parents=True, exist_ok=True)
-    config_path.write_text(merged_json + "\n", encoding="utf-8")
-    print(f"\n✅ Wrote config to {config_path}")
+    command = detect_python_command()
+    args_list = build_cloudprice_args()
 
-    killed = kill_cached_subprocesses()
-    if killed:
-        print(f"✅ Killed {killed} cached cloudprice-mcp subprocess(es).")
-    else:
-        print("✅ No cached cloudprice-mcp subprocesses found (clean slate).")
+    print("🔍 cloudprice-mcp setup\n")
+    print(f"  Python interpreter: {command}")
+    print(f"  Args:               {args_list}")
+    print(f"  Targets:            {len(targets)} client(s)\n")
 
-    print("\n🎯 Now restart Claude Desktop:\n")
-    print(restart_instructions(install_kind))
-    print("\n💡 Run `cloudprice-mcp doctor` if anything looks wrong.")
+    # Plan + print
+    plans: list[tuple[clients.ClientAdapter, dict | None, str]] = []
+    for adapter in targets:
+        try:
+            existing = adapter.read_existing_config()
+        except ValueError as e:
+            print(f"  ⚠ {adapter.display_name}: {e}", file=sys.stderr)
+            continue
+        action = adapter.plan_action(existing, command, args_list, args.force, dry_run=True)
+        plans.append((adapter, existing, action))
+
+    if not plans:
+        print("⚠ Nothing to do (all targets had unreadable configs).", file=sys.stderr)
+        return 1
+
+    print("📋 Plan:\n")
+    for adapter, _, action in plans:
+        print(f"  • {adapter.display_name}")
+        print(f"      path:   {adapter.config_path()}")
+        print(f"      action: {_action_label(action)}\n")
+
+    if args.dry_run:
+        print("--dry-run set: no files written.")
+        return 0
+
+    # Confirm
+    interactive_skip = args.yes or args.force
+    if not interactive_skip:
+        if not _confirm("Proceed with all of the above?"):
+            print("Aborted. No changes made.")
+            return 1
+
+    # Apply
+    print()
+    results: list[clients.WriteResult] = []
+    for adapter, _, _ in plans:
+        try:
+            result = adapter.apply(command, args_list, force=args.force, dry_run=False)
+        except ValueError as e:
+            print(f"  ✗ {adapter.display_name}: {e}", file=sys.stderr)
+            continue
+        symbol = "○" if result.action == clients.ACTION_SKIPPED_IDENTICAL else "✓"
+        print(f"  {symbol} {result.display_name}: {_action_label(result.action)}")
+        print(f"      → {result.config_path}")
+        results.append(result)
+
+    # Kill cached subprocesses if Claude Desktop is in the mix (other clients respawn cleanly).
+    if any(r.client_name == "claude" for r in results):
+        killed = kill_cached_subprocesses()
+        if killed:
+            print(f"\n✓ Killed {killed} cached cloudprice-mcp subprocess(es).")
+
+    # Restart instructions per client
+    if results:
+        print("\n🎯 Restart each configured client to pick up the change:\n")
+        for r in results:
+            adapter = clients.adapter_by_name(r.client_name)
+            if adapter is None:
+                continue
+            print(f"  • {r.display_name}")
+            print(f"      {adapter.restart_instructions()}")
+            print(f"      Verify: {adapter.verify_hint()}\n")
+
+    print("💡 Run `cloudprice-mcp doctor` if anything looks wrong.")
     return 0
+
+
+# -------- argparse hookup (called from cli.py) --------
+
+
+def add_setup_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--yes", "-y", action="store_true",
+        help="Skip the interactive Y/N confirmation.",
+    )
+    parser.add_argument(
+        "--force", action="store_true",
+        help="Overwrite existing cloudprice entries without merging — useful for path refresh on upgrade.",
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true",
+        help="Show what would be written without modifying any files.",
+    )
+    parser.add_argument(
+        "--print-config", action="store_true",
+        help="Print per-client JSON to stdout for users who prefer to paste it manually.",
+    )
+    parser.add_argument(
+        "--client", action="append", default=None, metavar="NAME",
+        help=(
+            "Configure a specific client (repeatable). "
+            f"Known: {', '.join(clients.known_client_names())}."
+        ),
+    )
+    parser.add_argument(
+        "--all", action="store_true",
+        help="Configure all known clients, even ones that don't appear installed.",
+    )
+    parser.add_argument(
+        "--list-clients", action="store_true",
+        help="Show which clients are known and which appear installed; exit.",
+    )
