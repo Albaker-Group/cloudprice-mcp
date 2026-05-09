@@ -1,7 +1,7 @@
 [project]
 name = "cloudprice-mcp"
 version = "0.5.3"
-description = "The FinOps MCP server. Structured cloud pricing + analysis primitives for AI assistants — Reserved Instance break-even, multi-cloud TCO, exit-cost migration analyses, egress arbitrage. 10 tools across AWS, Azure, GCP, and OCI covering compute, block storage, object storage, managed Postgres, egress (with OCI 10TB-free shown), Multi-AZ workloads, snapshots with incremental modeling, and RI / Savings Plan discounts. Auto-configures Claude Desktop, GitHub Copilot, Cursor, Windsurf, Cline, Continue, and Zed via `cloudprice-mcp setup`. OCI Always Free tier surfaced explicitly."
+description = "The FinOps MCP server: structured cloud pricing + analysis primitives for AI assistants. RI break-even, multi-cloud TCO, exit-cost migration, egress arbitrage across AWS / Azure / GCP / OCI. 10 tools, 7 AI clients (Claude, Copilot, Cursor, Windsurf, Cline, Continue, Zed)."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
