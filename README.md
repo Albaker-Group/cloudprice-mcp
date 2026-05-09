@@ -98,6 +98,19 @@ For step-by-step manual install (Windows / macOS / Linux), see **[INSTALL.md](IN
 | `compare_object_storage` | Bulk-compare object-storage buckets across **AWS S3 / Azure Blob / GCP Cloud Storage / OCI Object Storage**. Each row specifies capacity_gb + tier (`hot` / `cool` / `archive`). **OCI Always Free 20 GB tier surfaced explicitly** — capacity ≤ 20 GB on OCI hot tier returns $0/mo. |
 | `compare_postgres_database` | Bulk-compare managed PostgreSQL pricing across **AWS RDS / Azure Database for PostgreSQL / GCP Cloud SQL / OCI Database with PostgreSQL**. Each row specifies vCPUs / memory / storage_gb. Storage cost is calculated separately from compute. |
 
+### FinOps decision suite (v0.6, NEW)
+
+Four named tools that turn cross-cloud pricing into FinOps decisions in one call instead of letting the AI chain three+ tools. All four consume a structured workload inventory (compute / storage / object_storage / databases / egress) plus tool-specific options.
+
+| Tool | What it does |
+|---|---|
+| `assess_migration` | "Should I move?" — projects per-target cloud cost, savings %, **one-time exit egress cost**, payback months. Returns a ranked recommendation by 3-year TCO with triggered caveats (e.g., "OCI A1.Flex is ARM — verify your AMIs"). |
+| `optimize_commitment` | "When does my RI / SP / CUD pay back?" — six commitment scenarios (`none` / `1yr_no_upfront` / `1yr_all_upfront` / `3yr_no_upfront` / `3yr_partial_upfront` / `3yr_all_upfront`) with per-scenario monthly cost, upfront, 3-year total, savings %, payback months. Recommends the lowest 3-year TCO option. |
+| `compare_total_cost_of_ownership` | "What's my 3-year cost across clouds?" — multi-year projection with linear YoY growth assumptions for compute / storage / egress. Returns cumulative TCO per cloud, year-by-year breakdown, sensitivity analysis on the dominant variable. The kind of number that goes into board decks. |
+| `find_egress_arbitrage` | "Where do I save on data transfer?" — specialized assess_migration scoped to egress only. Surfaces the OCI 12× moat: at 50 TB/month internet egress, OCI is ~$340 vs $4,000+ on the hyperscalers. |
+
+All four tools accept a `WorkloadInventory` shape that mirrors a 4-section sizing sheet (compute / storage / object_storage / databases / egress) plus optional `commitment`, `multi_az`, and `one_time.data_to_migrate_gb` fields. Output includes `honest_gaps` — explicit list of what each tool does NOT model — to prevent over-trust.
+
 ### Egress + Multi-AZ + better snapshots (v0.5, NEW)
 
 | Tool / Feature | What it does |

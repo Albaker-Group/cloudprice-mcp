@@ -21,6 +21,11 @@ from .compare import (
     compare_postgres,
     compare_workload,
 )
+from .finops.commitment import ALL_SCENARIOS, optimize_commitment
+from .finops.egress_arbitrage import find_egress_arbitrage
+from .finops.migration import assess_migration
+from .finops.tco import GrowthAssumptions, compare_total_cost_of_ownership
+from .inventory import InventoryError, parse_dict
 from .pricing import HOURS_PER_MONTH, Cloud, load_catalog
 
 server: Server = Server("cloudprice-mcp")
@@ -29,6 +34,121 @@ server: Server = Server("cloudprice-mcp")
 def _list_skus(cloud: Cloud) -> list[str]:
     catalog = load_catalog()
     return sorted(i.sku for i in catalog.by_cloud(cloud))
+
+
+# --- v0.6 FinOps inventory schema (shared across all 4 FinOps tools) ---
+
+
+_FINOPS_COMPUTE_ITEM_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "name": {"type": "string", "description": "Friendly label, e.g. 'api-tier'"},
+        "vcpus": {"type": "integer", "minimum": 1},
+        "memory_gb": {"type": "number", "minimum": 0.5},
+        "quantity": {"type": "integer", "minimum": 1, "default": 1},
+        "multi_az": {"type": "boolean", "default": False},
+        "os_disk_gb": {"type": ["number", "null"], "minimum": 0},
+        "os_disk_type": {"type": "string", "enum": ["ssd", "hdd"], "default": "ssd"},
+        "snapshot_count": {"type": "integer", "minimum": 0, "default": 0},
+        "snapshot_incremental_factor": {
+            "type": "number", "minimum": 0, "maximum": 1, "default": 1.0,
+            "description": "1.0 = upper-bound, 0.3 = typical real-world incremental, 0.0 = exclude.",
+        },
+    },
+    "required": ["name", "vcpus", "memory_gb"],
+    "additionalProperties": False,
+}
+
+_FINOPS_STORAGE_ITEM_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "name": {"type": "string"},
+        "capacity_gb": {"type": "number", "minimum": 1},
+        "disk_type": {"type": "string", "enum": ["ssd", "hdd"], "default": "ssd"},
+        "quantity": {"type": "integer", "minimum": 1, "default": 1},
+        "snapshot_count": {"type": "integer", "minimum": 0, "default": 0},
+        "snapshot_incremental_factor": {
+            "type": "number", "minimum": 0, "maximum": 1, "default": 1.0,
+        },
+    },
+    "required": ["name", "capacity_gb"],
+    "additionalProperties": False,
+}
+
+_FINOPS_OBJECT_ITEM_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "name": {"type": "string"},
+        "capacity_gb": {"type": "number", "minimum": 1},
+        "tier": {"type": "string", "enum": ["hot", "cool", "archive"], "default": "hot"},
+        "quantity": {"type": "integer", "minimum": 1, "default": 1},
+    },
+    "required": ["name", "capacity_gb"],
+    "additionalProperties": False,
+}
+
+_FINOPS_DATABASE_ITEM_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "name": {"type": "string"},
+        "vcpus": {"type": "integer", "minimum": 1},
+        "memory_gb": {"type": "number", "minimum": 0.5},
+        "storage_gb": {"type": "number", "minimum": 0, "default": 0},
+        "engine": {"type": "string", "enum": ["postgres"], "default": "postgres"},
+        "quantity": {"type": "integer", "minimum": 1, "default": 1},
+    },
+    "required": ["name", "vcpus", "memory_gb"],
+    "additionalProperties": False,
+}
+
+_FINOPS_EGRESS_ITEM_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "name": {"type": "string"},
+        "gb_per_month": {"type": "number", "minimum": 0},
+        "direction": {
+            "type": "string",
+            "enum": ["out_to_internet", "inter_region"],
+            "default": "out_to_internet",
+        },
+    },
+    "required": ["name", "gb_per_month"],
+    "additionalProperties": False,
+}
+
+_FINOPS_ONE_TIME_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "data_to_migrate_gb": {"type": "number", "minimum": 0, "default": 0},
+    },
+    "additionalProperties": False,
+}
+
+
+def _finops_inventory_properties(*, include_source_cloud: bool = True, include_commitment: bool = True) -> dict:
+    """Build the shared inventory properties dict reused across FinOps tool schemas."""
+    props: dict = {
+        "compute": {"type": "array", "items": _FINOPS_COMPUTE_ITEM_SCHEMA, "default": []},
+        "storage": {"type": "array", "items": _FINOPS_STORAGE_ITEM_SCHEMA, "default": []},
+        "object_storage": {"type": "array", "items": _FINOPS_OBJECT_ITEM_SCHEMA, "default": []},
+        "databases": {"type": "array", "items": _FINOPS_DATABASE_ITEM_SCHEMA, "default": []},
+        "egress": {"type": "array", "items": _FINOPS_EGRESS_ITEM_SCHEMA, "default": []},
+        "multi_az": {"type": "boolean", "default": False},
+        "one_time": _FINOPS_ONE_TIME_SCHEMA,
+    }
+    if include_source_cloud:
+        props["source_cloud"] = {
+            "type": "string",
+            "enum": ["aws", "azure", "gcp", "oci"],
+            "description": "Cloud the workload currently runs on.",
+        }
+    if include_commitment:
+        props["commitment"] = {
+            "type": "string",
+            "enum": list(ALL_SCENARIOS),
+            "default": "none",
+        }
+    return props
 
 
 _COMPUTE_ITEM_SCHEMA = {
@@ -362,6 +482,131 @@ async def list_tools() -> list[Tool]:
                 },
             },
         ),
+        # --- v0.6 FinOps decision tools ---
+        Tool(
+            name="assess_migration",
+            description=(
+                "Project cross-cloud cost + payback for moving a workload away from "
+                "its source cloud. Inputs: source_cloud + workload inventory (compute / "
+                "storage / object_storage / databases / egress) + optional one_time data "
+                "to migrate. Returns per-target monthly cost, savings %, exit egress cost, "
+                "payback months, ranked recommendation by 3-year TCO, and triggered caveats "
+                "(e.g., 'OCI A1.Flex is ARM — verify your AMIs'). The kind of FinOps "
+                "decision that normally lives in a half-built spreadsheet — now one tool call."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    **_finops_inventory_properties(),
+                    "targets": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": ["aws", "azure", "gcp", "oci"]},
+                        "description": "Target clouds to evaluate. Default: all clouds except source_cloud.",
+                    },
+                },
+                "required": ["source_cloud"],
+            },
+        ),
+        Tool(
+            name="optimize_commitment",
+            description=(
+                "Compute per-scenario cost / savings / payback for compute commitment "
+                "options (none, 1yr_no_upfront, 1yr_all_upfront, 3yr_no_upfront, "
+                "3yr_partial_upfront, 3yr_all_upfront). Returns each scenario's monthly "
+                "cost, upfront, 3-year total, savings %, and payback months — plus the "
+                "recommended scenario by lowest 3-year TCO. Compute-only (storage / "
+                "database / object / egress are not discounted because most clouds don't "
+                "offer meaningful commitments on these). Per-family RI tiers come in "
+                "v0.6.x; v0.6.0 uses cloud-level conservative averages."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    **_finops_inventory_properties(include_commitment=False),
+                    "cloud": {
+                        "type": "string",
+                        "enum": ["aws", "azure", "gcp", "oci"],
+                        "description": "Cloud to evaluate (default: source_cloud, then 'aws').",
+                    },
+                    "scenarios": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": list(ALL_SCENARIOS)},
+                        "description": "Subset of commitment scenarios to evaluate. Default: all 6.",
+                    },
+                },
+                "required": ["compute"],
+            },
+        ),
+        Tool(
+            name="compare_total_cost_of_ownership",
+            description=(
+                "Project per-cloud per-year cost over a configurable horizon (default 3 "
+                "years), with linear YoY growth assumptions for compute / storage / egress. "
+                "Returns cumulative TCO per cloud, year-by-year breakdown by category, and "
+                "sensitivity analysis identifying the most impactful growth variable. The "
+                "kind of number that goes into board decks and budget conversations — now "
+                "computed from a public catalog instead of a spreadsheet."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    **_finops_inventory_properties(include_source_cloud=False),
+                    "horizon_years": {
+                        "type": "integer", "minimum": 1, "default": 3,
+                        "description": "Years to project (default 3 — FinOps standard).",
+                    },
+                    "growth": {
+                        "type": "object",
+                        "properties": {
+                            "compute_pct_yoy": {
+                                "type": "number", "default": 0.0,
+                                "description": "+0.20 means +20% YoY compute growth.",
+                            },
+                            "storage_pct_yoy": {"type": "number", "default": 0.0},
+                            "egress_pct_yoy": {"type": "number", "default": 0.0},
+                        },
+                        "additionalProperties": False,
+                    },
+                    "targets": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": ["aws", "azure", "gcp", "oci"]},
+                        "description": "Clouds to project. Default: all 4 clouds.",
+                    },
+                },
+            },
+        ),
+        Tool(
+            name="find_egress_arbitrage",
+            description=(
+                "Specialized assess_migration scoped to egress patterns. Useful when a "
+                "team's largest cost line is data transfer (CDN workloads, video streaming, "
+                "content distribution). Returns per-target egress cost, monthly + annual "
+                "savings, payback months on any one-time exit cost, and recommendation. "
+                "The OCI 12× moat is the headline finding: at 50 TB/month internet egress, "
+                "OCI is roughly $340 vs $4,000+ on the hyperscalers because of OCI's "
+                "10 TB/month free tier + $0.0085/GB beyond."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "source_cloud": {
+                        "type": "string",
+                        "enum": ["aws", "azure", "gcp", "oci"],
+                    },
+                    "egress": {
+                        "type": "array",
+                        "items": _FINOPS_EGRESS_ITEM_SCHEMA,
+                        "minItems": 1,
+                    },
+                    "one_time": _FINOPS_ONE_TIME_SCHEMA,
+                    "targets": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": ["aws", "azure", "gcp", "oci"]},
+                    },
+                },
+                "required": ["source_cloud", "egress"],
+            },
+        ),
     ]
 
 
@@ -531,6 +776,74 @@ def _handle_compare_workload(catalog, args):
     return _ok({"as_of": catalog.as_of, **result})
 
 
+# --- v0.6 FinOps decision tool handlers ---
+
+
+def _handle_assess_migration(catalog, args):
+    try:
+        inv = parse_dict(args)
+    except InventoryError as e:
+        return _err(f"assess_migration: {e}")
+    try:
+        result = assess_migration(catalog, inv, targets=args.get("targets"))
+    except ValueError as e:
+        return _err(f"assess_migration: {e}")
+    return _ok({"as_of": catalog.as_of, **result})
+
+
+def _handle_optimize_commitment(catalog, args):
+    try:
+        inv = parse_dict(args)
+    except InventoryError as e:
+        return _err(f"optimize_commitment: {e}")
+    try:
+        result = optimize_commitment(
+            catalog,
+            inv,
+            cloud=args.get("cloud"),
+            scenarios=args.get("scenarios"),
+        )
+    except ValueError as e:
+        return _err(f"optimize_commitment: {e}")
+    return _ok({"as_of": catalog.as_of, **result})
+
+
+def _handle_compare_total_cost_of_ownership(catalog, args):
+    try:
+        inv = parse_dict(args)
+    except InventoryError as e:
+        return _err(f"compare_total_cost_of_ownership: {e}")
+    growth_args = args.get("growth") or {}
+    growth = GrowthAssumptions(
+        compute_pct_yoy=float(growth_args.get("compute_pct_yoy", 0.0)),
+        storage_pct_yoy=float(growth_args.get("storage_pct_yoy", 0.0)),
+        egress_pct_yoy=float(growth_args.get("egress_pct_yoy", 0.0)),
+    )
+    try:
+        result = compare_total_cost_of_ownership(
+            catalog,
+            inv,
+            horizon_years=int(args.get("horizon_years", 3)),
+            growth=growth,
+            targets=args.get("targets"),
+        )
+    except ValueError as e:
+        return _err(f"compare_total_cost_of_ownership: {e}")
+    return _ok({"as_of": catalog.as_of, **result})
+
+
+def _handle_find_egress_arbitrage(catalog, args):
+    try:
+        inv = parse_dict(args)
+    except InventoryError as e:
+        return _err(f"find_egress_arbitrage: {e}")
+    try:
+        result = find_egress_arbitrage(catalog, inv, targets=args.get("targets"))
+    except ValueError as e:
+        return _err(f"find_egress_arbitrage: {e}")
+    return _ok({"as_of": catalog.as_of, **result})
+
+
 # Tool name → handler dispatch table. Adding a new tool = add one entry.
 _TOOL_HANDLERS = {
     "get_aws_price": _handle_get_aws_price,
@@ -543,6 +856,11 @@ _TOOL_HANDLERS = {
     "compare_object_storage": _handle_compare_object_storage,
     "compare_postgres_database": _handle_compare_postgres_database,
     "compare_workload": _handle_compare_workload,
+    # v0.6 FinOps decision tools
+    "assess_migration": _handle_assess_migration,
+    "optimize_commitment": _handle_optimize_commitment,
+    "compare_total_cost_of_ownership": _handle_compare_total_cost_of_ownership,
+    "find_egress_arbitrage": _handle_find_egress_arbitrage,
 }
 
 

@@ -1,0 +1,48 @@
+{
+  "as_of": "2026-05-09",
+  "notes": "Static cross-cloud risk rules consumed by v0.6+ FinOps decision tools. Each entry has an id (stable for cross-references), a cloud filter ('any' or a specific cloud), a trigger_id (mapped to a Python function in caveats.py), a human-readable message, and a severity ('info', 'warn', 'block'). Block-severity caveats prevent a target from being recommended; warn caveats flag a real risk; info caveats are advisory only.",
+  "caveats": [
+    {
+      "id": "source_equals_target",
+      "cloud": "any",
+      "trigger_id": "source_equals_target",
+      "message": "Target cloud equals source cloud — no migration to assess.",
+      "severity": "block"
+    },
+    {
+      "id": "oci_a1_arm_workload",
+      "cloud": "oci",
+      "trigger_id": "compute_fits_oci_a1_flex",
+      "message": "OCI A1.Flex (Always Free + cheapest) is ARM (Ampere) — verify your x86 AMIs / images can be rebuilt for ARM before relying on these prices.",
+      "severity": "warn"
+    },
+    {
+      "id": "commitment_3yr_not_portable",
+      "cloud": "any",
+      "trigger_id": "commitment_is_3yr",
+      "message": "3-year RI / Savings Plan / CUD commitments are not portable across clouds. Pilot the target cloud at on-demand for 1-3 months before committing.",
+      "severity": "info"
+    },
+    {
+      "id": "high_egress_warrants_dx",
+      "cloud": "any",
+      "trigger_id": "internet_egress_over_100tb_per_month",
+      "message": "Internet egress >100 TB/month typically benefits from Direct Connect / ExpressRoute / Interconnect / FastConnect — not modeled here. Real cost may be 30-50% lower than these estimates.",
+      "severity": "info"
+    },
+    {
+      "id": "multi_az_doubles_compute",
+      "cloud": "any",
+      "trigger_id": "multi_az_enabled",
+      "message": "Multi-AZ flag doubles compute totals on every cloud (sync replicas across two zones). Storage stays at 1× because object/block storage is usually cross-AZ at base price.",
+      "severity": "info"
+    },
+    {
+      "id": "no_compute_workload",
+      "cloud": "any",
+      "trigger_id": "compute_empty",
+      "message": "No compute items in inventory — assessment is storage / object / database / egress only. Compute cost is the largest line item in most workloads; consider whether you've inventoried it.",
+      "severity": "info"
+    }
+  ]
+}

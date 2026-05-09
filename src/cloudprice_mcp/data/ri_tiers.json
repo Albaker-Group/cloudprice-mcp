@@ -1,0 +1,70 @@
+{
+  "as_of": "2026-05-09",
+  "notes": "Cloud-level commitment discount tiers for v0.6.0. Conservative averages from each cloud's published RI / Savings Plan / CUD / Universal Credit calculators as of May 2026. Actual rates vary by instance family, region, payment option, and the cloud's quarterly pricing changes. Per-family tiers (e.g., compute-optimized vs general-purpose) are deferred to v0.6.x — these are deliberately conservative middle estimates; if a real workload returns numbers that look too low to justify a commitment, verify against the cloud's own calculator before signing.",
+  "scenarios": {
+    "none": {
+      "term_months": 0,
+      "upfront_fraction": 0.0,
+      "label": "On-demand"
+    },
+    "1yr_no_upfront": {
+      "term_months": 12,
+      "upfront_fraction": 0.0,
+      "label": "1-year, no upfront"
+    },
+    "1yr_all_upfront": {
+      "term_months": 12,
+      "upfront_fraction": 1.0,
+      "label": "1-year, all upfront"
+    },
+    "3yr_no_upfront": {
+      "term_months": 36,
+      "upfront_fraction": 0.0,
+      "label": "3-year, no upfront"
+    },
+    "3yr_partial_upfront": {
+      "term_months": 36,
+      "upfront_fraction": 0.5,
+      "label": "3-year, partial upfront (50%)"
+    },
+    "3yr_all_upfront": {
+      "term_months": 36,
+      "upfront_fraction": 1.0,
+      "label": "3-year, all upfront"
+    }
+  },
+  "rates_by_cloud": {
+    "aws": {
+      "1yr_no_upfront": 0.32,
+      "1yr_all_upfront": 0.36,
+      "3yr_no_upfront": 0.48,
+      "3yr_partial_upfront": 0.55,
+      "3yr_all_upfront": 0.60,
+      "_notes": "Mix of EC2 Standard RIs + Compute Savings Plans + EC2 Instance Savings Plans across general-purpose / compute-optimized / memory-optimized families. Real rates: m5/t3 ~30-35% 1yr, ~52-62% 3yr; c5 ~32-38% 1yr, ~55-65% 3yr; r5 ~28-34% 1yr, ~50-58% 3yr."
+    },
+    "azure": {
+      "1yr_no_upfront": 0.30,
+      "1yr_all_upfront": 0.36,
+      "3yr_no_upfront": 0.50,
+      "3yr_partial_upfront": 0.55,
+      "3yr_all_upfront": 0.62,
+      "_notes": "Reserved VM Instances. Azure typically structures RIs as all-upfront with monthly billing option that has similar effective rate. 3yr discount averages slightly higher than AWS for D-series/E-series equivalents."
+    },
+    "gcp": {
+      "1yr_no_upfront": 0.30,
+      "1yr_all_upfront": 0.30,
+      "3yr_no_upfront": 0.50,
+      "3yr_partial_upfront": 0.50,
+      "3yr_all_upfront": 0.55,
+      "_notes": "Resource-based Committed Use Discounts (CUDs). GCP's CUDs are billed monthly without an upfront-payment option, so all upfront variants effectively map to the same rate as no-upfront. Spend-based CUDs can reach ~70% discount but are deferred from v0.6.0."
+    },
+    "oci": {
+      "1yr_no_upfront": 0.20,
+      "1yr_all_upfront": 0.25,
+      "3yr_no_upfront": 0.30,
+      "3yr_partial_upfront": 0.33,
+      "3yr_all_upfront": 0.35,
+      "_notes": "Annual Universal Credits / 3-year flex. OCI commitment discounts are smaller than the hyperscalers because OCI's on-demand pricing is already aggressive (especially with Always Free + 10 TB free egress). The break-even calculation often makes Universal Credits less compelling than just paying on-demand at OCI's already-low rates."
+    }
+  }
+}
