@@ -7,21 +7,31 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![alialbaker/cloudprice-mcp MCP server](https://glama.ai/mcp/servers/alialbaker/cloudprice-mcp/badges/score.svg)](https://glama.ai/mcp/servers/alialbaker/cloudprice-mcp)
 
-An MCP server that lets Claude, GitHub Copilot, Cursor, Windsurf, Cline, Continue, Zed — or any MCP-compatible AI — compare cloud pricing across **AWS, Azure, GCP, and OCI** in real time. **10 tools** covering compute, block storage, object storage, managed Postgres, **egress** (internet + inter-region), Multi-AZ workloads, snapshots with realistic incremental modeling, and Reserved Instance / Savings Plan discounts. OCI Always Free tier (4 OCPU compute, 20 GB object storage, 10 TB egress) surfaced explicitly.
+**The FinOps MCP server.** Gives Claude, GitHub Copilot, Cursor, Windsurf, Cline, Continue, Zed — or any MCP-compatible AI — structured pricing data and analysis primitives across **AWS, Azure, GCP, and OCI**. AI clients use cloudprice-mcp to compute Reserved Instance break-even, multi-cloud workload TCO, exit-cost migration analyses, snapshot cost modeling, and egress arbitrage — the kind of FinOps decisions that normally live in three browser tabs and a half-built spreadsheet.
+
+**10 tools** covering compute, block storage, object storage, managed Postgres, **egress** (internet + inter-region with OCI's 10 TB free tier surfaced explicitly), Multi-AZ workloads, snapshots with realistic incremental modeling, and Reserved Instance / Savings Plan discounts. OCI Always Free tier (4 OCPU compute, 20 GB object storage, 10 TB egress) surfaced as $0 line items where it applies.
 
 **One-line install configures every AI client you have:** `pip install cloudprice-mcp && cloudprice-mcp setup` — auto-detects Claude Desktop, GitHub Copilot Agent Mode, Cursor, Windsurf, Cline, Continue.dev, and Zed, then asks Y/N before writing each config.
 
 ![demo](demo.gif)
 
-Ask things like:
+## What does FinOps look like with cloudprice-mcp?
 
-> *"How much does a 4 vCPU / 16 GB Linux VM cost across AWS, Azure, and GCP in us-east?"*
+Real questions teams actually ask. Paste any of these into Claude / Copilot / Cursor with cloudprice-mcp loaded:
 
-> *"I have a 3-tier deployment: 8 web (4/16), 12 app (8/32), 4 DB (16/64), each with a 200 GB SSD OS disk, plus 5 TB SSD shared and 50 TB HDD bulk. Compare AWS vs Azure vs GCP monthly cost."*
+> ***"I have 6× t3.2xlarge running on AWS. Compare the 3-year total cost on-demand vs 1-year Savings Plan vs 3-year RI partial upfront. What's the break-even month?"***
+> → AI calls `compare_workload`, pulls list-price baseline, layers AWS's published RI rates, returns dollar break-even. ~7-month payback typical.
 
-> *"What does an EC2 `t3.xlarge` cost per month?"*
+> ***"I'm thinking about offloading 5 TB of cold-tier object storage from AWS S3 to a cheaper provider. Compare archive-tier cost across all 4 clouds, factor in AWS exit egress, and tell me the payback period."***
+> → AI calls `compare_object_storage` + `compare_egress`, computes one-time exit cost vs ongoing savings. Often surfaces "don't move — AWS Glacier Deep Archive is already tied for cheapest".
 
-Claude calls the right tool, you get a clean answer with per-row + per-cloud + combined totals. No console-clicking. No tab-switching between three pricing calculators.
+> ***"At 50 TB/month internet egress, where am I cheapest? Show the 3-year savings of moving."***
+> → `compare_egress` → OCI ~$340/mo, AWS/Azure/GCP ~$4,000/mo. The 12× difference is OCI's 10 TB free tier — a real moat for content/CDN workloads.
+
+> ***"Size a 3-tier SaaS workload: 8 web (4/16), 12 app (8/32), 4 DB (16/64), 5 TB shared SSD, 50 TB HDD bulk, 10 TB/month egress. Compare full-stack monthly cost across all 4 clouds with multi-AZ and 1-year commitment."***
+> → AI chains `compare_workload` + `compare_egress`, applies multi-AZ multiplier (×2 compute) + commitment discount.
+
+What you get back: dollar numbers traceable to a public catalog, AI-explained tradeoffs, payback periods, and the kind of "don't do that" recommendation that kills bad migrations before they happen. **No console-clicking. No tab-switching between three pricing calculators. No FinOps spreadsheet that goes stale the moment a new SKU drops.**
 
 ---
 
