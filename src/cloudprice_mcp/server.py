@@ -607,6 +607,56 @@ async def list_tools() -> list[Tool]:
                 "required": ["source_cloud", "egress"],
             },
         ),
+        # --- v0.7.1 price-history tools ---
+        Tool(
+            name="get_price_history",
+            description=(
+                "Return the multi-cloud price history for a specific (cloud, sku). "
+                "cloudprice-mcp persists every weekly auto-refresh as a dated snapshot, "
+                "so this is the only FinOps tool that can answer 'what did m5.xlarge "
+                "cost in May?' — neither AWS Calculator nor GCP Estimator preserves "
+                "historical pricing. Returns the timeseries, total change %, and the "
+                "earliest/latest data points. Useful for: validating commitment timing, "
+                "spotting quiet price increases, citing audit-traceable historical "
+                "numbers to a CFO."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "cloud": {"type": "string", "enum": ["aws", "azure", "gcp", "oci"]},
+                    "sku": {"type": "string", "description": "Instance type / SKU name, e.g. m5.xlarge, D2s_v5, e2-standard-2, VM.Standard.E5.Flex.1OCPU"},
+                    "since": {
+                        "type": ["string", "null"],
+                        "description": "Optional ISO date (YYYY-MM-DD); restricts to snapshots on or after this date.",
+                    },
+                },
+                "required": ["cloud", "sku"],
+                "additionalProperties": False,
+            },
+        ),
+        Tool(
+            name="list_tracked_skus",
+            description=(
+                "List every (cloud, sku) pair present in the bundled price-history "
+                "dataset, with how many weekly snapshots exist for each. Use this to "
+                "discover which SKUs you can call get_price_history on, or to find "
+                "the biggest-mover SKUs since a given date. Filter by cloud to scope."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "cloud": {
+                        "type": ["string", "null"],
+                        "enum": ["aws", "azure", "gcp", "oci", None],
+                    },
+                    "since": {
+                        "type": ["string", "null"],
+                        "description": "Optional ISO date; only consider snapshots on or after this date.",
+                    },
+                },
+                "additionalProperties": False,
+            },
+        ),
     ]
 
 
@@ -845,6 +895,57 @@ def _handle_find_egress_arbitrage(catalog, args):
 
 
 # Tool name → handler dispatch table. Adding a new tool = add one entry.
+def _handle_get_price_history(catalog, args):
+    from .history import history_window
+    cloud = args.get("cloud")
+    sku = args.get("sku")
+    since = args.get("since")
+    if not cloud or not sku:
+        return _err("get_price_history: cloud and sku are required")
+    window = history_window(cloud, sku, since=since)
+    if window is None:
+        msg = f"No history for {cloud}/{sku}"
+        if since:
+            msg += f" since {since}"
+        return _err(msg)
+    return _ok(window.to_dict())
+
+
+def _handle_list_tracked_skus(catalog, args):
+    from .history import list_snapshot_dates, load_history
+    cloud = args.get("cloud")
+    since = args.get("since")
+    snapshots = list_snapshot_dates()
+    points = load_history(cloud=cloud, since=since)
+
+    # Aggregate by (cloud, sku)
+    by_key: dict[tuple[str, str], list] = {}
+    for p in points:
+        by_key.setdefault((p.cloud, p.sku), []).append(p)
+
+    skus = []
+    for (c, sku), pts in sorted(by_key.items()):
+        pts_sorted = sorted(pts, key=lambda x: x.as_of)
+        latest = pts_sorted[-1]
+        oldest = pts_sorted[0]
+        change_pct = ((latest.hourly_usd - oldest.hourly_usd) / oldest.hourly_usd * 100) if oldest.hourly_usd > 0 and len(pts_sorted) > 1 else 0.0
+        skus.append({
+            "cloud": c,
+            "sku": sku,
+            "region": latest.region,
+            "data_points": len(pts_sorted),
+            "latest_hourly_usd": latest.hourly_usd,
+            "latest_as_of": latest.as_of,
+            "total_change_pct": round(change_pct, 2),
+        })
+
+    return _ok({
+        "snapshots": snapshots,
+        "filters": {"cloud": cloud, "since": since},
+        "skus": skus,
+    })
+
+
 _TOOL_HANDLERS = {
     "get_aws_price": _handle_get_aws_price,
     "get_azure_price": _handle_get_azure_price,
@@ -861,6 +962,9 @@ _TOOL_HANDLERS = {
     "optimize_commitment": _handle_optimize_commitment,
     "compare_total_cost_of_ownership": _handle_compare_total_cost_of_ownership,
     "find_egress_arbitrage": _handle_find_egress_arbitrage,
+    # v0.7.1 price-history tools
+    "get_price_history": _handle_get_price_history,
+    "list_tracked_skus": _handle_list_tracked_skus,
 }
 
 
