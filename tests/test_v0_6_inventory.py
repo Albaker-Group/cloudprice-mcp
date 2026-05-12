@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 
-from cloudprice_mcp import inventory
 from cloudprice_mcp.inventory import (
     InventoryError,
     WorkloadInventory,

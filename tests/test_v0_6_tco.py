@@ -12,7 +12,6 @@ from cloudprice_mcp.inventory import (
     ComputeItem,
     EgressItem,
     ObjectStorageItem,
-    StorageItem,
     WorkloadInventory,
 )
 from cloudprice_mcp.pricing import load_catalog, reset_catalog_cache
