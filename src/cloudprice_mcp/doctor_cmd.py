@@ -167,7 +167,7 @@ def _check_shell_shim() -> None:
             )
             return
         print(
-            f"  ℹ Scripts dir not on PATH — bare `cloudprice-mcp` won't resolve in your shell.\n"
+            "  ℹ Scripts dir not on PATH — bare `cloudprice-mcp` won't resolve in your shell.\n"
             "       This does NOT affect MCP clients (their configs use absolute paths).\n"
             "       To fix:  cloudprice-mcp fix-path     (or keep using `python -m cloudprice_mcp.cli ...`)"
         )

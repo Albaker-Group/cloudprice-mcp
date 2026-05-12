@@ -20,3 +20,8 @@ reference/
 
 # Local developer tool binaries (mcp-publisher etc.) — not part of the package
 bin/
+
+# One-off operational artifacts (IAM trust policy + role policy templates).
+# Kept in the repo for traceability but never auto-applied.
+scripts/oidc-trust-policy.json
+scripts/cloudprice-mcp-deploy-policy.json

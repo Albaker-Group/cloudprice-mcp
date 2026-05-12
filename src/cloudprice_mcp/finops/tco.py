@@ -28,7 +28,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ..compare import CLOUDS
-from ..inventory import EgressItem, WorkloadInventory
+from ..inventory import WorkloadInventory
 from ..pricing import Cloud, PriceCatalog
 from .migration import (
     _compute_storage_cost,

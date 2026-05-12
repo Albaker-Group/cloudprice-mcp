@@ -8,7 +8,7 @@ from cloudprice_mcp.compare import (
     compare_all_clouds,
     compare_workload,
 )
-from cloudprice_mcp.pricing import HOURS_PER_MONTH, load_catalog, reset_catalog_cache
+from cloudprice_mcp.pricing import load_catalog, reset_catalog_cache
 
 
 def setup_function():
