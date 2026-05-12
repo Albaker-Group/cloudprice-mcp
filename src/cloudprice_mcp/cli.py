@@ -55,6 +55,13 @@ def _build_parser() -> argparse.ArgumentParser:
     from .fix_path_cmd import add_fix_path_arguments
     add_fix_path_arguments(p_fix_path)
 
+    p_history = sub.add_parser(
+        "history",
+        help="Query the bundled multi-cloud price history dataset (v0.7.1+).",
+    )
+    from .history_cmd import add_history_arguments
+    add_history_arguments(p_history)
+
     return parser
 
 
@@ -82,6 +89,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "fix-path":
         from .fix_path_cmd import run_fix_path
         return run_fix_path(args)
+    if args.cmd == "history":
+        from .history_cmd import run_history
+        return run_history(args)
     parser.print_help()
     return 2
 

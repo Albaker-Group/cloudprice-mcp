@@ -9,7 +9,7 @@
 
 **The FinOps MCP server.** Gives Claude, GitHub Copilot, Cursor, Windsurf, Cline, Continue, Zed — or any MCP-compatible AI — structured pricing data and analysis primitives across **AWS, Azure, GCP, and OCI**. AI clients use cloudprice-mcp to compute Reserved Instance break-even, multi-cloud workload TCO, exit-cost migration analyses, snapshot cost modeling, and egress arbitrage — the kind of FinOps decisions that normally live in three browser tabs and a half-built spreadsheet.
 
-**10 tools** covering compute, block storage, object storage, managed Postgres, **egress** (internet + inter-region with OCI's 10 TB free tier surfaced explicitly), Multi-AZ workloads, snapshots with realistic incremental modeling, and Reserved Instance / Savings Plan discounts. OCI Always Free tier (4 OCPU compute, 20 GB object storage, 10 TB egress) surfaced as $0 line items where it applies.
+**16 tools** covering compute, block storage, object storage, managed Postgres, **egress** (internet + inter-region with OCI's 10 TB free tier surfaced explicitly), Multi-AZ workloads, snapshots with realistic incremental modeling, Reserved Instance / Savings Plan discounts, FinOps decision suite (migration, commitment, TCO, egress arbitrage), and **multi-cloud price history** (the only public weekly-refreshed dataset of its kind). OCI Always Free tier (4 OCPU compute, 20 GB object storage, 10 TB egress) surfaced as $0 line items where it applies.
 
 **One-line install configures every AI client you have:** `pip install cloudprice-mcp && cloudprice-mcp setup` — auto-detects Claude Desktop, GitHub Copilot Agent Mode, Cursor, Windsurf, Cline, Continue.dev, and Zed, then asks Y/N before writing each config.
 
@@ -172,9 +172,42 @@ The bundled catalog is refreshed every Sunday by a GitHub Action that hits each 
 - **OCI** — [Public pricing API](https://apexapps.oracle.com/pls/apex/cetools/api/v1/products/) (public, no auth)
 - **GCP** — coming in v0.7.1 (requires API key)
 
-Each refresh writes a **dated snapshot** to `src/cloudprice_mcp/data/prices/YYYY-MM-DD.json` — every JSON ever published lives in the repo. After 12 weekly refreshes you can answer *"what did `m5.xlarge` cost in May?"* — neither AWS Calculator nor GCP Estimator can do that. The history archive is MIT-licensed and grows with every release.
+Each refresh writes a **dated snapshot** to `src/cloudprice_mcp/data/prices/YYYY-MM-DD.json` — every JSON ever published lives in the repo. The history archive is MIT-licensed and grows with every release.
 
 Every tool result includes the catalog's `as_of` field so you know exactly which prices were used.
+
+### Public price history dataset (v0.7.1+)
+
+cloudprice-mcp is the only FinOps tool we know of that **preserves every weekly snapshot**. You can query *"what did m5.xlarge cost in May?"* — neither AWS Calculator nor GCP Estimator can answer that because their pages always show today.
+
+**Query the history from the CLI:**
+
+```bash
+cloudprice-mcp history --cloud oci --sku VM.Standard.E5.Flex.4OCPU
+# oci/VM.Standard.E5.Flex.4OCPU (us-ashburn-1) — 2 data point(s)
+#
+# AS_OF          HOURLY USD
+# --------------------------
+# 2026-04-26   $    0.67600
+# 2026-05-12   $    0.18400
+#
+# Change: -72.78% ($-0.49200/h)
+```
+
+The -72.78% drop is the v0.7.0 auto-refresh **fixing a hand-curated inaccuracy** in the prior OCI catalog — proof that the auto-refresh story works.
+
+**Query the history from AI assistants** via two new MCP tools:
+
+- `get_price_history(cloud, sku, since?)` — full timeseries + change stats
+- `list_tracked_skus(cloud?, since?)` — every (cloud, sku) pair we have history for
+
+Real questions this unlocks:
+
+> *"Has AWS m5.xlarge changed price in the last quarter?"*
+> → AI calls `get_price_history`, returns timeseries with start/end prices and % change.
+
+> *"Show me every multi-cloud price mover since January."*
+> → AI calls `list_tracked_skus(since="2026-01-01")`, returns every SKU + its latest price + change.
 
 ### What's NOT modeled (real-world TCO killers)
 - ✅ ~~Egress / data transfer~~ — **modeled in v0.5** (`compare_egress`)

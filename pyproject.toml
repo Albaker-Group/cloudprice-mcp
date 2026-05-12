@@ -1,7 +1,7 @@
 [project]
 name = "cloudprice-mcp"
-version = "0.7.0"
-description = "The FinOps MCP server: structured cloud pricing + analysis primitives for AI assistants. RI break-even, multi-cloud TCO, exit-cost migration, egress arbitrage across AWS / Azure / GCP / OCI. 10 tools, 7 AI clients (Claude, Copilot, Cursor, Windsurf, Cline, Continue, Zed)."
+version = "0.7.1"
+description = "The FinOps MCP server: multi-cloud pricing + price-history dataset for AI assistants. RI break-even, multi-cloud TCO, migration analysis, egress arbitrage, weekly auto-refreshed catalog with dated snapshots across AWS / Azure / GCP / OCI. 16 tools, 7 AI clients."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
