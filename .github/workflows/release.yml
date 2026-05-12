@@ -1,0 +1,57 @@
+name: Release to PyPI
+
+# Triggered by pushing a version tag (e.g., `git tag v0.7.0 && git push --tags`).
+# Uses PyPI Trusted Publishing (OIDC) -- NO API TOKEN.
+#
+# One-time setup (per project, by repo owner):
+#   1. PyPI -> Account settings -> Publishing -> Add a new pending publisher
+#   2. Project name: cloudprice-mcp
+#   3. Owner: Albaker-Group
+#   4. Repository: cloudprice-mcp
+#   5. Workflow name: release.yml
+#   6. Environment name: pypi
+# After the first successful publish, PyPI flips the pending publisher to active.
+# After that, every tag push publishes automatically -- no token to rotate, ever.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  id-token: write   # required for PyPI Trusted Publishing OIDC
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install build tooling
+        run: pip install build
+      - name: Build sdist + wheel
+        run: python -m build
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/cloudprice-mcp/
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Publish to PyPI (Trusted Publisher)
+        uses: pypa/gh-action-pypi-publish@release/v1

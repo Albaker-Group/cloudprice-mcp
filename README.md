@@ -163,7 +163,18 @@ Prices are bundled as a curated dataset of common SKUs across **4 clouds**:
 - **Object storage** (Hot / Cool / Archive tiers per cloud, including OCI Always Free 20 GB)
 - **Managed PostgreSQL** (RDS / Azure DB / Cloud SQL / OCI Database with PostgreSQL)
 
-OCI pricing is verified against [Oracle's public pricing API](https://apexapps.oracle.com/pls/apex/cetools/api/v1/products/). Each response includes an `as_of` date so you know how fresh the data is.
+### Auto-refreshed weekly (v0.7+)
+
+The bundled catalog is refreshed every Sunday by a GitHub Action that hits each cloud's public pricing API:
+
+- **AWS** — [Pricing API](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/price-changes.html) (via boto3, OIDC-authenticated)
+- **Azure** — [Retail Prices API](https://learn.microsoft.com/en-us/rest/api/cost-management/retail-prices/azure-retail-prices) (public, no auth)
+- **OCI** — [Public pricing API](https://apexapps.oracle.com/pls/apex/cetools/api/v1/products/) (public, no auth)
+- **GCP** — coming in v0.7.1 (requires API key)
+
+Each refresh writes a **dated snapshot** to `src/cloudprice_mcp/data/prices/YYYY-MM-DD.json` — every JSON ever published lives in the repo. After 12 weekly refreshes you can answer *"what did `m5.xlarge` cost in May?"* — neither AWS Calculator nor GCP Estimator can do that. The history archive is MIT-licensed and grows with every release.
+
+Every tool result includes the catalog's `as_of` field so you know exactly which prices were used.
 
 ### What's NOT modeled (real-world TCO killers)
 - ✅ ~~Egress / data transfer~~ — **modeled in v0.5** (`compare_egress`)
@@ -179,17 +190,12 @@ OCI pricing is verified against [Oracle's public pricing API](https://apexapps.o
 
 These are tracked roadmap items. **Use cloudprice-mcp for the on-demand list-price baseline; do final TCO analysis with each cloud's own calculator before relying on numbers for big decisions.**
 
-**Live API mode is on the roadmap** (issue #1) — would fetch prices directly from each cloud's public pricing API:
-- AWS: [Price List Bulk API](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/price-changes.html)
-- Azure: [Retail Prices API](https://learn.microsoft.com/en-us/rest/api/cost-management/retail-prices/azure-retail-prices)
-- GCP: [Cloud Billing Catalog API](https://cloud.google.com/billing/docs/reference/rest/v1/services.skus)
-
-Track [issue #1](https://github.com/alialbaker/cloudprice-mcp/issues/1) for live mode and [issue #2](https://github.com/alialbaker/cloudprice-mcp/issues/2) for cross-cloud service mapping (RDS↔SQL DB↔Cloud SQL, etc.).
+**Live runtime pricing (not just weekly refresh)** is being considered for v0.8 — would fetch prices directly at MCP tool invocation time instead of from the bundled catalog. Trade-offs: slower (network call per tool use), adds GCP auth requirement, breaks offline mode. The v0.7 weekly auto-refresh covers ~95% of the credibility win at zero runtime cost; live mode is opt-in territory.
 
 ## Develop locally
 
 ```bash
-git clone https://github.com/alialbaker/cloudprice-mcp.git
+git clone https://github.com/Albaker-Group/cloudprice-mcp.git
 cd cloudprice-mcp
 pip install -e ".[dev]"
 pytest
