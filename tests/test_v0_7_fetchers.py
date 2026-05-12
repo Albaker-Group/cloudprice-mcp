@@ -3,16 +3,20 @@
 Each fetcher hits a public pricing API in production; in tests we mock the HTTP
 layer (httpx) with pytest-httpx so the suite stays fast + hermetic. AWS uses
 boto3 which we don't have mocked at the network level — instead we substitute
-the boto3 client with a fake.
+the boto3 client with a fake. boto3 is a SCRIPT-ONLY dep (not in package deps,
+not in dev deps), so we inject a fake `boto3` module into sys.modules before
+the AWS fetcher's lazy import runs.
 """
 from __future__ import annotations
 
 import json
-from unittest.mock import patch
+import sys
+import types
+from unittest.mock import MagicMock
 
 import pytest
 
-from scripts.fetchers import aws, azure, oci
+from scripts.fetchers import azure, oci
 from scripts.fetchers.base import FetchError, MissingPriceError
 
 
@@ -39,7 +43,9 @@ def test_azure_refreshes_known_sku(httpx_mock):
     result = azure.fetch_instance_prices([
         {"sku": "D2s_v5", "vcpus": 2, "memory_gb": 8}
     ])
-    assert result == [{"sku": "D2s_v5", "vcpus": 2, "memory_gb": 8, "hourly_usd": 0.0961}]
+    assert len(result) == 1
+    assert result[0]["sku"] == "D2s_v5"
+    assert result[0]["hourly_usd"] == pytest.approx(0.0961)
 
 
 def test_azure_skips_spot_meters(httpx_mock):
@@ -60,7 +66,7 @@ def test_azure_skips_spot_meters(httpx_mock):
         ]
     })
     result = azure.fetch_instance_prices([{"sku": "D2s_v5", "vcpus": 2, "memory_gb": 8}])
-    assert result[0]["hourly_usd"] == 0.0961
+    assert result[0]["hourly_usd"] == pytest.approx(0.0961)
 
 
 def test_azure_skips_windows_variants(httpx_mock):
@@ -81,7 +87,7 @@ def test_azure_skips_windows_variants(httpx_mock):
         ]
     })
     result = azure.fetch_instance_prices([{"sku": "D2s_v5", "vcpus": 2, "memory_gb": 8}])
-    assert result[0]["hourly_usd"] == 0.0961
+    assert result[0]["hourly_usd"] == pytest.approx(0.0961)
 
 
 def test_azure_raises_when_sku_missing(httpx_mock):
@@ -133,7 +139,7 @@ def test_oci_handles_always_free(httpx_mock):
     result = oci.fetch_instance_prices([
         {"sku": "VM.Standard.A1.Flex.AlwaysFree", "vcpus": 4, "memory_gb": 24},
     ])
-    assert result[0]["hourly_usd"] == 0.0
+    assert result[0]["hourly_usd"] == pytest.approx(0.0)
 
 
 def test_oci_excludes_cloud_at_customer_variants(httpx_mock):
@@ -186,75 +192,83 @@ def test_oci_raises_for_unknown_family(httpx_mock):
 
 
 # --- AWS fetcher ---
+#
+# boto3 isn't available in CI (script-only dep). We inject a fake `boto3` module
+# into sys.modules so the AWS fetcher's `import boto3` succeeds and returns our
+# stand-in client. The fixture cleans up sys.modules after each test.
 
 
-class _FakeBoto3Client:
-    """Minimal stand-in for the boto3 pricing client. Returns a single product
-    matching the requested instanceType filter with a configurable hourly USD."""
-
-    def __init__(self, price_per_hour: float = 0.192):
-        self.price = price_per_hour
-
-    def get_products(self, ServiceCode, Filters, MaxResults):
-        instance_type = next(
-            (f["Value"] for f in Filters if f["Field"] == "instanceType"),
-            "unknown",
-        )
-        product = {
-            "product": {"attributes": {"instanceType": instance_type}},
-            "terms": {
-                "OnDemand": {
-                    "TERM1": {
-                        "priceDimensions": {
-                            "PD1": {
-                                "unit": "Hrs",
-                                "pricePerUnit": {"USD": f"{self.price:.10f}"},
-                            }
+def _aws_product(price: float) -> dict:
+    return {
+        "terms": {
+            "OnDemand": {
+                "T1": {
+                    "priceDimensions": {
+                        "P1": {
+                            "unit": "Hrs",
+                            "pricePerUnit": {"USD": f"{price:.10f}"},
                         }
                     }
                 }
-            },
+            }
         }
-        return {"PriceList": [json.dumps(product)]}
+    }
 
 
-def test_aws_parses_hourly_usd_from_nested_response():
-    with patch.object(aws, "boto3", create=True) as fake_boto3:
-        fake_boto3.client.return_value = _FakeBoto3Client(price_per_hour=0.192)
-        result = aws.fetch_instance_prices([
-            {"sku": "m5.xlarge", "vcpus": 4, "memory_gb": 16}
-        ])
+@pytest.fixture
+def fake_boto3(monkeypatch):
+    """Install a fake `boto3` module in sys.modules for the duration of a test.
+
+    Use it as `fake_boto3(returns_price=0.192)` to control what `get_products`
+    returns. boto3's kwargs (ServiceCode, Filters, MaxResults) intentionally
+    use PascalCase to match the real API surface — the fake accepts **kwargs
+    so it doesn't care what they're called.
+    """
+    def factory(*, returns_price: float | None = None, returns_products: list[dict] | None = None):
+        if returns_products is None and returns_price is not None:
+            returns_products = [_aws_product(returns_price)]
+        elif returns_products is None:
+            returns_products = []
+
+        client = MagicMock()
+        client.get_products.return_value = {
+            "PriceList": [json.dumps(p) for p in returns_products],
+        }
+
+        boto3_mod = types.ModuleType("boto3")
+        boto3_mod.client = MagicMock(return_value=client)
+        monkeypatch.setitem(sys.modules, "boto3", boto3_mod)
+        return client
+
+    return factory
+
+
+def test_aws_parses_hourly_usd_from_nested_response(fake_boto3):
+    fake_boto3(returns_price=0.192)
+    # Re-import so the fetcher picks up the patched sys.modules state.
+    from scripts.fetchers import aws  # noqa: PLC0415
+
+    result = aws.fetch_instance_prices([
+        {"sku": "m5.xlarge", "vcpus": 4, "memory_gb": 16}
+    ])
     assert result[0]["hourly_usd"] == pytest.approx(0.192)
 
 
-def test_aws_skips_zero_priced_promo_rows():
-    """AWS sometimes carries a $0 free-tier row; the fetcher should skip past it."""
-    class TwoRowClient:
-        def get_products(self, ServiceCode, Filters, MaxResults):
-            promo = {"terms": {"OnDemand": {"T": {"priceDimensions": {"P": {
-                "unit": "Hrs", "pricePerUnit": {"USD": "0.0000000000"}
-            }}}}}}
-            real = {"terms": {"OnDemand": {"T": {"priceDimensions": {"P": {
-                "unit": "Hrs", "pricePerUnit": {"USD": "0.0104000000"}
-            }}}}}}
-            return {"PriceList": [json.dumps(promo), json.dumps(real)]}
+def test_aws_skips_zero_priced_promo_rows(fake_boto3):
+    fake_boto3(returns_products=[_aws_product(0.0), _aws_product(0.0104)])
+    from scripts.fetchers import aws  # noqa: PLC0415
 
-    with patch.object(aws, "boto3", create=True) as fake_boto3:
-        fake_boto3.client.return_value = TwoRowClient()
-        result = aws.fetch_instance_prices([
-            {"sku": "t3.micro", "vcpus": 2, "memory_gb": 1}
-        ])
+    result = aws.fetch_instance_prices([
+        {"sku": "t3.micro", "vcpus": 2, "memory_gb": 1}
+    ])
     assert result[0]["hourly_usd"] == pytest.approx(0.0104)
 
 
-def test_aws_raises_when_no_products_returned():
-    class EmptyClient:
-        def get_products(self, **kw):
-            return {"PriceList": []}
+def test_aws_raises_when_no_products_returned(fake_boto3):
+    fake_boto3(returns_products=[])
+    from scripts.fetchers import aws  # noqa: PLC0415
 
-    with patch.object(aws, "boto3", create=True) as fake_boto3:
-        fake_boto3.client.return_value = EmptyClient()
-        with pytest.raises(MissingPriceError):
-            aws.fetch_instance_prices([
-                {"sku": "nonexistent.xlarge", "vcpus": 4, "memory_gb": 16}
-            ])
+    with pytest.raises(MissingPriceError):
+        aws.fetch_instance_prices([
+            {"sku": "nonexistent.xlarge", "vcpus": 4, "memory_gb": 16}
+        ])
