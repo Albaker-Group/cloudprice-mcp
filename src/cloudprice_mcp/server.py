@@ -24,6 +24,7 @@ from .compare import (
 from .finops.commitment import ALL_SCENARIOS, optimize_commitment
 from .finops.egress_arbitrage import find_egress_arbitrage
 from .finops.migration import assess_migration
+from .finops.sentinel import watch_workload
 from .finops.spot import compare_spot
 from .finops.tco import GrowthAssumptions, compare_total_cost_of_ownership
 from .inventory import InventoryError, parse_dict
@@ -658,6 +659,43 @@ async def list_tools() -> list[Tool]:
                 "additionalProperties": False,
             },
         ),
+        # --- v0.9.0 Cost Drift Sentinel ---
+        Tool(
+            name="watch_workload",
+            description=(
+                "Cost Drift Sentinel — turns cloudprice from query tool into agent capability. "
+                "First call (no baseline): captures the current per-cloud monthly cost for the "
+                "workload as a baseline JSON the caller persists. Subsequent calls (with the "
+                "saved baseline): compute today's cost, compare to baseline, return a structured "
+                "drift report with per-cloud delta + SKU-level attribution from the price-history "
+                "dataset. Stateless — no database, no server-side storage. Drop the baseline JSON "
+                "into a git repo or any durable location. Designed for scheduled agents (GitHub "
+                "Actions cron, Claude Code's autonomous mode, etc.) to detect 'has this cost "
+                "moved since I signed off?' between runs."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    **_finops_inventory_properties(),
+                    "baseline": {
+                        "type": ["object", "null"],
+                        "description": (
+                            "Previously returned baseline JSON. Pass null on first call to "
+                            "capture a fresh baseline; pass it back on subsequent calls to "
+                            "detect drift."
+                        ),
+                    },
+                    "alert_threshold_pct": {
+                        "type": "number",
+                        "minimum": 0,
+                        "default": 5.0,
+                        "description": "Drift % that triggers an alert. Defaults to 5%.",
+                    },
+                },
+                "required": ["source_cloud"],
+                "additionalProperties": False,
+            },
+        ),
         # --- v0.8.1 spot pricing tool ---
         Tool(
             name="compare_spot",
@@ -947,6 +985,20 @@ def _handle_compare_spot(catalog, args):
     return _ok({"as_of": catalog.as_of, **result})
 
 
+def _handle_watch_workload(catalog, args):
+    try:
+        inv = parse_dict(args)
+    except InventoryError as e:
+        return _err(f"watch_workload: {e}")
+    baseline = args.get("baseline")
+    threshold = float(args.get("alert_threshold_pct", 5.0))
+    try:
+        result = watch_workload(catalog, inv, baseline=baseline, alert_threshold_pct=threshold)
+    except ValueError as e:
+        return _err(f"watch_workload: {e}")
+    return _ok({"as_of": catalog.as_of, **result})
+
+
 def _handle_list_tracked_skus(catalog, args):
     from .history import list_snapshot_dates, load_history
     cloud = args.get("cloud")
@@ -1003,6 +1055,8 @@ _TOOL_HANDLERS = {
     "list_tracked_skus": _handle_list_tracked_skus,
     # v0.8.1 spot pricing tool
     "compare_spot": _handle_compare_spot,
+    # v0.9.0 cost drift sentinel
+    "watch_workload": _handle_watch_workload,
 }
 
 

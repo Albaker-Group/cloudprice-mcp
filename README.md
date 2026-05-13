@@ -9,7 +9,7 @@
 
 **The FinOps MCP server.** Gives Claude, GitHub Copilot, Cursor, Windsurf, Cline, Continue, Zed — or any MCP-compatible AI — structured pricing data and analysis primitives across **AWS, Azure, GCP, and OCI**. AI clients use cloudprice-mcp to compute Reserved Instance break-even, multi-cloud workload TCO, exit-cost migration analyses, snapshot cost modeling, and egress arbitrage — the kind of FinOps decisions that normally live in three browser tabs and a half-built spreadsheet.
 
-**16 tools** covering compute, block storage, object storage, managed Postgres, **egress** (internet + inter-region with OCI's 10 TB free tier surfaced explicitly), Multi-AZ workloads, snapshots with realistic incremental modeling, Reserved Instance / Savings Plan discounts, FinOps decision suite (migration, commitment, TCO, egress arbitrage), and **multi-cloud price history** (the only public weekly-refreshed dataset of its kind). OCI Always Free tier (4 OCPU compute, 20 GB object storage, 10 TB egress) surfaced as $0 line items where it applies.
+**18 tools** covering compute, block storage, object storage, managed Postgres, **egress** (internet + inter-region with OCI's 10 TB free tier surfaced explicitly), Multi-AZ workloads, snapshots with realistic incremental modeling, Reserved Instance / Savings Plan discounts, FinOps decision suite (migration, commitment, TCO, egress arbitrage), **multi-cloud spot pricing** with eviction tradeoffs, **multi-cloud price history** (the only public weekly-refreshed dataset of its kind), and a **stateless cost drift sentinel** for scheduled agents. OCI Always Free tier (4 OCPU compute, 20 GB object storage, 10 TB egress) surfaced as $0 line items where it applies.
 
 **One-line install configures every AI client you have:** `pip install cloudprice-mcp && cloudprice-mcp setup` — auto-detects Claude Desktop, GitHub Copilot Agent Mode, Cursor, Windsurf, Cline, Continue.dev, and Zed, then asks Y/N before writing each config.
 
@@ -208,6 +208,34 @@ Real questions this unlocks:
 
 > *"Show me every multi-cloud price mover since January."*
 > → AI calls `list_tracked_skus(since="2026-01-01")`, returns every SKU + its latest price + change.
+
+### Cost Drift Sentinel (v0.9.0+)
+
+The shift from query tool to **agent capability**. Most FinOps tools answer *"what does this cost?"* — this one answers *"is this still what it cost when I signed off on it?"*
+
+```python
+from cloudprice_mcp.finops.sentinel import watch_workload
+from cloudprice_mcp.inventory import parse_dict
+from cloudprice_mcp.pricing import load_catalog
+
+# First call — captures a baseline. Persist the returned baseline JSON.
+result = watch_workload(load_catalog(), parse_dict(workload_spec))
+save(result["baseline"])
+
+# Later — pass the baseline back to detect drift.
+report = watch_workload(load_catalog(), parse_dict(workload_spec), baseline=load_baseline())
+if report["alert_triggered"]:
+    notify_humans(report["headline"])
+```
+
+**Stateless by design** — no server, no database. The baseline JSON lives wherever you want: a file in your IaC repo, S3, Slack DM, anywhere. Each call is a pure function of `(catalog, workload, baseline)`.
+
+Key properties:
+- **Workload-hash protected** — if you change the workload spec, the hash mismatches and you get a fresh baseline rather than a misleading drift report
+- **SKU-level attribution** — the drift report consults the price-history dataset and surfaces which SKUs moved the most between baseline and now
+- **Configurable threshold** — default 5%; pass `alert_threshold_pct=N` to tune
+
+**Plug-and-play GitHub Action template** at [`examples/cloudprice-watch.yml`](examples/cloudprice-watch.yml) — drop it in any IaC repo with a `workload.json`, get auto-opened GitHub issues when costs drift. Baseline is committed to your repo so the history is auditable.
 
 ### What's NOT modeled (real-world TCO killers)
 - ✅ ~~Egress / data transfer~~ — **modeled in v0.5** (`compare_egress`)
