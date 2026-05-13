@@ -1,0 +1,20 @@
+{
+  "_doc": "Example workload spec for the cloudprice drift sentinel. Drop this in your IaC repo alongside .github/workflows/cloudprice-watch.yml. Adjust the compute/storage/egress to match your actual footprint. Same schema as the assess_migration / watch_workload MCP tool inputs.",
+  "source_cloud": "aws",
+  "compute": [
+    {"name": "web", "vcpus": 4, "memory_gb": 16, "quantity": 6},
+    {"name": "app", "vcpus": 8, "memory_gb": 32, "quantity": 12},
+    {"name": "db",  "vcpus": 16, "memory_gb": 64, "quantity": 4}
+  ],
+  "storage": [
+    {"name": "shared-ssd", "capacity_gb": 5000, "disk_type": "ssd", "quantity": 1}
+  ],
+  "object_storage": [
+    {"name": "hot-data", "capacity_gb": 10240, "tier": "hot"}
+  ],
+  "egress": [
+    {"name": "internet-egress", "gb_per_month": 51200, "direction": "out_to_internet"}
+  ],
+  "multi_az": true,
+  "commitment": "1yr_no_upfront"
+}
