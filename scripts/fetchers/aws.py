@@ -31,14 +31,57 @@ def fetch_instance_prices(skus: list[InstanceSku]) -> list[InstanceSku]:
             "before running the refresh script."
         ) from e
 
-    client = boto3.client("pricing", region_name=_PRICING_REGION)
+    pricing_client = boto3.client("pricing", region_name=_PRICING_REGION)
+    # Spot prices live in the regional EC2 endpoint, not the cross-region Pricing API.
+    ec2_client = boto3.client("ec2", region_name=region)
     refreshed: list[InstanceSku] = []
     for entry in skus:
         sku = entry["sku"]
         entry_out = dict(entry)
-        entry_out["hourly_usd"] = _lookup_one(client, sku)
+        entry_out["hourly_usd"] = _lookup_one(pricing_client, sku)
+        spot = _lookup_spot(ec2_client, sku)
+        if spot is not None:
+            entry_out["spot_hourly_usd"] = spot
         refreshed.append(entry_out)  # type: ignore[arg-type]
     return refreshed
+
+
+def _lookup_spot(ec2_client, instance_type: str) -> float | None:
+    """Return the most recent Linux spot price for the instance type, averaged
+    across AZs. AWS spot prices fluctuate by AZ; this returns the mean of the
+    latest observation per AZ — a defensible single number for planning.
+
+    Returns None if no spot history is published (rare; usually means the
+    instance type doesn't support Spot in this region).
+    """
+    try:
+        resp = ec2_client.describe_spot_price_history(
+            InstanceTypes=[instance_type],
+            ProductDescriptions=["Linux/UNIX"],
+            MaxResults=20,  # one per AZ × recent samples
+        )
+    except Exception:  # noqa: BLE001
+        # Permission errors etc. shouldn't kill the on-demand refresh.
+        # Log via the orchestrator's summary by letting the field stay unset.
+        return None
+
+    items = resp.get("SpotPriceHistory") or []
+    if not items:
+        return None
+    # Pick the most recent timestamp per AZ, then average.
+    by_az: dict[str, tuple[str, float]] = {}
+    for item in items:
+        az = item.get("AvailabilityZone") or ""
+        ts = item.get("Timestamp")
+        price = float(item.get("SpotPrice", 0))
+        ts_str = ts.isoformat() if hasattr(ts, "isoformat") else str(ts)
+        prev = by_az.get(az)
+        if prev is None or ts_str > prev[0]:
+            by_az[az] = (ts_str, price)
+    if not by_az:
+        return None
+    avg = sum(v[1] for v in by_az.values()) / len(by_az)
+    return round(avg, 6)
 
 
 def fetch_storage_prices(skus):

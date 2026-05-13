@@ -41,6 +41,12 @@ _SKU_FAMILY_RE = re.compile(r"VM\.Standard\.([A-Z]\d+)\.Flex")
 _SKU_OCPU_RE = re.compile(r"\.(\d+)OCPU$", re.IGNORECASE)
 
 
+# OCI Preemptible Instances are billed at a flat 50% discount on the equivalent
+# on-demand Flex shape (per Oracle's published pricing as of 2026-05; no separate
+# spot API — the discount is a regional billing rule, not a per-SKU SKU).
+_OCI_PREEMPTIBLE_DISCOUNT = 0.50
+
+
 def fetch_instance_prices(skus: list[InstanceSku]) -> list[InstanceSku]:
     rates = _fetch_family_rates()
     refreshed: list[InstanceSku] = []
@@ -54,6 +60,7 @@ def fetch_instance_prices(skus: list[InstanceSku]) -> list[InstanceSku]:
             # Always Free tier — A1.Flex up to 4 OCPU + 24 GB. Hardcoded $0.
             entry_out = dict(entry)
             entry_out["hourly_usd"] = 0.0
+            entry_out["spot_hourly_usd"] = 0.0  # already free, no further discount
             refreshed.append(entry_out)  # type: ignore[arg-type]
             continue
 
@@ -72,6 +79,7 @@ def fetch_instance_prices(skus: list[InstanceSku]) -> list[InstanceSku]:
         hourly = round(ocpu_count * ocpu_rate + memory_gb * mem_rate, 6)
         entry_out = dict(entry)
         entry_out["hourly_usd"] = hourly
+        entry_out["spot_hourly_usd"] = round(hourly * (1 - _OCI_PREEMPTIBLE_DISCOUNT), 6)
         refreshed.append(entry_out)  # type: ignore[arg-type]
     return refreshed
 
