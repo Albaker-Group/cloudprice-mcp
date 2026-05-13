@@ -64,6 +64,10 @@ jobs:
 
       - name: Run refresh
         id: refresh
+        env:
+          # GCP Cloud Billing Catalog API key (restricted to Cloud Billing API).
+          # Without this the GCP fetcher cleanly skips. With it, all 4 clouds refresh.
+          GCP_API_KEY: ${{ secrets.GCP_API_KEY }}
         run: |
           set -euo pipefail
           python scripts/refresh_prices.py --output-summary /tmp/summary.md
