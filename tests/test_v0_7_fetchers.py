@@ -38,14 +38,39 @@ def _azure_response(unit_price: float, *, meter_name: str = "D2s v5", product_na
     }
 
 
+def _no_spot_response() -> dict:
+    """v0.8.1: the fetcher makes a second call to look up the spot price.
+    Tests that don't care about spot can use this to satisfy the call."""
+    return {"Items": []}
+
+
 def test_azure_refreshes_known_sku(httpx_mock):
     httpx_mock.add_response(json=_azure_response(0.0961))
+    httpx_mock.add_response(json=_no_spot_response())  # spot lookup
     result = azure.fetch_instance_prices([
         {"sku": "D2s_v5", "vcpus": 2, "memory_gb": 8}
     ])
     assert len(result) == 1
     assert result[0]["sku"] == "D2s_v5"
     assert result[0]["hourly_usd"] == pytest.approx(0.0961)
+    assert "spot_hourly_usd" not in result[0]
+
+
+def test_azure_populates_spot_when_available(httpx_mock):
+    httpx_mock.add_response(json=_azure_response(0.0961))
+    httpx_mock.add_response(json={
+        "Items": [
+            {
+                "armSkuName": "Standard_D2s_v5",
+                "meterName": "D2s v5 Spot",
+                "productName": "Virtual Machines DSv5 Series",
+                "unitPrice": 0.0192,  # ~80% off on-demand
+            }
+        ]
+    })
+    result = azure.fetch_instance_prices([{"sku": "D2s_v5", "vcpus": 2, "memory_gb": 8}])
+    assert result[0]["hourly_usd"] == pytest.approx(0.0961)
+    assert result[0]["spot_hourly_usd"] == pytest.approx(0.0192)
 
 
 def test_azure_skips_spot_meters(httpx_mock):
@@ -55,7 +80,7 @@ def test_azure_skips_spot_meters(httpx_mock):
                 "armSkuName": "Standard_D2s_v5",
                 "meterName": "D2s v5 Spot",
                 "productName": "Virtual Machines DSv5 Series",
-                "unitPrice": 0.01,  # spot — should be ignored
+                "unitPrice": 0.01,  # spot — should be ignored for ON-DEMAND lookup
             },
             {
                 "armSkuName": "Standard_D2s_v5",
@@ -65,6 +90,7 @@ def test_azure_skips_spot_meters(httpx_mock):
             },
         ]
     })
+    httpx_mock.add_response(json=_no_spot_response())  # spot lookup
     result = azure.fetch_instance_prices([{"sku": "D2s_v5", "vcpus": 2, "memory_gb": 8}])
     assert result[0]["hourly_usd"] == pytest.approx(0.0961)
 
@@ -86,6 +112,7 @@ def test_azure_skips_windows_variants(httpx_mock):
             },
         ]
     })
+    httpx_mock.add_response(json=_no_spot_response())  # spot lookup
     result = azure.fetch_instance_prices([{"sku": "D2s_v5", "vcpus": 2, "memory_gb": 8}])
     assert result[0]["hourly_usd"] == pytest.approx(0.0961)
 

@@ -24,6 +24,7 @@ from .compare import (
 from .finops.commitment import ALL_SCENARIOS, optimize_commitment
 from .finops.egress_arbitrage import find_egress_arbitrage
 from .finops.migration import assess_migration
+from .finops.spot import compare_spot
 from .finops.tco import GrowthAssumptions, compare_total_cost_of_ownership
 from .inventory import InventoryError, parse_dict
 from .pricing import HOURS_PER_MONTH, Cloud, load_catalog
@@ -657,6 +658,33 @@ async def list_tools() -> list[Tool]:
                 "additionalProperties": False,
             },
         ),
+        # --- v0.8.1 spot pricing tool ---
+        Tool(
+            name="compare_spot",
+            description=(
+                "Compare spot / preemptible pricing for a vCPU + memory shape across "
+                "AWS, Azure, GCP, and OCI. Returns per-cloud best-matching SKU + "
+                "on-demand cost + spot cost + savings + eviction characteristics, "
+                "ranked cheapest-first. The only multi-cloud spot comparison "
+                "anyone publishes openly — AWS Spot vs Azure Spot vs GCP Spot VMs "
+                "vs OCI Preemptible all use different pricing + eviction models, "
+                "and this tool surfaces every one of them with their tradeoffs."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "vcpus": {"type": "integer", "minimum": 1},
+                    "memory_gb": {"type": "number", "minimum": 0.5},
+                    "targets": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": ["aws", "azure", "gcp", "oci"]},
+                        "description": "Optional list of clouds to compare; default all 4.",
+                    },
+                },
+                "required": ["vcpus", "memory_gb"],
+                "additionalProperties": False,
+            },
+        ),
     ]
 
 
@@ -911,6 +939,14 @@ def _handle_get_price_history(catalog, args):
     return _ok(window.to_dict())
 
 
+def _handle_compare_spot(catalog, args):
+    vcpus = int(args["vcpus"])
+    memory_gb = float(args["memory_gb"])
+    targets = args.get("targets")
+    result = compare_spot(catalog, vcpus=vcpus, memory_gb=memory_gb, targets=targets)
+    return _ok({"as_of": catalog.as_of, **result})
+
+
 def _handle_list_tracked_skus(catalog, args):
     from .history import list_snapshot_dates, load_history
     cloud = args.get("cloud")
@@ -965,6 +1001,8 @@ _TOOL_HANDLERS = {
     # v0.7.1 price-history tools
     "get_price_history": _handle_get_price_history,
     "list_tracked_skus": _handle_list_tracked_skus,
+    # v0.8.1 spot pricing tool
+    "compare_spot": _handle_compare_spot,
 }
 
 

@@ -30,7 +30,10 @@ def fetch_instance_prices(skus: list[InstanceSku]) -> list[InstanceSku]:
             sku = entry["sku"]
             arm_name = sku if sku.startswith("Standard_") else f"Standard_{sku}"
             entry_out = dict(entry)
-            entry_out["hourly_usd"] = _lookup_one(client, arm_name)
+            entry_out["hourly_usd"] = _lookup_one(client, arm_name, spot=False)
+            spot = _lookup_one(client, arm_name, spot=True, allow_missing=True)
+            if spot is not None:
+                entry_out["spot_hourly_usd"] = spot
             refreshed.append(entry_out)  # type: ignore[arg-type]
     return refreshed
 
@@ -44,7 +47,20 @@ def fetch_storage_prices(skus):
     return list(skus)
 
 
-def _lookup_one(client: httpx.Client, arm_sku_name: str) -> float:
+def _lookup_one(
+    client: httpx.Client,
+    arm_sku_name: str,
+    *,
+    spot: bool = False,
+    allow_missing: bool = False,
+) -> float | None:
+    """Find the per-hour Linux on-demand (or Spot) price for an Azure VM SKU.
+
+    `spot=False` returns the regular Consumption rate (raises MissingPriceError
+    if absent). `spot=True` returns the Spot rate when one is published; pair
+    with `allow_missing=True` to return None instead of raising (not every Azure
+    SKU has a Spot variant — e.g., B-series burstable).
+    """
     filter_q = (
         f"serviceName eq 'Virtual Machines' "
         f"and armRegionName eq '{region}' "
@@ -61,16 +77,31 @@ def _lookup_one(client: httpx.Client, arm_sku_name: str) -> float:
         raise FetchError(f"Azure Retail Prices API error for {arm_sku_name}: {e}") from e
 
     items = resp.json().get("Items", [])
-    linux_ondemand = [
-        i for i in items
-        if "Spot" not in (i.get("meterName") or "")
-        and "Low Priority" not in (i.get("meterName") or "")
-        and "Windows" not in (i.get("productName") or "")
-    ]
-    if not linux_ondemand:
+
+    def is_windows(i): return "Windows" in (i.get("productName") or "")
+    def meter(i): return i.get("meterName") or ""
+
+    if spot:
+        matches = [
+            i for i in items
+            if "Spot" in meter(i)
+            and "Low Priority" not in meter(i)
+            and not is_windows(i)
+        ]
+    else:
+        matches = [
+            i for i in items
+            if "Spot" not in meter(i)
+            and "Low Priority" not in meter(i)
+            and not is_windows(i)
+        ]
+
+    if not matches:
+        if allow_missing:
+            return None
         raise MissingPriceError(
-            f"Azure: no Linux on-demand price found for {arm_sku_name} "
-            f"(API returned {len(items)} rows). SKU may have been retired."
+            f"Azure: no Linux {'spot' if spot else 'on-demand'} price found for "
+            f"{arm_sku_name} (API returned {len(items)} rows). SKU may have been retired."
         )
-    cheapest = min(linux_ondemand, key=lambda i: i["unitPrice"])
+    cheapest = min(matches, key=lambda i: i["unitPrice"])
     return float(cheapest["unitPrice"])

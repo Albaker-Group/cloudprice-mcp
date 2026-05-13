@@ -19,13 +19,29 @@ class Instance:
     memory_gb: float
     hourly_usd: float
     region: str
+    # v0.8.1+ optional spot/preemptible rate for this SKU. None when the cloud
+    # doesn't publish a separate spot price or the fetcher hasn't run yet.
+    spot_hourly_usd: float | None = None
 
     @property
     def monthly_usd(self) -> float:
         return round(self.hourly_usd * HOURS_PER_MONTH, 2)
 
+    @property
+    def spot_monthly_usd(self) -> float | None:
+        if self.spot_hourly_usd is None:
+            return None
+        return round(self.spot_hourly_usd * HOURS_PER_MONTH, 2)
+
+    @property
+    def spot_discount_pct(self) -> int | None:
+        """Whole-number percent discount of spot vs on-demand. None if no spot."""
+        if self.spot_hourly_usd is None or self.hourly_usd <= 0:
+            return None
+        return round((1 - self.spot_hourly_usd / self.hourly_usd) * 100)
+
     def to_dict(self) -> dict:
-        return {
+        out = {
             "cloud": self.cloud,
             "sku": self.sku,
             "region": self.region,
@@ -34,6 +50,11 @@ class Instance:
             "hourly_usd": self.hourly_usd,
             "monthly_usd": self.monthly_usd,
         }
+        if self.spot_hourly_usd is not None:
+            out["spot_hourly_usd"] = self.spot_hourly_usd
+            out["spot_monthly_usd"] = self.spot_monthly_usd
+            out["spot_discount_pct"] = self.spot_discount_pct
+        return out
 
 
 @dataclass(frozen=True)
@@ -256,6 +277,7 @@ def load_catalog() -> PriceCatalog:
         block = raw[cloud]
         region = block["region"]
         for entry in block["instances"]:
+            spot_hourly = entry.get("spot_hourly_usd")
             instances.append(
                 Instance(
                     cloud=cloud,
@@ -264,6 +286,7 @@ def load_catalog() -> PriceCatalog:
                     memory_gb=float(entry["memory_gb"]),
                     hourly_usd=float(entry["hourly_usd"]),
                     region=region,
+                    spot_hourly_usd=float(spot_hourly) if spot_hourly is not None else None,
                 )
             )
         for entry in block.get("storage", []):
