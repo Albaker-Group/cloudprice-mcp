@@ -25,3 +25,6 @@ bin/
 # Kept in the repo for traceability but never auto-applied.
 scripts/oidc-trust-policy.json
 scripts/cloudprice-mcp-deploy-policy.json
+*_APPLICATION.md
+*_SUBMISSION.md
+LINKEDIN_*.md
