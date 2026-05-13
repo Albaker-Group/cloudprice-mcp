@@ -1,21 +1,28 @@
 """GCP Cloud Billing Catalog API fetcher.
 
-The Cloud Billing Catalog exposes every public SKU GCP charges for. The
-"Compute Engine" service ID is fixed: 6F81-5844-456A.
+STATUS (verified 2026-05-13): the catalog's family naming has drifted away
+from what this fetcher was originally written for. The current us-east1 SKUs
+include N4, A2, A3Plus, C4, C2D AMD, M3, N1 Predefined, Z3 — but NOT
+plain "E2 Instance Core", "N2 Instance Core", or "C2 Instance Core" with
+the predefined pricing shape we expected. GCP appears to have consolidated
+predefined-VM pricing into custom-shape billing for newer families.
 
-GCP compute pricing is computed from family-level core + RAM rates rather than
-looked up directly per instance type, similar to OCI:
+Until the SKU mapping is reworked (planned v0.10+ — needs deciding whether
+to swap the catalog over to N4/C4/N1 Predefined, or compute predefined
+rates from custom-instance rates), the fetcher gracefully fails so the
+other 3 cloud refreshes still produce a weekly snapshot. The orchestrator
+treats a MissingPriceError here as "skip GCP this run."
 
+The auth piece (GCP_API_KEY + Cloud Billing API enablement) IS working —
+verified 2026-05-13 with the cloudprice-mcp-refresh key restricted to
+Cloud Billing API. The 403s are resolved; the remaining issue is purely
+that the SKUs we look up no longer exist under their old names.
+
+Original design (kept for the v0.10+ refactor):
     predefined VM (n2/c2/e2-standard/n2-highmem/n2-highcpu):
         hourly_usd = vcpus * core_rate + memory_gb * ram_rate
-
     shared-core VMs (e2-micro / e2-small / e2-medium):
         per-SKU fixed price published as a separate billing line each
-
-We hit the API with an API key (free to provision in any GCP project under
-"APIs & Services -> Credentials -> Create API Key", restricted to "Cloud
-Billing API"). Without GCP_API_KEY the fetcher cleanly skips so the
-orchestrator can still produce a snapshot of the other 3 clouds.
 """
 from __future__ import annotations
 
