@@ -170,7 +170,7 @@ The bundled catalog is refreshed every Sunday by a GitHub Action that hits each 
 - **AWS** — [Pricing API](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/price-changes.html) (via boto3, OIDC-authenticated)
 - **Azure** — [Retail Prices API](https://learn.microsoft.com/en-us/rest/api/cost-management/retail-prices/azure-retail-prices) (public, no auth)
 - **OCI** — [Public pricing API](https://apexapps.oracle.com/pls/apex/cetools/api/v1/products/) (public, no auth)
-- **GCP** — coming in v0.7.1 (requires API key)
+- **GCP** — [Cloud Billing Catalog API](https://cloud.google.com/billing/docs/reference/rest/v1/services.skus) (via API key — `GCP_API_KEY` env var). Added in v0.8.0
 
 Each refresh writes a **dated snapshot** to `src/cloudprice_mcp/data/prices/YYYY-MM-DD.json` — every JSON ever published lives in the repo. The history archive is MIT-licensed and grows with every release.
 
