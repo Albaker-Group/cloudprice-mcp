@@ -1,0 +1,52 @@
+{
+  "as_of": "2026-05-13",
+  "notes": "Public-source carbon model for cloudprice-mcp v0.10. PUE comes from each cloud's published sustainability report; grid carbon intensity (gCO2e/kWh) uses location-based published averages for the region the catalog tracks. Renewable matching reflects each cloud's public claim for the relevant year. Market-based residual = grid_intensity * (1 - renewable_match_pct/100).",
+  "sources": {
+    "pue_method": "Each provider's most recent published global or region PUE (Sustainability Report / ESG disclosure).",
+    "grid_intensity_method": "Region-specific gCO2e/kWh from public grid-emissions data (EPA eGRID 2023 for US, similar published baselines elsewhere). Values are annual averages.",
+    "renewable_matching_method": "Provider's published annual renewable match. AWS/Azure claim 100% as of 2024/2025; GCP publishes CFE (carbon-free-energy) percentages per region; OCI claims 100% in EU but doesn't publish per-region figures, so we use a conservative 0% match for non-EU.",
+    "power_model_method": "Estimated CPU+memory power based on industry-published per-core figures for the relevant CPU family. ARM (Graviton, Ampere, Axion) ~30% lower than x86. Memory ~0.3W/GB across all families. Assumes 50% average utilization."
+  },
+
+  "pue_by_cloud": {
+    "aws": 1.135,
+    "azure": 1.12,
+    "gcp": 1.10,
+    "oci": 1.15
+  },
+
+  "grid_intensity_g_per_kwh_by_region": {
+    "us-east-1": 369,
+    "eastus": 369,
+    "us-east1": 412,
+    "us-ashburn-1": 369,
+    "_default": 400
+  },
+
+  "renewable_match_pct_by_cloud": {
+    "aws": 100,
+    "azure": 100,
+    "gcp": 64,
+    "oci": 0
+  },
+
+  "power_model": {
+    "x86_watts_per_vcpu": 8.0,
+    "arm_watts_per_vcpu": 5.5,
+    "memory_watts_per_gb": 0.3,
+    "utilization_factor": 0.5,
+    "_notes": "Final watts = (vcpus * watts_per_vcpu + memory_gb * memory_watts_per_gb) * utilization_factor. PUE multiplier applied separately at total-power stage."
+  },
+
+  "arm_sku_substrings": [
+    "a1.",
+    "m6g", "c6g", "r6g", "t4g",
+    "m7g", "c7g", "r7g",
+    "m8g", "c8g", "r8g",
+    "_arm",
+    "ps_v",
+    "pls_v",
+    "A1.Flex", "A2.Flex",
+    "t2a-", "c4a-"
+  ]
+}

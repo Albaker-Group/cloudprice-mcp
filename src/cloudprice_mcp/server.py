@@ -24,6 +24,7 @@ from .compare import (
 from .finops.commitment import ALL_SCENARIOS, optimize_commitment
 from .finops.egress_arbitrage import find_egress_arbitrage
 from .finops.migration import assess_migration
+from .finops.carbon import compare_carbon_footprint
 from .finops.sentinel import watch_workload
 from .finops.spot import compare_spot
 from .finops.tco import GrowthAssumptions, compare_total_cost_of_ownership
@@ -659,6 +660,36 @@ async def list_tools() -> list[Tool]:
                 "additionalProperties": False,
             },
         ),
+        # --- v0.10.0 Carbon-aware FinOps ---
+        Tool(
+            name="compare_carbon_footprint",
+            description=(
+                "Multi-cloud carbon footprint comparison — the only FinOps tool that "
+                "returns both USD cost AND kg CO2e/month side-by-side. For a given "
+                "vCPU + memory shape (and optional quantity), returns per-cloud best-"
+                "matching SKU + monthly cost + grid-based kg CO2e + market-based "
+                "residual kg CO2e (after the cloud's published renewable matching) + "
+                "power class (x86 vs ARM). Ranked cheapest-carbon-first. Surfaces "
+                "tradeoffs (AWS/Azure 100% renewable matched, GCP ~64% CFE, OCI "
+                "unmatched outside EU). Use when the user cares about sustainability, "
+                "Green FinOps, or carbon-cost dual optimization."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "vcpus": {"type": "integer", "minimum": 1},
+                    "memory_gb": {"type": "number", "minimum": 0.5},
+                    "quantity": {"type": "integer", "minimum": 1, "default": 1},
+                    "targets": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": ["aws", "azure", "gcp", "oci"]},
+                        "description": "Optional list of clouds to compare; default all 4.",
+                    },
+                },
+                "required": ["vcpus", "memory_gb"],
+                "additionalProperties": False,
+            },
+        ),
         # --- v0.9.0 Cost Drift Sentinel ---
         Tool(
             name="watch_workload",
@@ -985,6 +1016,20 @@ def _handle_compare_spot(catalog, args):
     return _ok({"as_of": catalog.as_of, **result})
 
 
+def _handle_compare_carbon_footprint(catalog, args):
+    vcpus = int(args["vcpus"])
+    memory_gb = float(args["memory_gb"])
+    quantity = int(args.get("quantity", 1))
+    targets = args.get("targets")
+    try:
+        result = compare_carbon_footprint(
+            catalog, vcpus=vcpus, memory_gb=memory_gb, quantity=quantity, targets=targets,
+        )
+    except ValueError as e:
+        return _err(f"compare_carbon_footprint: {e}")
+    return _ok({"as_of": catalog.as_of, **result})
+
+
 def _handle_watch_workload(catalog, args):
     try:
         inv = parse_dict(args)
@@ -1057,6 +1102,8 @@ _TOOL_HANDLERS = {
     "compare_spot": _handle_compare_spot,
     # v0.9.0 cost drift sentinel
     "watch_workload": _handle_watch_workload,
+    # v0.10.0 carbon-aware FinOps
+    "compare_carbon_footprint": _handle_compare_carbon_footprint,
 }
 
 

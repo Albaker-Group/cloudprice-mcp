@@ -9,7 +9,7 @@
 
 **The FinOps MCP server.** Gives Claude, GitHub Copilot, Cursor, Windsurf, Cline, Continue, Zed — or any MCP-compatible AI — structured pricing data and analysis primitives across **AWS, Azure, GCP, and OCI**. AI clients use cloudprice-mcp to compute Reserved Instance break-even, multi-cloud workload TCO, exit-cost migration analyses, snapshot cost modeling, and egress arbitrage — the kind of FinOps decisions that normally live in three browser tabs and a half-built spreadsheet.
 
-**18 tools** covering compute, block storage, object storage, managed Postgres, **egress** (internet + inter-region with OCI's 10 TB free tier surfaced explicitly), Multi-AZ workloads, snapshots with realistic incremental modeling, Reserved Instance / Savings Plan discounts, FinOps decision suite (migration, commitment, TCO, egress arbitrage), **multi-cloud spot pricing** with eviction tradeoffs, **multi-cloud price history** (the only public weekly-refreshed dataset of its kind), and a **stateless cost drift sentinel** for scheduled agents. OCI Always Free tier (4 OCPU compute, 20 GB object storage, 10 TB egress) surfaced as $0 line items where it applies.
+**19 tools** covering compute, block storage, object storage, managed Postgres, **egress** (internet + inter-region with OCI's 10 TB free tier surfaced explicitly), Multi-AZ workloads, snapshots with realistic incremental modeling, Reserved Instance / Savings Plan discounts, FinOps decision suite (migration, commitment, TCO, egress arbitrage), **multi-cloud spot pricing** with eviction tradeoffs, **multi-cloud price history** (the only public weekly-refreshed dataset of its kind), a **stateless cost drift sentinel** for scheduled agents, and **multi-cloud carbon footprint** (the only FinOps tool returning $ AND kg CO2e on the same query). OCI Always Free tier (4 OCPU compute, 20 GB object storage, 10 TB egress) surfaced as $0 line items where it applies.
 
 **One-line install configures every AI client you have:** `pip install cloudprice-mcp && cloudprice-mcp setup` — auto-detects Claude Desktop, GitHub Copilot Agent Mode, Cursor, Windsurf, Cline, Continue.dev, and Zed, then asks Y/N before writing each config.
 
@@ -236,6 +236,41 @@ Key properties:
 - **Configurable threshold** — default 5%; pass `alert_threshold_pct=N` to tune
 
 **Plug-and-play GitHub Action template** at [`examples/cloudprice-watch.yml`](examples/cloudprice-watch.yml) — drop it in any IaC repo with a `workload.json`, get auto-opened GitHub issues when costs drift. Baseline is committed to your repo so the history is auditable.
+
+### Carbon-aware FinOps (v0.10.0+) — kg CO2e per workload, alongside USD
+
+The only FinOps MCP tool that returns **both cost AND carbon footprint** on the same query. AWS / Azure / GCP each publish their own customer dashboards (Customer Carbon Footprint Tool, Emissions Impact Dashboard, Carbon Footprint) — but none compare across providers. cloudprice does.
+
+```python
+from cloudprice_mcp.finops.carbon import compare_carbon_footprint
+from cloudprice_mcp.pricing import load_catalog
+
+result = compare_carbon_footprint(load_catalog(), vcpus=8, memory_gb=32, quantity=6)
+# Returns per-cloud SKU + cost + power class (x86/ARM) + monthly kWh +
+# grid-based kg CO2e + market-based residual kg CO2e (after renewable matching),
+# ranked cheapest-carbon-first.
+```
+
+What's modeled (and disclosed in every response):
+- **PUE per cloud** from each provider's public sustainability report
+- **Grid carbon intensity per region** from public emissions data (EPA eGRID for US, similar baselines elsewhere)
+- **Renewable matching** per provider (AWS/Azure 100%, GCP ~64% CFE, OCI unmatched outside EU)
+- **ARM vs x86 power class** — ARM SKUs (Graviton, Ampere, Axion) modeled at ~30% lower per-vCPU power
+- **Two carbon numbers per cloud**: location-based (grid) AND market-based (residual after renewable matching) — both surfaced so auditors can see both perspectives
+
+What's NOT modeled (always disclosed via `honest_gaps[]`):
+- Embodied carbon (server manufacturing) — operational only
+- GPU / network / storage power — compute + memory only
+- Time-of-use grid variation — annual averages only
+- Real-time 24/7 CFE matching — GCP publishes annual CFE %; cloudprice uses that
+
+Real questions this unlocks:
+
+> *"What's the lowest-carbon cloud for 4 vCPU / 16 GB at 6 instances?"*
+> → AI calls `compare_carbon_footprint`, returns per-cloud kg CO2e/mo ranked.
+
+> *"How much carbon do I save running on ARM vs x86?"*
+> → AI calls it twice with the same shape but different target SKUs.
 
 ### What's NOT modeled (real-world TCO killers)
 - ✅ ~~Egress / data transfer~~ — **modeled in v0.5** (`compare_egress`)
