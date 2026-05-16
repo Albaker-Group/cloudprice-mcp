@@ -116,6 +116,69 @@
         "memory_gb": 64,
         "hourly_usd": 0.504,
         "spot_hourly_usd": 0.16554
+      },
+      {
+        "sku": "g4dn.xlarge",
+        "vcpus": 4,
+        "memory_gb": 16,
+        "hourly_usd": 0.526,
+        "gpu_type": "T4",
+        "gpu_count": 1,
+        "gpu_memory_gb_each": 16
+      },
+      {
+        "sku": "g5.xlarge",
+        "vcpus": 4,
+        "memory_gb": 16,
+        "hourly_usd": 1.006,
+        "gpu_type": "A10G",
+        "gpu_count": 1,
+        "gpu_memory_gb_each": 24
+      },
+      {
+        "sku": "g6.xlarge",
+        "vcpus": 4,
+        "memory_gb": 16,
+        "hourly_usd": 0.8048,
+        "gpu_type": "L4",
+        "gpu_count": 1,
+        "gpu_memory_gb_each": 24
+      },
+      {
+        "sku": "g6e.xlarge",
+        "vcpus": 4,
+        "memory_gb": 32,
+        "hourly_usd": 1.861,
+        "gpu_type": "L40S",
+        "gpu_count": 1,
+        "gpu_memory_gb_each": 48
+      },
+      {
+        "sku": "p3.2xlarge",
+        "vcpus": 8,
+        "memory_gb": 61,
+        "hourly_usd": 3.06,
+        "gpu_type": "V100",
+        "gpu_count": 1,
+        "gpu_memory_gb_each": 16
+      },
+      {
+        "sku": "p4d.24xlarge",
+        "vcpus": 96,
+        "memory_gb": 1152,
+        "hourly_usd": 32.77,
+        "gpu_type": "A100",
+        "gpu_count": 8,
+        "gpu_memory_gb_each": 40
+      },
+      {
+        "sku": "p5.48xlarge",
+        "vcpus": 192,
+        "memory_gb": 2048,
+        "hourly_usd": 98.32,
+        "gpu_type": "H100",
+        "gpu_count": 8,
+        "gpu_memory_gb_each": 80
       }
     ],
     "storage": [
@@ -229,6 +292,60 @@
         "memory_gb": 64,
         "hourly_usd": 0.504,
         "spot_hourly_usd": 0.113299
+      },
+      {
+        "sku": "NC4as_T4_v3",
+        "vcpus": 4,
+        "memory_gb": 28,
+        "hourly_usd": 0.526,
+        "gpu_type": "T4",
+        "gpu_count": 1,
+        "gpu_memory_gb_each": 16
+      },
+      {
+        "sku": "NV6ads_A10_v5",
+        "vcpus": 6,
+        "memory_gb": 55,
+        "hourly_usd": 0.454,
+        "gpu_type": "A10",
+        "gpu_count": 1,
+        "gpu_memory_gb_each": 24
+      },
+      {
+        "sku": "NC24ads_A100_v4",
+        "vcpus": 24,
+        "memory_gb": 220,
+        "hourly_usd": 3.673,
+        "gpu_type": "A100",
+        "gpu_count": 1,
+        "gpu_memory_gb_each": 80
+      },
+      {
+        "sku": "ND96asr_v4",
+        "vcpus": 96,
+        "memory_gb": 900,
+        "hourly_usd": 27.2,
+        "gpu_type": "A100",
+        "gpu_count": 8,
+        "gpu_memory_gb_each": 40
+      },
+      {
+        "sku": "NC40ads_H100_v5",
+        "vcpus": 40,
+        "memory_gb": 320,
+        "hourly_usd": 12.29,
+        "gpu_type": "H100",
+        "gpu_count": 1,
+        "gpu_memory_gb_each": 80
+      },
+      {
+        "sku": "ND96isr_H100_v5",
+        "vcpus": 96,
+        "memory_gb": 1900,
+        "hourly_usd": 98.32,
+        "gpu_type": "H100",
+        "gpu_count": 8,
+        "gpu_memory_gb_each": 80
       }
     ],
     "storage": [
@@ -338,6 +455,60 @@
         "vcpus": 4,
         "memory_gb": 4,
         "hourly_usd": 0.1432
+      },
+      {
+        "sku": "n1-standard-4+t4",
+        "vcpus": 4,
+        "memory_gb": 15,
+        "hourly_usd": 0.51,
+        "gpu_type": "T4",
+        "gpu_count": 1,
+        "gpu_memory_gb_each": 16
+      },
+      {
+        "sku": "g2-standard-4",
+        "vcpus": 4,
+        "memory_gb": 16,
+        "hourly_usd": 0.708,
+        "gpu_type": "L4",
+        "gpu_count": 1,
+        "gpu_memory_gb_each": 24
+      },
+      {
+        "sku": "a2-highgpu-1g",
+        "vcpus": 12,
+        "memory_gb": 85,
+        "hourly_usd": 3.673,
+        "gpu_type": "A100",
+        "gpu_count": 1,
+        "gpu_memory_gb_each": 40
+      },
+      {
+        "sku": "a2-ultragpu-1g",
+        "vcpus": 12,
+        "memory_gb": 170,
+        "hourly_usd": 5.07,
+        "gpu_type": "A100",
+        "gpu_count": 1,
+        "gpu_memory_gb_each": 80
+      },
+      {
+        "sku": "a2-highgpu-8g",
+        "vcpus": 96,
+        "memory_gb": 680,
+        "hourly_usd": 29.38,
+        "gpu_type": "A100",
+        "gpu_count": 8,
+        "gpu_memory_gb_each": 40
+      },
+      {
+        "sku": "a3-highgpu-8g",
+        "vcpus": 208,
+        "memory_gb": 1872,
+        "hourly_usd": 84.4,
+        "gpu_type": "H100",
+        "gpu_count": 8,
+        "gpu_memory_gb_each": 80
       }
     ],
     "storage": [
@@ -428,6 +599,60 @@
         "memory_gb": 24,
         "hourly_usd": 0.0,
         "spot_hourly_usd": 0.0
+      },
+      {
+        "sku": "VM.GPU.A10.1",
+        "vcpus": 15,
+        "memory_gb": 240,
+        "hourly_usd": 2.0,
+        "gpu_type": "A10",
+        "gpu_count": 1,
+        "gpu_memory_gb_each": 24
+      },
+      {
+        "sku": "VM.GPU.A10.2",
+        "vcpus": 30,
+        "memory_gb": 480,
+        "hourly_usd": 4.0,
+        "gpu_type": "A10",
+        "gpu_count": 2,
+        "gpu_memory_gb_each": 24
+      },
+      {
+        "sku": "BM.GPU.A10.4",
+        "vcpus": 64,
+        "memory_gb": 1024,
+        "hourly_usd": 8.0,
+        "gpu_type": "A10",
+        "gpu_count": 4,
+        "gpu_memory_gb_each": 24
+      },
+      {
+        "sku": "BM.GPU4.8",
+        "vcpus": 64,
+        "memory_gb": 2048,
+        "hourly_usd": 24.4,
+        "gpu_type": "A100",
+        "gpu_count": 8,
+        "gpu_memory_gb_each": 40
+      },
+      {
+        "sku": "BM.GPU.A100-v2.8",
+        "vcpus": 128,
+        "memory_gb": 2048,
+        "hourly_usd": 40.0,
+        "gpu_type": "A100",
+        "gpu_count": 8,
+        "gpu_memory_gb_each": 80
+      },
+      {
+        "sku": "BM.GPU.H100.8",
+        "vcpus": 112,
+        "memory_gb": 2048,
+        "hourly_usd": 80.0,
+        "gpu_type": "H100",
+        "gpu_count": 8,
+        "gpu_memory_gb_each": 80
       }
     ],
     "storage": [
