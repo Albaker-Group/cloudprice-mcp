@@ -22,6 +22,10 @@ class Instance:
     # v0.8.1+ optional spot/preemptible rate for this SKU. None when the cloud
     # doesn't publish a separate spot price or the fetcher hasn't run yet.
     spot_hourly_usd: float | None = None
+    # v0.11.0+ optional GPU fields. CPU-only SKUs leave both None/0.
+    gpu_type: str | None = None    # canonical name: "A100" | "H100" | "L4" | "L40S" | "T4" | "A10" | "A10G" | "V100"
+    gpu_count: int = 0
+    gpu_memory_gb_each: float | None = None  # differentiates A100 40GB vs 80GB
 
     @property
     def monthly_usd(self) -> float:
@@ -40,6 +44,13 @@ class Instance:
             return None
         return round((1 - self.spot_hourly_usd / self.hourly_usd) * 100)
 
+    @property
+    def hourly_usd_per_gpu(self) -> float | None:
+        """Effective $/GPU/hour for the SKU. None when the SKU has no GPU."""
+        if self.gpu_count <= 0:
+            return None
+        return round(self.hourly_usd / self.gpu_count, 4)
+
     def to_dict(self) -> dict:
         out = {
             "cloud": self.cloud,
@@ -54,6 +65,11 @@ class Instance:
             out["spot_hourly_usd"] = self.spot_hourly_usd
             out["spot_monthly_usd"] = self.spot_monthly_usd
             out["spot_discount_pct"] = self.spot_discount_pct
+        if self.gpu_count > 0:
+            out["gpu_type"] = self.gpu_type
+            out["gpu_count"] = self.gpu_count
+            out["gpu_memory_gb_each"] = self.gpu_memory_gb_each
+            out["hourly_usd_per_gpu"] = self.hourly_usd_per_gpu
         return out
 
 
@@ -278,6 +294,7 @@ def load_catalog() -> PriceCatalog:
         region = block["region"]
         for entry in block["instances"]:
             spot_hourly = entry.get("spot_hourly_usd")
+            gpu_mem = entry.get("gpu_memory_gb_each")
             instances.append(
                 Instance(
                     cloud=cloud,
@@ -287,6 +304,9 @@ def load_catalog() -> PriceCatalog:
                     hourly_usd=float(entry["hourly_usd"]),
                     region=region,
                     spot_hourly_usd=float(spot_hourly) if spot_hourly is not None else None,
+                    gpu_type=entry.get("gpu_type"),
+                    gpu_count=int(entry.get("gpu_count", 0)),
+                    gpu_memory_gb_each=float(gpu_mem) if gpu_mem is not None else None,
                 )
             )
         for entry in block.get("storage", []):

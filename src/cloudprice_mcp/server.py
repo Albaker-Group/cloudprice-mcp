@@ -25,6 +25,7 @@ from .finops.commitment import ALL_SCENARIOS, optimize_commitment
 from .finops.egress_arbitrage import find_egress_arbitrage
 from .finops.migration import assess_migration
 from .finops.carbon import compare_carbon_footprint
+from .finops.gpu import compare_gpu_workload
 from .finops.sentinel import watch_workload
 from .finops.spot import compare_spot
 from .finops.tco import GrowthAssumptions, compare_total_cost_of_ownership
@@ -660,6 +661,38 @@ async def list_tools() -> list[Tool]:
                 "additionalProperties": False,
             },
         ),
+        # --- v0.11.0 GPU pricing ---
+        Tool(
+            name="compare_gpu_workload",
+            description=(
+                "Cross-cloud GPU pricing comparison — finds the cheapest matching SKU "
+                "per cloud for a (gpu_type, gpu_count) request. Supports NVIDIA T4 / "
+                "A10 / A10G / L4 / L40S / V100 / A100 / H100 across AWS / Azure / GCP / "
+                "OCI. Returns absolute hourly cost AND $/GPU/h so users can see both "
+                "the absolute winner and the per-GPU packaging-efficiency winner "
+                "(they're often different clouds). Surfaces over-provisioning when "
+                "the only matching SKU has more GPUs than requested (e.g., asking for "
+                "1 H100 but only bare-metal 8x SKUs are available). Use for AI/ML "
+                "workload pricing decisions — training, inference, fine-tuning."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "gpu_type": {
+                        "type": "string",
+                        "description": "GPU family name, e.g. 'A100', 'H100', 'L4', 'L40S', 'T4', 'A10', 'A10G', 'V100'. Case-insensitive.",
+                    },
+                    "gpu_count": {"type": "integer", "minimum": 1, "default": 1},
+                    "targets": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": ["aws", "azure", "gcp", "oci"]},
+                        "description": "Optional list of clouds to compare; default all 4.",
+                    },
+                },
+                "required": ["gpu_type"],
+                "additionalProperties": False,
+            },
+        ),
         # --- v0.10.0 Carbon-aware FinOps ---
         Tool(
             name="compare_carbon_footprint",
@@ -1016,6 +1049,19 @@ def _handle_compare_spot(catalog, args):
     return _ok({"as_of": catalog.as_of, **result})
 
 
+def _handle_compare_gpu_workload(catalog, args):
+    gpu_type = args.get("gpu_type", "")
+    gpu_count = int(args.get("gpu_count", 1))
+    targets = args.get("targets")
+    try:
+        result = compare_gpu_workload(
+            catalog, gpu_type=gpu_type, gpu_count=gpu_count, targets=targets,
+        )
+    except ValueError as e:
+        return _err(f"compare_gpu_workload: {e}")
+    return _ok({"as_of": catalog.as_of, **result})
+
+
 def _handle_compare_carbon_footprint(catalog, args):
     vcpus = int(args["vcpus"])
     memory_gb = float(args["memory_gb"])
@@ -1104,6 +1150,8 @@ _TOOL_HANDLERS = {
     "watch_workload": _handle_watch_workload,
     # v0.10.0 carbon-aware FinOps
     "compare_carbon_footprint": _handle_compare_carbon_footprint,
+    # v0.11.0 GPU pricing
+    "compare_gpu_workload": _handle_compare_gpu_workload,
 }
 
 

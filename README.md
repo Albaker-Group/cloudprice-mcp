@@ -9,7 +9,7 @@
 
 **The FinOps MCP server.** Gives Claude, GitHub Copilot, Cursor, Windsurf, Cline, Continue, Zed — or any MCP-compatible AI — structured pricing data and analysis primitives across **AWS, Azure, GCP, and OCI**. AI clients use cloudprice-mcp to compute Reserved Instance break-even, multi-cloud workload TCO, exit-cost migration analyses, snapshot cost modeling, and egress arbitrage — the kind of FinOps decisions that normally live in three browser tabs and a half-built spreadsheet.
 
-**19 tools** covering compute, block storage, object storage, managed Postgres, **egress** (internet + inter-region with OCI's 10 TB free tier surfaced explicitly), Multi-AZ workloads, snapshots with realistic incremental modeling, Reserved Instance / Savings Plan discounts, FinOps decision suite (migration, commitment, TCO, egress arbitrage), **multi-cloud spot pricing** with eviction tradeoffs, **multi-cloud price history** (the only public weekly-refreshed dataset of its kind), a **stateless cost drift sentinel** for scheduled agents, and **multi-cloud carbon footprint** (the only FinOps tool returning $ AND kg CO2e on the same query). OCI Always Free tier (4 OCPU compute, 20 GB object storage, 10 TB egress) surfaced as $0 line items where it applies.
+**20 tools** covering compute, block storage, object storage, managed Postgres, **egress** (internet + inter-region with OCI's 10 TB free tier surfaced explicitly), Multi-AZ workloads, snapshots with realistic incremental modeling, Reserved Instance / Savings Plan discounts, FinOps decision suite (migration, commitment, TCO, egress arbitrage), **multi-cloud spot pricing** with eviction tradeoffs, **multi-cloud price history** (the only public weekly-refreshed dataset of its kind), a **stateless cost drift sentinel** for scheduled agents, **multi-cloud carbon footprint** ($ AND kg CO2e on the same query), and **multi-cloud GPU pricing** (T4 / A10 / L4 / L40S / V100 / A100 / H100 across all 4 clouds). OCI Always Free tier (4 OCPU compute, 20 GB object storage, 10 TB egress) surfaced as $0 line items where it applies.
 
 **One-line install configures every AI client you have:** `pip install cloudprice-mcp && cloudprice-mcp setup` — auto-detects Claude Desktop, GitHub Copilot Agent Mode, Cursor, Windsurf, Cline, Continue.dev, and Zed, then asks Y/N before writing each config.
 
@@ -208,6 +208,31 @@ Real questions this unlocks:
 
 > *"Show me every multi-cloud price mover since January."*
 > → AI calls `list_tracked_skus(since="2026-01-01")`, returns every SKU + its latest price + change.
+
+### Multi-cloud GPU pricing (v0.11.0+)
+
+The fastest-growing cloud cost category — and nobody compares it cross-cloud openly.
+
+```python
+from cloudprice_mcp.finops.gpu import compare_gpu_workload
+from cloudprice_mcp.pricing import load_catalog
+
+r = compare_gpu_workload(load_catalog(), gpu_type="H100", gpu_count=8)
+# OCI BM.GPU.H100.8 is cheapest at $80.0000/h for 8x H100.
+#   oci    BM.GPU.H100.8                  $ 80.0000/h  $10.0000/GPU/h
+#   gcp    a3-highgpu-8g                  $ 84.4000/h  $10.5500/GPU/h
+#   aws    p5.48xlarge                    $ 98.3200/h  $12.2900/GPU/h
+#   azure  ND96isr_H100_v5                $ 98.3200/h  $12.2900/GPU/h
+```
+
+Covers NVIDIA T4, A10, A10G, L4, L40S, V100, A100, H100 across all 4 clouds. Returns:
+
+- **Absolute hourly winner** — the cheapest matching SKU per cloud
+- **Per-GPU efficiency winner** — sometimes a different cloud (e.g., OCI's BM.GPU4.8 is cheapest *per GPU* but only sold as 8x, so for `gpu_count=1` Azure/GCP win the absolute ranking)
+- **Over-provisioning flags** — when the only matching SKU bundles more GPUs than asked for
+- **GPU memory** — differentiates A100 40GB vs 80GB (same `gpu_type` field)
+
+The OCI H100 finding is real: at 8x H100 it's ~19% cheaper than AWS/Azure for identical hardware.
 
 ### Cost Drift Sentinel (v0.9.0+)
 
