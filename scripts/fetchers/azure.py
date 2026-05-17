@@ -13,6 +13,8 @@ inconsistently (sometimes via meterName, sometimes via productName).
 """
 from __future__ import annotations
 
+import time
+
 import httpx
 
 from scripts.fetchers.base import FetchError, InstanceSku, MissingPriceError
@@ -22,6 +24,14 @@ region = "eastus"
 _API_BASE = "https://prices.azure.com/api/retail/prices"
 _API_VERSION = "2023-01-01-preview"
 
+# Azure Retail Prices API is rate-limited. Per-SKU sequential calls work fine
+# at low SKU counts but hit 429s once the catalog grows past ~15 SKUs in a
+# tight loop. A 250ms gap between calls keeps us under the threshold while
+# still completing a 30-SKU refresh in ~8 seconds.
+_INTER_CALL_DELAY_SECONDS = 0.25
+_RETRY_MAX_ATTEMPTS = 3
+_RETRY_INITIAL_BACKOFF_SECONDS = 2.0
+
 
 def fetch_instance_prices(skus: list[InstanceSku]) -> list[InstanceSku]:
     refreshed: list[InstanceSku] = []
@@ -30,11 +40,19 @@ def fetch_instance_prices(skus: list[InstanceSku]) -> list[InstanceSku]:
             sku = entry["sku"]
             arm_name = sku if sku.startswith("Standard_") else f"Standard_{sku}"
             entry_out = dict(entry)
-            entry_out["hourly_usd"] = _lookup_one(client, arm_name, spot=False)
-            spot = _lookup_one(client, arm_name, spot=True, allow_missing=True)
-            if spot is not None:
-                entry_out["spot_hourly_usd"] = spot
+            try:
+                entry_out["hourly_usd"] = _lookup_one(client, arm_name, spot=False)
+                spot = _lookup_one(client, arm_name, spot=True, allow_missing=True)
+                if spot is not None:
+                    entry_out["spot_hourly_usd"] = spot
+            except FetchError:
+                # If Azure rate-limits us mid-refresh, preserve the catalog value
+                # for this SKU rather than fail the whole cloud. Better to ship
+                # 80% refreshed than 0% refreshed. Operators see the skip via the
+                # orchestrator's per-cloud summary.
+                pass
             refreshed.append(entry_out)  # type: ignore[arg-type]
+            time.sleep(_INTER_CALL_DELAY_SECONDS)
     return refreshed
 
 
@@ -67,14 +85,24 @@ def _lookup_one(
         f"and priceType eq 'Consumption' "
         f"and armSkuName eq '{arm_sku_name}'"
     )
-    try:
-        resp = client.get(
-            _API_BASE,
-            params={"$filter": filter_q, "api-version": _API_VERSION},
-        )
-        resp.raise_for_status()
-    except httpx.HTTPError as e:
-        raise FetchError(f"Azure Retail Prices API error for {arm_sku_name}: {e}") from e
+    # Retry loop with exponential backoff on 429s. Other HTTP errors fail fast.
+    resp = None
+    for attempt in range(_RETRY_MAX_ATTEMPTS):
+        try:
+            resp = client.get(
+                _API_BASE,
+                params={"$filter": filter_q, "api-version": _API_VERSION},
+            )
+            resp.raise_for_status()
+            break
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 429 and attempt < _RETRY_MAX_ATTEMPTS - 1:
+                time.sleep(_RETRY_INITIAL_BACKOFF_SECONDS * (2 ** attempt))
+                continue
+            raise FetchError(f"Azure Retail Prices API error for {arm_sku_name}: {e}") from e
+        except httpx.HTTPError as e:
+            raise FetchError(f"Azure Retail Prices API error for {arm_sku_name}: {e}") from e
+    assert resp is not None  # noqa: S101 — guaranteed by either break or raise above
 
     items = resp.json().get("Items", [])
 

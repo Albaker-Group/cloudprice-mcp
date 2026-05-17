@@ -71,11 +71,15 @@ jobs:
         run: |
           set -euo pipefail
           python scripts/refresh_prices.py --output-summary /tmp/summary.md
-          # Persist the summary as a step output for the PR body.
+          # Persist the summary as a step output for the PR body. We use a
+          # random delimiter rather than 'EOF' because the summary contains
+          # provider error text that can include the literal 'EOF' and break
+          # the GITHUB_OUTPUT parser. (Bit us in v0.11.0; fixed in v0.11.1.)
+          DELIM="EOF_$(uuidgen | tr -d '-')"
           {
-            echo 'summary<<EOF'
+            echo "summary<<$DELIM"
             cat /tmp/summary.md
-            echo 'EOF'
+            echo "$DELIM"
           } >> "$GITHUB_OUTPUT"
 
       - name: Check if anything changed

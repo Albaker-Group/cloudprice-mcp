@@ -17,7 +17,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from scripts.fetchers import azure, oci
-from scripts.fetchers.base import FetchError, MissingPriceError
+from scripts.fetchers.base import MissingPriceError
 
 
 # --- Azure fetcher ---
@@ -123,10 +123,44 @@ def test_azure_raises_when_sku_missing(httpx_mock):
         azure.fetch_instance_prices([{"sku": "D2s_v5", "vcpus": 2, "memory_gb": 8}])
 
 
-def test_azure_raises_when_http_error(httpx_mock):
+def test_azure_preserves_catalog_on_http_error(httpx_mock, monkeypatch):
+    """v0.11.1: a single 500 on a SKU lookup preserves the catalog value
+    rather than crashing the whole cloud's refresh. The error surfaces via
+    the orchestrator's per-cloud summary, not a process-killing exception."""
+    monkeypatch.setattr(azure, "_INTER_CALL_DELAY_SECONDS", 0)
     httpx_mock.add_response(status_code=500)
-    with pytest.raises(FetchError):
-        azure.fetch_instance_prices([{"sku": "D2s_v5", "vcpus": 2, "memory_gb": 8}])
+    result = azure.fetch_instance_prices([
+        {"sku": "D2s_v5", "vcpus": 2, "memory_gb": 8, "hourly_usd": 0.0961}
+    ])
+    assert result[0]["hourly_usd"] == pytest.approx(0.0961)
+
+
+def test_azure_retries_on_429_then_succeeds(httpx_mock, monkeypatch):
+    """v0.11.1: a single 429 followed by a 200 should yield the 200 result
+    (retry succeeded). monkeypatch removes the inter-call delay so the test
+    stays fast."""
+    monkeypatch.setattr(azure, "_INTER_CALL_DELAY_SECONDS", 0)
+    monkeypatch.setattr(azure, "_RETRY_INITIAL_BACKOFF_SECONDS", 0)
+    httpx_mock.add_response(status_code=429)
+    httpx_mock.add_response(json=_azure_response(0.0961))
+    httpx_mock.add_response(json=_no_spot_response())  # spot lookup, no retry
+    result = azure.fetch_instance_prices([{"sku": "D2s_v5", "vcpus": 2, "memory_gb": 8}])
+    assert result[0]["hourly_usd"] == pytest.approx(0.0961)
+
+
+def test_azure_skip_persists_catalog_when_all_retries_exhaust(httpx_mock, monkeypatch):
+    """v0.11.1: if Azure 429s for every retry, the SKU keeps its existing
+    catalog price instead of breaking the whole cloud's refresh."""
+    monkeypatch.setattr(azure, "_INTER_CALL_DELAY_SECONDS", 0)
+    monkeypatch.setattr(azure, "_RETRY_INITIAL_BACKOFF_SECONDS", 0)
+    # 3 retries × 429 for the on-demand lookup
+    for _ in range(3):
+        httpx_mock.add_response(status_code=429)
+    result = azure.fetch_instance_prices([
+        {"sku": "D2s_v5", "vcpus": 2, "memory_gb": 8, "hourly_usd": 0.0961}
+    ])
+    # Existing catalog price preserved — refresh didn't crash
+    assert result[0]["hourly_usd"] == pytest.approx(0.0961)
 
 
 # --- OCI fetcher ---
@@ -212,10 +246,32 @@ def test_oci_excludes_cloud_at_customer_variants(httpx_mock):
 
 def test_oci_raises_for_unknown_family(httpx_mock):
     httpx_mock.add_response(json=_oci_response())
-    with pytest.raises(MissingPriceError):
-        oci.fetch_instance_prices([
-            {"sku": "VM.Standard.Z9.Flex.1OCPU", "vcpus": 2, "memory_gb": 8},
-        ])
+    # An unrecognized FAMILY (Z9) in the Flex pattern is now preserved instead
+    # of raising — see v0.11.1 hardening: refresh shouldn't break on unknown
+    # shapes. The catalog value is kept as-is.
+    result = oci.fetch_instance_prices([
+        {"sku": "VM.Standard.Z9.Flex.1OCPU", "vcpus": 2, "memory_gb": 8, "hourly_usd": 0.123},
+    ])
+    assert result[0]["hourly_usd"] == pytest.approx(0.123)
+
+
+def test_oci_preserves_gpu_skus_without_refresh(httpx_mock):
+    """v0.11.1: GPU SKUs (VM.GPU.* / BM.GPU*) are bundled in the catalog with
+    manually-curated prices because Oracle's public pricing API doesn't expose
+    them in the OCPU+memory model. The OCI fetcher must preserve them."""
+    httpx_mock.add_response(json=_oci_response())
+    result = oci.fetch_instance_prices([
+        {"sku": "VM.GPU.A10.1", "vcpus": 15, "memory_gb": 240, "hourly_usd": 2.00,
+         "gpu_type": "A10", "gpu_count": 1, "gpu_memory_gb_each": 24},
+        {"sku": "BM.GPU.H100.8", "vcpus": 112, "memory_gb": 2048, "hourly_usd": 80.00,
+         "gpu_type": "H100", "gpu_count": 8, "gpu_memory_gb_each": 80},
+    ])
+    # Prices preserved exactly — no refresh, no error
+    assert result[0]["hourly_usd"] == pytest.approx(2.00)
+    assert result[1]["hourly_usd"] == pytest.approx(80.00)
+    # GPU metadata preserved
+    assert result[0]["gpu_type"] == "A10"
+    assert result[1]["gpu_count"] == 8
 
 
 # --- AWS fetcher ---
