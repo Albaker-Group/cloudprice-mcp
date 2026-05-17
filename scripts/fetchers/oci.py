@@ -52,9 +52,22 @@ def fetch_instance_prices(skus: list[InstanceSku]) -> list[InstanceSku]:
     refreshed: list[InstanceSku] = []
     for entry in skus:
         sku = entry["sku"]
+
+        # GPU SKUs (VM.GPU.*, BM.GPU.*) don't follow the OCPU+memory pricing
+        # model the API exposes — their prices are bundled per-shape published
+        # rates that aren't returned by the public catalog endpoint. Preserve
+        # whatever's already in the bundled catalog rather than fail-the-refresh.
+        # Operators update GPU prices manually when Oracle publishes changes.
+        if sku.startswith(("VM.GPU.", "BM.GPU")):
+            refreshed.append(dict(entry))  # type: ignore[arg-type]
+            continue
+
         family = _family_from_sku(sku)
         if family is None:
-            raise MissingPriceError(f"OCI: can't parse family from SKU {sku!r}")
+            # Unknown shape (not Flex, not GPU). Preserve catalog value rather
+            # than break the whole refresh — surface in logs via the orchestrator.
+            refreshed.append(dict(entry))  # type: ignore[arg-type]
+            continue
 
         if "AlwaysFree" in sku:
             # Always Free tier — A1.Flex up to 4 OCPU + 24 GB. Hardcoded $0.
@@ -66,13 +79,16 @@ def fetch_instance_prices(skus: list[InstanceSku]) -> list[InstanceSku]:
 
         ocpu_count = _ocpu_from_sku(sku)
         if ocpu_count is None:
-            raise MissingPriceError(
-                f"OCI: SKU {sku!r} doesn't follow VM.Standard.<family>.Flex.<N>OCPU naming"
-            )
+            # v0.11.1: preserve catalog rather than crash. Unusual SKU names
+            # (e.g. .AlwaysFree handled above, or future naming variants)
+            # shouldn't break the whole refresh.
+            refreshed.append(dict(entry))  # type: ignore[arg-type]
+            continue
         if family not in rates:
-            raise MissingPriceError(
-                f"OCI: family {family!r} rates not found in API response (sku={sku})"
-            )
+            # v0.11.1: family parsed but OCI's API didn't return rates for it
+            # (new family Oracle just launched, etc.). Preserve catalog value.
+            refreshed.append(dict(entry))  # type: ignore[arg-type]
+            continue
 
         ocpu_rate, mem_rate = rates[family]
         memory_gb = float(entry["memory_gb"])
