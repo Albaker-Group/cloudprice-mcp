@@ -21,6 +21,12 @@ region = "us-east-1"
 _PRICING_REGION = "us-east-1"  # Pricing API endpoint, NOT the priced region
 _LOCATION = "US East (N. Virginia)"
 
+# AccessDenied here means the role is misconfigured, not that the data is
+# missing - see _lookup_spot for why that distinction is load-bearing.
+_SPOT_AUTH_ERRORS = frozenset(
+    {"AuthFailure", "UnauthorizedOperation", "AccessDenied", "AccessDeniedException"}
+)
+
 
 def fetch_instance_prices(skus: list[InstanceSku]) -> list[InstanceSku]:
     try:
@@ -51,8 +57,18 @@ def _lookup_spot(ec2_client, instance_type: str) -> float | None:
     across AZs. AWS spot prices fluctuate by AZ; this returns the mean of the
     latest observation per AZ — a defensible single number for planning.
 
-    Returns None if no spot history is published (rare; usually means the
-    instance type doesn't support Spot in this region).
+    Returns None only if no spot history is published (rare; usually means the
+    instance type doesn't support Spot in this region). A permission failure is
+    NOT None - it raises.
+
+    Why it raises: this used to be a bare `except Exception: return None`. The
+    CI role was never granted ec2:DescribeSpotPriceHistory, so every call
+    returned AccessDenied, every spot lookup returned None, and the caller's
+    `if spot is not None` left the previous value in place. AWS spot prices sat
+    frozen at their 2026-05-17 values through four months of "successful"
+    weekly refreshes - each one stamping a fresh `as_of` over stale numbers -
+    while azure/gcp/oci moved normally. Publishing prices that are wrong is
+    worse than publishing no prices, so a misconfigured role must be loud.
     """
     try:
         resp = ec2_client.describe_spot_price_history(
@@ -60,9 +76,17 @@ def _lookup_spot(ec2_client, instance_type: str) -> float | None:
             ProductDescriptions=["Linux/UNIX"],
             MaxResults=20,  # one per AZ × recent samples
         )
-    except Exception:
-        # Permission errors etc. shouldn't kill the on-demand refresh.
-        # Log via the orchestrator's summary by letting the field stay unset.
+    except Exception as e:
+        code = getattr(e, "response", {}).get("Error", {}).get("Code", "")
+        if code in _SPOT_AUTH_ERRORS:
+            raise FetchError(
+                f"AWS spot pricing denied ({code}) for {instance_type}. The "
+                f"assumed role needs ec2:DescribeSpotPriceHistory. Refusing to "
+                f"carry forward stale spot prices under a fresh as_of date."
+            ) from e
+        # Anything else (throttling, a transient endpoint error) is genuinely
+        # per-instance and shouldn't kill an otherwise good on-demand refresh.
+        print(f"  warning: spot lookup failed for {instance_type}: {e}")
         return None
 
     items = resp.get("SpotPriceHistory") or []
