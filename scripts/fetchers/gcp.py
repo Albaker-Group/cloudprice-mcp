@@ -1,28 +1,51 @@
 """GCP Cloud Billing Catalog API fetcher.
 
-STATUS (verified 2026-05-13): the catalog's family naming has drifted away
-from what this fetcher was originally written for. The current us-east1 SKUs
-include N4, A2, A3Plus, C4, C2D AMD, M3, N1 Predefined, Z3 — but NOT
-plain "E2 Instance Core", "N2 Instance Core", or "C2 Instance Core" with
-the predefined pricing shape we expected. GCP appears to have consolidated
-predefined-VM pricing into custom-shape billing for newer families.
+STATUS (verified 2026-09-20 against the live Cloud Billing Catalog): working.
 
-Until the SKU mapping is reworked (planned v0.10+ — needs deciding whether
-to swap the catalog over to N4/C4/N1 Predefined, or compute predefined
-rates from custom-instance rates), the fetcher gracefully fails so the
-other 3 cloud refreshes still produce a weekly snapshot. The orchestrator
-treats a MissingPriceError here as "skip GCP this run."
+The previous status note claimed the family core/RAM SKUs had been retired and
+that GCP had "consolidated predefined-VM pricing into custom-shape billing".
+That was wrong. `E2/N2 Instance Core`, `... Instance Ram` and
+`Compute optimized Core/Ram` are all still published for us-east1, and the
+family-rate path reproduces the catalog exactly (e2-standard-2 computes
+0.067011 against a catalog 0.067).
 
-The auth piece (GCP_API_KEY + Cloud Billing API enablement) IS working —
-verified 2026-05-13 with the cloudprice-mcp-refresh key restricted to
-Cloud Billing API. The 403s are resolved; the remaining issue is purely
-that the SKUs we look up no longer exist under their old names.
+The real fault was narrower and more dangerous. GCP publishes NO shared-core
+billing line for the E2 family - not for e2-micro, e2-small or e2-medium. The
+three SKU descriptions this fetcher matched:
 
-Original design (kept for the v0.10+ refactor):
-    predefined VM (n2/c2/e2-standard/n2-highmem/n2-highcpu):
-        hourly_usd = vcpus * core_rate + memory_gb * ram_rate
-    shared-core VMs (e2-micro / e2-small / e2-medium):
-        per-SKU fixed price published as a separate billing line each
+    "Micro Instance with burstable CPU running in Americas"  -> 0.0076
+    "Small Instance with 1 VCPU running in Americas"         -> 0.0257
+
+are the LEGACY N1 shapes, f1-micro and g1-small. Wrong machine family. Had
+they been written to the catalog, e2-small would have been published at 0.0257
+against a true 0.016753 - 53% too high - and e2-micro 9% too low.
+
+That never happened, only by luck: e2-medium's equivalent SKU does not exist
+at all, so the lookup raised MissingPriceError and the orchestrator skipped
+GCP entirely before any bad value was written. The "GCP is broken" symptom was
+the thing protecting the catalog. It had been skipping since 2026-05, so the
+GCP half of the catalog simply stopped refreshing and nobody was told.
+
+Shared-core E2 shapes are billed from the ordinary E2 core/RAM rates against a
+FRACTIONAL vCPU share, which is why they have no SKU of their own:
+
+    e2-micro   0.25 vCPU + 1 GB
+    e2-small   0.5  vCPU + 2 GB
+    e2-medium  1.0  vCPU + 4 GB
+
+Verified 2026-09-20 - the share model reproduces all three catalog values to
+five decimal places:
+
+    e2-micro   0.25*0.02181159 + 1*0.00292353 = 0.008376  (catalog 0.00838)
+    e2-small   0.5 *0.02181159 + 2*0.00292353 = 0.016753  (catalog 0.01675)
+    e2-medium  1.0 *0.02181159 + 4*0.00292353 = 0.033506  (catalog 0.0335)
+
+Note the share is NOT the advertised vCPU count - `vcpus` in the catalog is 2
+for all three shapes, since that is what the shape exposes to the guest. Using
+it would overcharge e2-micro by 5x.
+
+A side benefit: shared-core shapes now get spot prices too. The old fixed-SKU
+path could not produce them.
 """
 from __future__ import annotations
 
@@ -59,14 +82,35 @@ _FAMILY_SPOT_DESCRIPTION_PATTERNS: dict[str, tuple[str, str]] = {
     "e2": ("Spot Preemptible E2 Instance Core running in Americas", "Spot Preemptible E2 Instance Ram running in Americas"),
 }
 
-# Shared-core SKUs price the whole VM as a single billing line.
-_SHARED_CORE_SKUS = {
-    "e2-micro": "Micro Instance with burstable CPU running in Americas",
-    "e2-small": "Small Instance with 1 VCPU running in Americas",
-    "e2-medium": "Medium Instance with 1 VCPU running in Americas",
+# Shared-core E2 shapes have no billing line of their own. They bill from the
+# ordinary E2 core/RAM rates against a fractional vCPU share.
+#
+# These are (vcpu_share, memory_gb) - deliberately NOT the catalog's `vcpus`
+# field, which reports what the guest sees (2 for all three shapes). Billing
+# them at 2 vCPU would overcharge e2-micro by 5x. See the module docstring.
+_SHARED_CORE_SHARES: dict[str, tuple[float, float]] = {
+    "e2-micro": (0.25, 1.0),
+    "e2-small": (0.5, 2.0),
+    "e2-medium": (1.0, 4.0),
 }
 
 _FAMILY_RE = re.compile(r"^(n2|c2|e2)-")
+
+# Shapes this fetcher cannot price yet. GPU-bearing shapes bill as a base VM
+# plus one or more accelerator SKUs ("Nvidia Tesla T4 GPU running in Americas"
+# and friends), which is a different lookup this module does not implement.
+#
+# They are passed through with their existing price rather than raising,
+# because raising is fatal for the WHOLE cloud: v0.11.0 added these GPU SKUs
+# to the catalog, and from that day the first one hit turned every GCP refresh
+# into a skip. Fifteen perfectly refreshable shapes stopped updating because of
+# five this module never claimed to handle.
+#
+# Passing through is not the same as pretending. fetch_instance_prices returns
+# the list of skipped SKUs so the orchestrator can report them, and anything
+# NOT matched here still raises - a SKU that silently vanishes upstream must
+# still be loud.
+_UNPRICED_RE = re.compile(r"^(n1|g2|a2|a3)-|\+")
 
 
 def fetch_instance_prices(skus: list[InstanceSku]) -> list[InstanceSku]:
@@ -82,23 +126,19 @@ def fetch_instance_prices(skus: list[InstanceSku]) -> list[InstanceSku]:
     items = _fetch_all_skus(api_key)
     family_rates = _extract_family_rates(items)
     family_spot_rates = _extract_family_rates(items, spot=True, optional=True)
-    shared_core_prices = _extract_shared_core_prices(items)
 
     refreshed: list[InstanceSku] = []
+    unpriced: list[str] = []
     for entry in skus:
         sku = entry["sku"]
         entry_out = dict(entry)
 
-        # Shared-core SKUs ship a fixed price each. No spot variant (these are
-        # already heavily discounted burstable shapes).
-        if sku in _SHARED_CORE_SKUS:
-            if sku not in shared_core_prices:
-                raise MissingPriceError(f"GCP: shared-core SKU {sku!r} not found in API")
-            entry_out["hourly_usd"] = shared_core_prices[sku]
+        if _UNPRICED_RE.search(sku):
+            # Known gap, not a surprise - keep the existing price and move on.
+            unpriced.append(sku)
             refreshed.append(entry_out)  # type: ignore[arg-type]
             continue
 
-        # Predefined VMs: vcpus * core_rate + memory * ram_rate
         m = _FAMILY_RE.match(sku)
         if not m:
             raise MissingPriceError(f"GCP: cannot derive family from SKU {sku!r}")
@@ -107,16 +147,32 @@ def fetch_instance_prices(skus: list[InstanceSku]) -> list[InstanceSku]:
             raise MissingPriceError(f"GCP: family {family!r} rates not in API response")
 
         core_rate, ram_rate = family_rates[family]
-        vcpus = float(entry["vcpus"])
-        memory_gb = float(entry["memory_gb"])
-        entry_out["hourly_usd"] = round(vcpus * core_rate + memory_gb * ram_rate, 6)
+
+        # Shared-core shapes bill a FRACTION of a vCPU, so they use the share
+        # table rather than the advertised `vcpus`. Everything else is
+        # vcpus * core_rate + memory * ram_rate.
+        if sku in _SHARED_CORE_SHARES:
+            billed_cores, memory_gb = _SHARED_CORE_SHARES[sku]
+        else:
+            billed_cores = float(entry["vcpus"])
+            memory_gb = float(entry["memory_gb"])
+
+        entry_out["hourly_usd"] = round(billed_cores * core_rate + memory_gb * ram_rate, 6)
 
         spot_rates = family_spot_rates.get(family)
         if spot_rates is not None:
             spot_core, spot_ram = spot_rates
-            entry_out["spot_hourly_usd"] = round(vcpus * spot_core + memory_gb * spot_ram, 6)
+            entry_out["spot_hourly_usd"] = round(
+                billed_cores * spot_core + memory_gb * spot_ram, 6
+            )
 
         refreshed.append(entry_out)  # type: ignore[arg-type]
+
+    if unpriced:
+        print(
+            f"  note: gcp carried forward {len(unpriced)} GPU shape(s) this "
+            f"module cannot price yet: {', '.join(unpriced)}"
+        )
 
     return refreshed
 
@@ -213,24 +269,6 @@ def _finalize_family_rates(
             )
         completed[family] = (core, ram)
     return completed
-
-
-def _extract_shared_core_prices(items: list[dict]) -> dict[str, float]:
-    """Find fixed prices for e2-micro / e2-small / e2-medium."""
-    prices: dict[str, float] = {}
-    for sku in items:
-        description = sku.get("description") or ""
-        lowered = description.lower()
-        if any(skip in lowered for skip in ("preemptible", "spot")):
-            continue
-        if _REGION_KEY not in (sku.get("serviceRegions") or []):
-            continue
-        for sku_name, needle in _SHARED_CORE_SKUS.items():
-            if sku_name in prices:
-                continue
-            if needle in description:
-                prices[sku_name] = _unit_price_usd(sku)
-    return prices
 
 
 def _unit_price_usd(sku: dict) -> float:
