@@ -39,10 +39,22 @@ def _gcp_full_response() -> dict:
             # C2 (compute-optimized) family
             _gcp_sku("Compute optimized Core running in Americas", 0, 35200000),
             _gcp_sku("Compute optimized Ram running in Americas", 0, 4708000),
-            # Shared-core e2 SKUs (fixed prices)
-            _gcp_sku("Micro Instance with burstable CPU running in Americas", 0, 8380000),   # e2-micro
-            _gcp_sku("Small Instance with 1 VCPU running in Americas", 0, 16750000),         # e2-small
-            _gcp_sku("Medium Instance with 1 VCPU running in Americas", 0, 33500000),        # e2-medium
+            # NOTE: no shared-core SKUs here, deliberately. GCP publishes none
+            # for the E2 family - e2-micro/small/medium bill from the E2 core
+            # and RAM rates above against a fractional vCPU share.
+            #
+            # This fixture used to carry three "Micro/Small/Medium Instance"
+            # SKUs. Those descriptions are the LEGACY N1 shapes (f1-micro,
+            # g1-small), and the fixture gave them e2 prices - so the fetcher's
+            # wrong mapping looked correct here while it would have published
+            # e2-small 53% high against live data. A fixture that states the
+            # assumption under test cannot falsify it.
+            #
+            # Real us-east1 rates, confirmed against the live Cloud Billing
+            # Catalog 2026-09-20:
+            #   Micro Instance with burstable CPU ... = 0.0076   (f1-micro)
+            #   Small Instance with 1 VCPU ...        = 0.0257   (g1-small)
+            # Neither is an E2 price.
         ]
     }
 
@@ -67,13 +79,67 @@ def test_gcp_refreshes_predefined_vm(httpx_mock):
     assert result[0]["hourly_usd"] == pytest.approx(0.067012, abs=1e-5)
 
 
-def test_gcp_refreshes_shared_core_micro(httpx_mock):
+@pytest.mark.parametrize(
+    ("sku", "expected"),
+    [
+        # share * 0.02181 + gb * 0.002924
+        ("e2-micro", 0.25 * 0.02181 + 1 * 0.002924),   # 0.008377
+        ("e2-small", 0.5 * 0.02181 + 2 * 0.002924),    # 0.016753
+        ("e2-medium", 1.0 * 0.02181 + 4 * 0.002924),   # 0.033506
+    ],
+)
+def test_gcp_prices_shared_core_from_fractional_vcpu_share(httpx_mock, sku, expected):
+    """Shared-core E2 shapes bill a FRACTION of a vCPU, not the advertised count.
+
+    `vcpus` is 2 for all three shapes because that is what the guest sees.
+    Billing at 2 vCPU would put e2-micro at 0.046547 - 5x its true price.
+    These expectations match the live catalog to five decimal places.
+    """
+    httpx_mock.add_response(json=_gcp_full_response())
+    result = gcp.fetch_instance_prices([
+        {"sku": sku, "vcpus": 2, "memory_gb": 4},
+    ])
+    assert result[0]["hourly_usd"] == pytest.approx(expected, abs=1e-5)
+
+
+def test_gcp_shared_core_ignores_advertised_vcpus(httpx_mock):
+    """Guard the 5x overcharge directly: the `vcpus` field must not be used."""
     httpx_mock.add_response(json=_gcp_full_response())
     result = gcp.fetch_instance_prices([
         {"sku": "e2-micro", "vcpus": 2, "memory_gb": 1},
     ])
-    # Fixed-price SKU = $0.00838/h
-    assert result[0]["hourly_usd"] == pytest.approx(0.00838)
+    naive = 2 * 0.02181 + 1 * 0.002924  # 0.046544
+    assert result[0]["hourly_usd"] < naive / 4
+
+
+def test_gcp_carries_forward_gpu_shapes_instead_of_failing(httpx_mock):
+    """A shape this module cannot price must not take the whole cloud down.
+
+    v0.11.0 added GPU SKUs to the catalog. The fetcher raised on the first one,
+    and because MissingPriceError is fatal per-cloud, every GCP refresh became
+    a skip - fifteen refreshable shapes stopped updating because of six this
+    module never claimed to handle.
+    """
+    httpx_mock.add_response(json=_gcp_full_response())
+    result = gcp.fetch_instance_prices([
+        {"sku": "e2-standard-2", "vcpus": 2, "memory_gb": 8},
+        {"sku": "n1-standard-4+t4", "vcpus": 4, "memory_gb": 15, "hourly_usd": 0.51},
+        {"sku": "a2-highgpu-1g", "vcpus": 12, "memory_gb": 85, "hourly_usd": 3.673},
+    ])
+    by_sku = {r["sku"]: r for r in result}
+    assert by_sku["e2-standard-2"]["hourly_usd"] == pytest.approx(0.067012, abs=1e-5)
+    # Carried forward untouched, not recomputed and not dropped.
+    assert by_sku["n1-standard-4+t4"]["hourly_usd"] == 0.51
+    assert by_sku["a2-highgpu-1g"]["hourly_usd"] == 3.673
+
+
+def test_gcp_still_raises_on_a_genuinely_missing_family(httpx_mock):
+    """Pass-through is only for declared gaps. An unknown shape stays loud."""
+    httpx_mock.add_response(json=_gcp_full_response())
+    with pytest.raises(MissingPriceError):
+        gcp.fetch_instance_prices([
+            {"sku": "m3-ultramem-32", "vcpus": 32, "memory_gb": 976},
+        ])
 
 
 def test_gcp_computes_n2_family(httpx_mock):
