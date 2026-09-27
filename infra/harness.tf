@@ -168,4 +168,30 @@ resource "aws_bedrockagentcore_harness" "cloudprice" {
     AgentRole = "recommender"
     CostGroup = "cloudprice-agent"
   }
+
+  lifecycle {
+    # WHY THIS IS HERE: without it, `terraform apply` in this directory fails
+    # every single time, on any change, with
+    #
+    #   Error: Provider produced inconsistent result after apply
+    #   .environment_variables: inconsistent values for sensitive attribute
+    #   This is a bug in the provider
+    #
+    # This config never sets environment_variables, and the live harness has
+    # none (get-harness returns null). But the provider records a sensitive
+    # value in state and does not read it back on refresh, so Terraform plans
+    # to "remove" something that is not there, then rejects the provider's null
+    # reply as inconsistent. `apply -refresh-only` does not clear it, because
+    # refresh is exactly the step that skips this attribute.
+    #
+    # The failure happens AFTER the update call succeeds, which is the trap: the
+    # change is live, the apply is red, and re-running gets the same error
+    # forever. That is how the Sonnet 4.5 model switch looked like a failed
+    # deploy while the chat was already fixed.
+    #
+    # Remove this once the aws provider reads the attribute back. If env vars
+    # are ever genuinely needed here, declare them AND drop this, or they will
+    # be set once and silently ignored from then on.
+    ignore_changes = [environment_variables]
+  }
 }
