@@ -18,34 +18,36 @@ data "aws_caller_identity" "current" {}
 locals {
   # System-defined profiles to copy from. "us." prefix = US-region bound.
   orchestrator_source = "arn:aws:bedrock:${var.region}:${data.aws_caller_identity.current.account_id}:inference-profile/us.anthropic.claude-sonnet-4-5-20250929-v1:0"
-  # WAS Claude 3 Haiku, which reached end of life and took the live chat down.
-  # The failure is worth describing because nothing warned first: the profile
-  # stayed valid, the harness stayed healthy, and every /chat returned 500 with
+  # The cheap, high-volume role. Two model retirements are recorded here because
+  # each one took the live chat down and neither announced itself.
+  #
+  # Claude 3 Haiku reached end of life on 2026-09-27. Nothing warned: the profile
+  # stayed valid, the harness stayed healthy, no alarm fired, and terraform plan
+  # reported no changes, because no config was wrong. Every /chat returned 500
+  # and only the Lambda log said why:
   #
   #   ResourceNotFoundException when calling ConverseStream:
   #   This model version has reached the end of its life.
   #
-  # Only the Lambda log said so. This is the THIRD chatbot in this account
-  # killed by a model retirement, after the Azure and GCP ones.
+  # The stopgap was Sonnet 4.5 - correct but 12x the token price - because
+  # Haiku 4.5 needed an AWS Marketplace subscription the account had not taken.
+  # That subscription was accepted on 2026-09-28 (usage-based, no fixed fee), so
+  # the cheap tier exists again and this points back at it.
   #
-  # This is deliberately the same model as the orchestrator, which collapses the
-  # cheap/expensive tier split the file header describes. That is not tidiness,
-  # it is the only working option:
-  #
-  #   us.anthropic.claude-sonnet-4-5    invokable
-  #   us.anthropic.claude-haiku-4-5     AccessDenied - needs an AWS Marketplace
-  #                                     subscription the account has not taken
   #   anthropic.claude-3-haiku          end of life
+  #   us.anthropic.claude-haiku-4-5     invokable since the agreement
+  #   us.anthropic.claude-sonnet-4-5    invokable, 3x the price
   #
   # Verified by calling bedrock-runtime converse on each, not by reading
-  # list-foundation-models, which reports Haiku 4.5 as ACTIVE and says nothing
-  # about whether this account may call it.
+  # list-foundation-models, which reported Haiku 4.5 as ACTIVE the whole time it
+  # was unusable and would have sent you looking in the wrong place.
   #
-  # COST: this raises the high-volume role from $0.25/$1.25 per million tokens
-  # to $3/$15 - about 12x. The per-visitor quota is what bounds it. Point this
-  # back at a Haiku profile if the account ever subscribes to Haiku 4.5; the two
-  # profiles still exist separately so Cost Explorer keeps the per-role split.
-  recommender_source  = "arn:aws:bedrock:${var.region}:${data.aws_caller_identity.current.account_id}:inference-profile/us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+  # COST: $1/$5 per million tokens against Sonnet's $3/$15. With the 150/day cap
+  # in cloudprice-web that moves a worst-case day from ~$88/month to ~$29.
+  #
+  # Note the "us." prefix is required. The bare foundation-model id is rejected -
+  # this model can only be called through an inference profile.
+  recommender_source  = "arn:aws:bedrock:${var.region}:${data.aws_caller_identity.current.account_id}:inference-profile/us.anthropic.claude-haiku-4-5-20251001-v1:0"
 }
 
 # The reasoning role: plans, decides which tools to call, reads results.
