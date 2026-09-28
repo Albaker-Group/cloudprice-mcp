@@ -36,7 +36,13 @@ jobs:
     name: Build + push arm64
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v4
+      # SHA-pinned: the repo's zizmor policy rejects tag references, because a
+      # tag can be moved to point at different code after review.
+      # persist-credentials: false stops the job's token being left in
+      # .git/config, where any later step - or an uploaded artifact - can read it.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Read version from pyproject
         id: ver
@@ -47,14 +53,14 @@ jobs:
           echo "Version: $v"
 
       - name: Log in to ghcr.io
-        uses: docker/login-action@v3
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           context: .
           file: http_api/Dockerfile
