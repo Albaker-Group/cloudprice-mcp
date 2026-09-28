@@ -1,6 +1,13 @@
 image:
   repository: ghcr.io/albaker-group/cloudprice-mcp/http
   tag: "0.18.3"
+  # A digest, when set, WINS over the tag and is what should be used in any
+  # environment that matters. A tag is mutable: ":0.18.3" can be repointed at
+  # different bytes, so a pod restart can quietly run code nobody reviewed, and
+  # `helm diff` shows nothing. A digest cannot be repointed.
+  #
+  # Terraform sets this; the tag remains for humans reading `helm show values`.
+  digest: ""
   pullPolicy: IfNotPresent
 
 # GHCR packages are PRIVATE by default even when the repository is public.
