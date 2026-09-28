@@ -1,0 +1,111 @@
+name: Container image (ARM64)
+
+# Builds the HTTP-transport image and pushes it to GitHub Container Registry.
+#
+# WHY ghcr.io AND NOT AZURE CONTAINER REGISTRY
+#   ACR Basic is ~$5/month. This image is a few hundred MB of a public,
+#   open-source project, and ghcr.io hosts public images for nothing. $5/month
+#   is half the entire budget for the cluster this runs on.
+#
+# WHY A NATIVE ARM RUNNER AND NOT QEMU
+#   The AKS node is aarch64. Cross-building arm64 on an amd64 runner under QEMU
+#   works but is several times slower and has a habit of failing oddly inside
+#   native wheels. ubuntu-24.04-arm is free for public repositories, so there is
+#   no reason to emulate.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "http_api/**"
+      - "src/cloudprice_mcp/**"
+      - "pyproject.toml"
+      - ".github/workflows/container.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: container-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    name: Build + push arm64
+    runs-on: ubuntu-24.04-arm
+    steps:
+      # SHA-pinned: the repo's zizmor policy rejects tag references, because a
+      # tag can be moved to point at different code after review.
+      # persist-credentials: false stops the job's token being left in
+      # .git/config, where any later step - or an uploaded artifact - can read it.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Read version from pyproject
+        id: ver
+        run: |
+          v=$(grep -m1 '^version' pyproject.toml | sed 's/.*"\(.*\)".*/\1/')
+          [ -n "$v" ] || { echo "could not read version"; exit 1; }
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "Version: $v"
+
+      - name: Log in to ghcr.io
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: .
+          file: http_api/Dockerfile
+          platforms: linux/arm64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/http:${{ steps.ver.outputs.version }}
+            ghcr.io/${{ github.repository }}/http:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Prove the image runs BEFORE it is deployed anywhere. A container that
+      # starts and then fails every request - the classic symptom of package
+      # data that did not make it into the image - passes a plain `docker run`
+      # but fails this.
+      - name: Smoke-test the pushed image
+        run: |
+          IMAGE=ghcr.io/${{ github.repository }}/http:${{ steps.ver.outputs.version }}
+          docker run -d --name smoke -p 8080:8080 "$IMAGE"
+
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8080/healthz >/dev/null 2>&1; then break; fi
+            sleep 2
+          done
+
+          echo "--- /readyz (loads the price catalogue) ---"
+          curl -fsS http://localhost:8080/readyz | tee /tmp/ready.json
+          echo
+          # readyz returns 503 with an error body if the catalogue is missing,
+          # so -f alone is the real assertion here.
+
+          echo "--- /tools ---"
+          count=$(curl -fsS http://localhost:8080/tools | python3 -c 'import sys,json;print(json.load(sys.stdin)["count"])')
+          echo "tools: $count"
+          [ "$count" -ge 20 ] || { echo "FAIL: expected 20+ tools, got $count"; docker logs smoke; exit 1; }
+
+          echo "--- a real priced call ---"
+          curl -fsS -X POST http://localhost:8080/call \
+            -H 'Content-Type: application/json' \
+            -d '{"tool":"get_aws_price","arguments":{"instance_type":"t3.2xlarge"}}' \
+            | python3 -c 'import sys,json;d=json.load(sys.stdin);assert d.get("hourly_usd") or d.get("monthly_usd"),d;print("priced ok:",d.get("sku"),d.get("as_of"))'
+
+          echo "--- architecture ---"
+          arch=$(docker run --rm --entrypoint uname "$IMAGE" -m)
+          echo "image arch: $arch"
+          [ "$arch" = "aarch64" ] || { echo "FAIL: expected aarch64, got $arch"; exit 1; }
+
+          docker rm -f smoke >/dev/null

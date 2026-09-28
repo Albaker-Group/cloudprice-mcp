@@ -1,0 +1,9 @@
+apiVersion: v2
+name: cloudprice
+description: cloudprice-mcp over HTTP — multi-cloud price comparison tools
+type: application
+# Chart version. Bump on chart changes.
+version: 0.1.0
+# The app this deploys. Overridden per-release by --set image.tag, so this is
+# only the default; the image tag is what actually decides what runs.
+appVersion: "0.18.3"

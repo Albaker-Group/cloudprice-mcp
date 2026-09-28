@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cloudprice.fullname" . }}
+  labels:
+    {{- include "cloudprice.labels" . | nindent 4 }}
+spec:
+  # ClusterIP by default. A LoadBalancer would allocate a public IP at about
+  # $3.65/month - real money against this cluster's budget - so reaching it from
+  # a laptop is done with `kubectl port-forward`, which costs nothing and
+  # teaches the same networking.
+  type: {{ .Values.service.type }}
+  selector:
+    {{- include "cloudprice.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
