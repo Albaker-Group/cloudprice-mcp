@@ -90,8 +90,9 @@ jobs:
       # data that did not make it into the image - passes a plain `docker run`
       # but fails this.
       - name: Smoke-test the pushed image
+        env:
+          IMAGE: ${{ steps.ver.outputs.image }}:${{ steps.ver.outputs.version }}
         run: |
-          IMAGE=${{ steps.ver.outputs.image }}:${{ steps.ver.outputs.version }}
           docker run -d --name smoke -p 8080:8080 "$IMAGE"
 
           for i in $(seq 1 30); do
@@ -131,15 +132,28 @@ jobs:
       # which is not a deployment mechanism. Versioned OCI keeps the two repos
       # decoupled and makes a rollback a version number.
       - name: Package and push the Helm chart
+        # Values come through env, NOT inline ${{ }} inside run.
+        #
+        # zizmor flags the inline form as template-injection, and it is right in
+        # principle: the expression is substituted into the script text before
+        # the shell sees it, so anything attacker-influenced - github.actor on a
+        # fork PR being the classic - becomes code rather than data. Passed as
+        # env vars they are values the shell quotes, and can never be code.
+        env:
+          APP_VERSION: ${{ steps.ver.outputs.version }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
+
           CHART_REPO=$(echo "oci://ghcr.io/${GITHUB_REPOSITORY}/charts" | tr '[:upper:]' '[:lower:]')
 
           # Keep the chart's appVersion honest: it should name the image tag
-          # this run actually built, not whatever was committed.
-          helm package helm/cloudprice             --app-version "${{ steps.ver.outputs.version }}"             --destination /tmp/chart
+          # this run actually built, not whatever happens to be committed.
+          helm package helm/cloudprice             --app-version "${APP_VERSION}"             --destination /tmp/chart
 
-          helm registry login ghcr.io             --username "${{ github.actor }}"             --password "${{ secrets.GITHUB_TOKEN }}"
+          helm registry login ghcr.io             --username "${GHCR_USER}"             --password-stdin <<<"${GHCR_TOKEN}"
 
           CHART_VER=$(grep -m1 '^version:' helm/cloudprice/Chart.yaml | awk '{print $2}')
-          helm push "/tmp/chart/cloudprice-${CHART_VER}.tgz" "$CHART_REPO"
-          echo "Pushed $CHART_REPO/cloudprice:$CHART_VER (appVersion ${{ steps.ver.outputs.version }})"
+          helm push "/tmp/chart/cloudprice-${CHART_VER}.tgz" "${CHART_REPO}"
+          echo "Pushed ${CHART_REPO}/cloudprice:${CHART_VER} (appVersion ${APP_VERSION})"
