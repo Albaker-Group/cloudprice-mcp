@@ -31,6 +31,10 @@ concurrency:
 permissions:
   contents: read
   packages: write
+  # Required to sign the provenance attestation. id-token is the OIDC token used
+  # to prove to Sigstore that this really is this workflow in this repo.
+  id-token: write
+  attestations: write
 
 jobs:
   build:
@@ -73,6 +77,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
+        id: build
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           context: .
@@ -84,6 +89,12 @@ jobs:
             ${{ steps.ver.outputs.image }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          # Supply-chain metadata, both free:
+          #   provenance - a signed record of WHAT built this and from which commit
+          #   sbom       - the list of packages inside, so a future CVE can be
+          #                answered with "is it in our image" instead of a guess
+          provenance: mode=max
+          sbom: true
 
       # Prove the image runs BEFORE it is deployed anywhere. A container that
       # starts and then fails every request - the classic symptom of package
@@ -123,6 +134,34 @@ jobs:
           [ "$arch" = "aarch64" ] || { echo "FAIL: expected aarch64, got $arch"; exit 1; }
 
           docker rm -f smoke >/dev/null
+
+      # A signed, verifiable statement that this exact image digest was built by
+      # this workflow, from this commit. Without it, nothing distinguishes the
+      # image CI pushed from one someone with packages:write pushed by hand -
+      # the cluster would pull either without complaint.
+      #
+      # Verify with:
+      #   gh attestation verify oci://<image>@<digest> --repo Albaker-Group/cloudprice-mcp
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
+        with:
+          subject-name: ${{ steps.ver.outputs.image }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+
+      # Scan the IMAGE, not the IaC. The existing Trivy job scans Terraform and
+      # Dockerfiles; nothing until now looked at what is actually installed
+      # inside the built container - the Python base image and every wheel in
+      # the venv. exit-code 1 means a HIGH or CRITICAL fails the build rather
+      # than producing a report nobody opens.
+      - name: Scan the image for vulnerabilities
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ steps.ver.outputs.image }}:${{ steps.ver.outputs.version }}
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
 
       # Publish the chart as an OCI artifact alongside the image.
       #

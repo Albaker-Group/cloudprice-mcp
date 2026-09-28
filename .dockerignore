@@ -1,0 +1,30 @@
+# Keep the build context small and free of things that must never reach a
+# public image layer or a build cache.
+#
+# Without this the whole repo - including .git, with every commit and any secret
+# ever committed and later removed - is uploaded as build context. It does not
+# land in the final image with the COPY lines this Dockerfile uses, but it is
+# sent to the builder, it lands in the build cache, and a single careless
+# `COPY . .` in future would publish all of it.
+.git
+.github
+.gitignore
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.ruff_cache
+.venv
+venv
+tests
+docs
+examples
+helm
+infra
+gateway_lambda
+scripts
+bin
+*.md
+!README.md
+.env
+*.pem
+*.key
