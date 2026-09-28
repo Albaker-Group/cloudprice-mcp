@@ -96,10 +96,20 @@ def readyz() -> JSONResponse:
         catalog = dispatch.load_catalog()
         if not catalog:
             raise RuntimeError("catalogue loaded but empty")
-    except Exception as exc:  # surfaced, not swallowed - see below
+    except Exception:
+        # The detail goes to the LOG, not to the response body.
+        #
+        # An earlier version returned str(exc) to the caller, and CodeQL was
+        # right to flag it (py/stack-trace-exposure): the exception text from a
+        # failed catalogue load carries filesystem paths and package internals,
+        # and /readyz is reachable by anything that can reach the pod. An
+        # operator reading `kubectl logs` gets the whole traceback; a caller
+        # gets only the fact that the pod cannot serve, which is all a probe
+        # needs to decide anything.
         log.exception("readiness check failed")
         return JSONResponse(
-            status_code=503, content={"status": "not-ready", "error": str(exc)}
+            status_code=503,
+            content={"status": "not-ready", "error": "catalogue unavailable"},
         )
     return JSONResponse(content={"status": "ready", "tools": len(dispatch.tool_names())})
 
