@@ -1,0 +1,72 @@
+image:
+  repository: ghcr.io/albaker-group/cloudprice-mcp/http
+  tag: "0.18.3"
+  pullPolicy: IfNotPresent
+
+# GHCR packages are PRIVATE by default even when the repository is public.
+# Either make the package public once (Packages -> cloudprice-mcp/http ->
+# Package settings -> Change visibility), or create a pull secret and name it
+# here. Left empty because public is the right answer for an open-source image
+# and costs nothing to maintain.
+imagePullSecrets: []
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+# SIZED FOR A 2 vCPU / 4 GB NODE, which is the whole cluster.
+#
+# requests are what the scheduler reserves; limits are what the kernel enforces.
+# These are small on purpose: kube-system already takes roughly 1 GB on this
+# node, and a request that cannot be satisfied leaves the pod Pending forever
+# with an "Insufficient memory" event that is easy to misread as a broken image.
+#
+# memory limit is a HARD kill - exceed it and the container is OOMKilled, no
+# warning, exit 137. cpu limit only throttles. That asymmetry is why memory gets
+# headroom and cpu does not.
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Probes map to the two endpoints, which do deliberately different things:
+#   /healthz  cheap, "is the process alive"     -> liveness  (restarts the pod)
+#   /readyz   loads the catalogue, "can it serve" -> readiness (pulls it from the Service)
+#
+# Using /readyz for liveness would be a mistake: under load the catalogue check
+# could time out and Kubernetes would restart a pod that was merely busy,
+# turning slowness into a crash loop.
+probes:
+  liveness:
+    initialDelaySeconds: 10
+    periodSeconds: 20
+    timeoutSeconds: 3
+    failureThreshold: 3
+  readiness:
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# The image runs as uid 10001 and needs no write access anywhere.
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+# The node is arm64. Stating it means a pod scheduled onto a future amd64 pool
+# fails loudly at scheduling rather than crash-looping on exec format error.
+nodeSelector:
+  kubernetes.io/arch: arm64
+
+env:
+  LOG_LEVEL: INFO
