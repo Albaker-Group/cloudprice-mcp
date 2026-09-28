@@ -24,7 +24,12 @@
 #    perfectly and fails every single request.
 
 # ---- build ----------------------------------------------------------------
-FROM python:3.12-slim AS build
+# Base image pinned BY DIGEST, not by the 3.12-slim tag.
+# A tag is mutable: the same Dockerfile can build different code on
+# different days, which makes a build unreproducible and lets an upstream
+# compromise reach this image without any change here. Update the digest
+# deliberately, as a reviewable commit.
+FROM python:3.12-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f AS build
 
 WORKDIR /build
 
@@ -45,7 +50,7 @@ COPY src/ ./src/
 RUN pip install --no-cache-dir --no-deps .
 
 # ---- runtime --------------------------------------------------------------
-FROM python:3.12-slim
+FROM python:3.12-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f
 
 # Non-root. Kubernetes will not enforce this for you unless a securityContext
 # says so, and the Helm chart does - but an image that only works as root makes
