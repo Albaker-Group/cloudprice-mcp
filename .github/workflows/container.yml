@@ -18,6 +18,7 @@ on:
     branches: [main]
     paths:
       - "http_api/**"
+      - "helm/**"
       - "src/cloudprice_mcp/**"
       - "pyproject.toml"
       - ".github/workflows/container.yml"
@@ -121,3 +122,24 @@ jobs:
           [ "$arch" = "aarch64" ] || { echo "FAIL: expected aarch64, got $arch"; exit 1; }
 
           docker rm -f smoke >/dev/null
+
+      # Publish the chart as an OCI artifact alongside the image.
+      #
+      # Terraform in terraform-azure-aks deploys this with helm_release and
+      # points at oci://.../charts/cloudprice. The alternative - a relative path
+      # into a sibling checkout - resolves on Ali's laptop and nowhere else,
+      # which is not a deployment mechanism. Versioned OCI keeps the two repos
+      # decoupled and makes a rollback a version number.
+      - name: Package and push the Helm chart
+        run: |
+          CHART_REPO=$(echo "oci://ghcr.io/${GITHUB_REPOSITORY}/charts" | tr '[:upper:]' '[:lower:]')
+
+          # Keep the chart's appVersion honest: it should name the image tag
+          # this run actually built, not whatever was committed.
+          helm package helm/cloudprice             --app-version "${{ steps.ver.outputs.version }}"             --destination /tmp/chart
+
+          helm registry login ghcr.io             --username "${{ github.actor }}"             --password "${{ secrets.GITHUB_TOKEN }}"
+
+          CHART_VER=$(grep -m1 '^version:' helm/cloudprice/Chart.yaml | awk '{print $2}')
+          helm push "/tmp/chart/cloudprice-${CHART_VER}.tgz" "$CHART_REPO"
+          echo "Pushed $CHART_REPO/cloudprice:$CHART_VER (appVersion ${{ steps.ver.outputs.version }})"
