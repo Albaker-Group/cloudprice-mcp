@@ -50,7 +50,19 @@ jobs:
           v=$(grep -m1 '^version' pyproject.toml | sed 's/.*"\(.*\)".*/\1/')
           [ -n "$v" ] || { echo "could not read version"; exit 1; }
           echo "version=$v" >> "$GITHUB_OUTPUT"
-          echo "Version: $v"
+          # ghcr.io rejects uppercase in a repository name, and
+          # github.repository is "Albaker-Group/cloudprice-mcp". Without this
+          # the push fails after a full build with an "invalid reference
+          # format" error that never mentions capital letters.
+          repo_lc=$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')
+          echo "image=ghcr.io/${repo_lc}/http" >> "$GITHUB_OUTPUT"
+          echo "Version: $v  Image: ghcr.io/${repo_lc}/http"
+
+      # Required for cache-from/cache-to. The default "docker" driver cannot
+      # export a cache and fails with "Cache export is not supported for the
+      # docker driver" only once the build command actually runs.
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
 
       - name: Log in to ghcr.io
         uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
@@ -67,8 +79,8 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}/http:${{ steps.ver.outputs.version }}
-            ghcr.io/${{ github.repository }}/http:latest
+            ${{ steps.ver.outputs.image }}:${{ steps.ver.outputs.version }}
+            ${{ steps.ver.outputs.image }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -78,7 +90,7 @@ jobs:
       # but fails this.
       - name: Smoke-test the pushed image
         run: |
-          IMAGE=ghcr.io/${{ github.repository }}/http:${{ steps.ver.outputs.version }}
+          IMAGE=${{ steps.ver.outputs.image }}:${{ steps.ver.outputs.version }}
           docker run -d --name smoke -p 8080:8080 "$IMAGE"
 
           for i in $(seq 1 30); do
