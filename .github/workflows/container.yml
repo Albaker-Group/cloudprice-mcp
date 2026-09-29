@@ -63,6 +63,12 @@ jobs:
           echo "image=ghcr.io/${repo_lc}/http" >> "$GITHUB_OUTPUT"
           echo "Version: $v  Image: ghcr.io/${repo_lc}/http"
 
+      # Emulation, so this arm64 runner can also produce the amd64 half of the
+      # manifest. Needed because the image has to run in two places with
+      # different CPUs - see the platforms list below.
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
+
       # Required for cache-from/cache-to. The default "docker" driver cannot
       # export a cache and fails with "Cache export is not supported for the
       # docker driver" only once the build command actually runs.
@@ -82,7 +88,19 @@ jobs:
         with:
           context: .
           file: http_api/Dockerfile
-          platforms: linux/arm64
+          # BOTH architectures, in one manifest index.
+          #
+          # arm64 alone was not enough, and the failure is worth recording: the
+          # AKS node is Standard_B2pls_v2 (arm64, chosen because it is ~20%
+          # cheaper), but Azure Container Apps runs amd64 ONLY. Deploying the
+          # arm64-only image there failed with
+          #
+          #   no child with platform linux/amd64 in index
+          #
+          # which is accurate and mentions neither Container Apps nor the fact
+          # that the image was single-arch. One index carrying both means the
+          # same digest works in both places, and each runtime picks its own.
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             ${{ steps.ver.outputs.image }}:${{ steps.ver.outputs.version }}
@@ -128,10 +146,14 @@ jobs:
             -d '{"tool":"get_aws_price","arguments":{"instance_type":"t3.2xlarge"}}' \
             | python3 -c 'import sys,json;d=json.load(sys.stdin);assert d.get("hourly_usd") or d.get("monthly_usd"),d;print("priced ok:",d.get("sku"),d.get("as_of"))'
 
-          echo "--- architecture ---"
-          arch=$(docker run --rm --entrypoint uname "$IMAGE" -m)
-          echo "image arch: $arch"
-          [ "$arch" = "aarch64" ] || { echo "FAIL: expected aarch64, got $arch"; exit 1; }
+          echo "--- architectures in the manifest ---"
+          # docker run can only execute the runner's own architecture, so the
+          # real assertion is on the INDEX: both platforms must be present, or
+          # one of the two deployment targets silently cannot pull it.
+          docker buildx imagetools inspect "$IMAGE" --format '{{range .Manifest.Manifests}}{{.Platform.OS}}/{{.Platform.Architecture}}{{println}}{{end}}'             | grep -v '^$' | grep -v unknown | sort -u | tee /tmp/arches.txt
+          grep -q '^linux/amd64$' /tmp/arches.txt || { echo "FAIL: no linux/amd64 - Container Apps cannot run this"; exit 1; }
+          grep -q '^linux/arm64$' /tmp/arches.txt || { echo "FAIL: no linux/arm64 - the AKS node cannot run this"; exit 1; }
+          echo "both platforms present"
 
           docker rm -f smoke >/dev/null
 
