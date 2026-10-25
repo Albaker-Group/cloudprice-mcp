@@ -1,12 +1,12 @@
 {
-  "as_of": "2026-09-06",
+  "as_of": "2026-10-25",
   "source": "openrouter",
   "source_url": "https://openrouter.ai/api/v1/models",
   "license": "OpenRouter public catalog (no redistribution restriction noted, but cite the source).",
   "currency": "USD",
   "schema_version": 1,
   "notes": "Auto-ingested from OpenRouter's public /api/v1/models. Prices reflect OpenRouter's routed rate (includes their margin), NOT the underlying provider's direct retail price. For direct provider pricing on the same model use the litellm-sourced rows in llm_catalog_extended.json.",
-  "model_count": 404,
+  "model_count": 440,
   "models": [
     {
       "openrouter_id": "aion-labs/aion-2.0",
@@ -42,6 +42,30 @@
       "output_per_1m_usd": 1.4,
       "cache_read_per_1m_usd": 0.18,
       "context_window_tokens": 131072,
+      "max_output_tokens": 32768
+    },
+    {
+      "openrouter_id": "aion-labs/aion-3.5",
+      "provider": "openrouter",
+      "provider_underlying": "aion-labs",
+      "name": "AionLabs: Aion 3.5",
+      "mode": "chat",
+      "input_per_1m_usd": 3.0,
+      "output_per_1m_usd": 6.0,
+      "cache_read_per_1m_usd": 0.75,
+      "context_window_tokens": 262144,
+      "max_output_tokens": 32768
+    },
+    {
+      "openrouter_id": "aion-labs/aion-3.5-mini",
+      "provider": "openrouter",
+      "provider_underlying": "aion-labs",
+      "name": "AionLabs: Aion 3.5 Mini",
+      "mode": "chat",
+      "input_per_1m_usd": 0.7,
+      "output_per_1m_usd": 1.4,
+      "cache_read_per_1m_usd": 0.18,
+      "context_window_tokens": 262144,
       "max_output_tokens": 32768
     },
     {
@@ -123,19 +147,6 @@
       "max_output_tokens": 4096
     },
     {
-      "openrouter_id": "anthropic/claude-3-haiku",
-      "provider": "openrouter",
-      "provider_underlying": "anthropic",
-      "name": "Anthropic: Claude 3 Haiku",
-      "mode": "chat",
-      "input_per_1m_usd": 0.25,
-      "output_per_1m_usd": 1.25,
-      "cache_read_per_1m_usd": 0.03,
-      "cache_write_per_1m_usd": 0.3,
-      "context_window_tokens": 200000,
-      "max_output_tokens": 4096
-    },
-    {
       "openrouter_id": "anthropic/claude-fable-5",
       "provider": "openrouter",
       "provider_underlying": "anthropic",
@@ -214,17 +225,30 @@
       "max_output_tokens": 64000
     },
     {
-      "openrouter_id": "anthropic/claude-opus-4",
+      "openrouter_id": "anthropic/claude-haiku-5.5",
       "provider": "openrouter",
       "provider_underlying": "anthropic",
-      "name": "Anthropic: Claude Opus 4",
+      "name": "Anthropic: Claude Haiku 5.5",
       "mode": "chat",
-      "input_per_1m_usd": 15.0,
-      "output_per_1m_usd": 75.0,
-      "cache_read_per_1m_usd": 1.5,
-      "cache_write_per_1m_usd": 18.75,
-      "context_window_tokens": 200000,
-      "max_output_tokens": 32000
+      "input_per_1m_usd": 0.1,
+      "output_per_1m_usd": 0.5,
+      "cache_read_per_1m_usd": 0.01,
+      "cache_write_per_1m_usd": 0.125,
+      "context_window_tokens": 1000000,
+      "max_output_tokens": 128000
+    },
+    {
+      "openrouter_id": "anthropic/claude-haiku-5.5:batch",
+      "provider": "openrouter",
+      "provider_underlying": "anthropic",
+      "name": "Anthropic: Claude Haiku 5.5 (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 0.05,
+      "output_per_1m_usd": 0.25,
+      "cache_read_per_1m_usd": 0.005,
+      "cache_write_per_1m_usd": 0.0625,
+      "context_window_tokens": 1000000,
+      "max_output_tokens": 128000
     },
     {
       "openrouter_id": "anthropic/claude-opus-4.1",
@@ -360,7 +384,7 @@
       "openrouter_id": "anthropic/claude-opus-5",
       "provider": "openrouter",
       "provider_underlying": "anthropic",
-      "name": "Claude Opus 5",
+      "name": "Anthropic: Claude Opus 5",
       "mode": "chat",
       "input_per_1m_usd": 5.0,
       "output_per_1m_usd": 25.0,
@@ -370,10 +394,36 @@
       "max_output_tokens": 128000
     },
     {
+      "openrouter_id": "anthropic/claude-opus-5.5",
+      "provider": "openrouter",
+      "provider_underlying": "anthropic",
+      "name": "Anthropic: Claude Opus 5.5",
+      "mode": "chat",
+      "input_per_1m_usd": 4.0,
+      "output_per_1m_usd": 20.0,
+      "cache_read_per_1m_usd": 0.2,
+      "cache_write_per_1m_usd": 5.0,
+      "context_window_tokens": 1000000,
+      "max_output_tokens": 128000
+    },
+    {
+      "openrouter_id": "anthropic/claude-opus-5.5:batch",
+      "provider": "openrouter",
+      "provider_underlying": "anthropic",
+      "name": "Anthropic: Claude Opus 5.5 (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 2.0,
+      "output_per_1m_usd": 10.0,
+      "cache_read_per_1m_usd": 0.1,
+      "cache_write_per_1m_usd": 2.5,
+      "context_window_tokens": 1000000,
+      "max_output_tokens": 128000
+    },
+    {
       "openrouter_id": "anthropic/claude-opus-5:batch",
       "provider": "openrouter",
       "provider_underlying": "anthropic",
-      "name": "Claude Opus 5 (batch)",
+      "name": "Anthropic: Claude Opus 5 (batch)",
       "mode": "chat",
       "input_per_1m_usd": 2.5,
       "output_per_1m_usd": 12.5,
@@ -381,19 +431,6 @@
       "cache_write_per_1m_usd": 3.125,
       "context_window_tokens": 1000000,
       "max_output_tokens": 128000
-    },
-    {
-      "openrouter_id": "anthropic/claude-sonnet-4",
-      "provider": "openrouter",
-      "provider_underlying": "anthropic",
-      "name": "Anthropic: Claude Sonnet 4",
-      "mode": "chat",
-      "input_per_1m_usd": 3.0,
-      "output_per_1m_usd": 15.0,
-      "cache_read_per_1m_usd": 0.3,
-      "cache_write_per_1m_usd": 3.75,
-      "context_window_tokens": 1000000,
-      "max_output_tokens": 64000
     },
     {
       "openrouter_id": "anthropic/claude-sonnet-4.5",
@@ -461,6 +498,32 @@
       "max_output_tokens": 128000
     },
     {
+      "openrouter_id": "anthropic/claude-sonnet-5.5",
+      "provider": "openrouter",
+      "provider_underlying": "anthropic",
+      "name": "Anthropic: Claude Sonnet 5.5",
+      "mode": "chat",
+      "input_per_1m_usd": 2.0,
+      "output_per_1m_usd": 10.0,
+      "cache_read_per_1m_usd": 0.1,
+      "cache_write_per_1m_usd": 2.5,
+      "context_window_tokens": 1000000,
+      "max_output_tokens": 128000
+    },
+    {
+      "openrouter_id": "anthropic/claude-sonnet-5.5:batch",
+      "provider": "openrouter",
+      "provider_underlying": "anthropic",
+      "name": "Anthropic: Claude Sonnet 5.5 (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 1.0,
+      "output_per_1m_usd": 5.0,
+      "cache_read_per_1m_usd": 0.05,
+      "cache_write_per_1m_usd": 1.25,
+      "context_window_tokens": 1000000,
+      "max_output_tokens": 128000
+    },
+    {
       "openrouter_id": "anthropic/claude-sonnet-5:batch",
       "provider": "openrouter",
       "provider_underlying": "anthropic",
@@ -484,17 +547,6 @@
       "cache_read_per_1m_usd": 0.06,
       "context_window_tokens": 262144,
       "max_output_tokens": 80000
-    },
-    {
-      "openrouter_id": "baidu/ernie-4.5-vl-424b-a47b",
-      "provider": "openrouter",
-      "provider_underlying": "baidu",
-      "name": "Baidu: ERNIE 4.5 VL 424B A47B ",
-      "mode": "chat",
-      "input_per_1m_usd": 0.42,
-      "output_per_1m_usd": 1.25,
-      "context_window_tokens": 123000,
-      "max_output_tokens": 16000
     },
     {
       "openrouter_id": "bytedance-seed/seed-1.6",
@@ -597,6 +649,18 @@
       "max_output_tokens": 8192
     },
     {
+      "openrouter_id": "cohere/command-a-plus",
+      "provider": "openrouter",
+      "provider_underlying": "cohere",
+      "name": "Cohere: Command A+",
+      "mode": "chat",
+      "input_per_1m_usd": 0.3,
+      "output_per_1m_usd": 1.5,
+      "cache_read_per_1m_usd": 0.15,
+      "context_window_tokens": 192000,
+      "max_output_tokens": 64000
+    },
+    {
       "openrouter_id": "cohere/command-r-08-2024",
       "provider": "openrouter",
       "provider_underlying": "cohere",
@@ -635,10 +699,10 @@
       "provider_underlying": "deepseek",
       "name": "DeepSeek: DeepSeek V3",
       "mode": "chat",
-      "input_per_1m_usd": 0.32,
-      "output_per_1m_usd": 0.89,
+      "input_per_1m_usd": 0.2574,
+      "output_per_1m_usd": 1.0287,
       "context_window_tokens": 163840,
-      "max_output_tokens": 16384
+      "max_output_tokens": 16000
     },
     {
       "openrouter_id": "deepseek/deepseek-chat-v3-0324",
@@ -646,10 +710,11 @@
       "provider_underlying": "deepseek",
       "name": "DeepSeek: DeepSeek V3 0324",
       "mode": "chat",
-      "input_per_1m_usd": 0.25,
-      "output_per_1m_usd": 1.0,
+      "input_per_1m_usd": 0.29,
+      "output_per_1m_usd": 1.14,
+      "cache_read_per_1m_usd": 0.11,
       "context_window_tokens": 163840,
-      "max_output_tokens": 147456
+      "max_output_tokens": 115200
     },
     {
       "openrouter_id": "deepseek/deepseek-chat-v3.1",
@@ -657,22 +722,11 @@
       "provider_underlying": "deepseek",
       "name": "DeepSeek: DeepSeek V3.1",
       "mode": "chat",
-      "input_per_1m_usd": 0.55,
-      "output_per_1m_usd": 1.65,
-      "cache_read_per_1m_usd": 0.55,
+      "input_per_1m_usd": 0.25,
+      "output_per_1m_usd": 0.95,
+      "cache_read_per_1m_usd": 0.13,
       "context_window_tokens": 163840,
-      "max_output_tokens": 144900
-    },
-    {
-      "openrouter_id": "deepseek/deepseek-r1",
-      "provider": "openrouter",
-      "provider_underlying": "deepseek",
-      "name": "DeepSeek: R1",
-      "mode": "chat",
-      "input_per_1m_usd": 0.7,
-      "output_per_1m_usd": 2.5,
-      "context_window_tokens": 64000,
-      "max_output_tokens": 16000
+      "max_output_tokens": 32768
     },
     {
       "openrouter_id": "deepseek/deepseek-r1-0528",
@@ -687,17 +741,6 @@
       "max_output_tokens": 32768
     },
     {
-      "openrouter_id": "deepseek/deepseek-r1-distill-llama-70b",
-      "provider": "openrouter",
-      "provider_underlying": "deepseek",
-      "name": "DeepSeek: R1 Distill Llama 70B",
-      "mode": "chat",
-      "input_per_1m_usd": 0.8,
-      "output_per_1m_usd": 0.8,
-      "context_window_tokens": 8192,
-      "max_output_tokens": 7372
-    },
-    {
       "openrouter_id": "deepseek/deepseek-v3.1-terminus",
       "provider": "openrouter",
       "provider_underlying": "deepseek",
@@ -705,9 +748,8 @@
       "mode": "chat",
       "input_per_1m_usd": 0.27,
       "output_per_1m_usd": 1.0,
-      "cache_read_per_1m_usd": 0.135,
       "context_window_tokens": 163840,
-      "max_output_tokens": 32768
+      "max_output_tokens": 147456
     },
     {
       "openrouter_id": "deepseek/deepseek-v3.2",
@@ -715,9 +757,9 @@
       "provider_underlying": "deepseek",
       "name": "DeepSeek: DeepSeek V3.2",
       "mode": "chat",
-      "input_per_1m_usd": 0.269,
-      "output_per_1m_usd": 0.4,
-      "cache_read_per_1m_usd": 0.1345,
+      "input_per_1m_usd": 0.28,
+      "output_per_1m_usd": 0.42,
+      "cache_read_per_1m_usd": 0.028,
       "context_window_tokens": 163840,
       "max_output_tokens": 65536
     },
@@ -730,7 +772,7 @@
       "input_per_1m_usd": 0.27,
       "output_per_1m_usd": 0.41,
       "context_window_tokens": 163840,
-      "max_output_tokens": 65536
+      "max_output_tokens": 147456
     },
     {
       "openrouter_id": "deepseek/deepseek-v4-flash",
@@ -738,11 +780,11 @@
       "provider_underlying": "deepseek",
       "name": "DeepSeek: DeepSeek V4 Flash 0423",
       "mode": "chat",
-      "input_per_1m_usd": 0.0816,
-      "output_per_1m_usd": 0.1632,
-      "cache_read_per_1m_usd": 0.0163,
+      "input_per_1m_usd": 0.091,
+      "output_per_1m_usd": 0.182,
+      "cache_read_per_1m_usd": 0.0182,
       "context_window_tokens": 1048576,
-      "max_output_tokens": 384000
+      "max_output_tokens": 943717
     },
     {
       "openrouter_id": "deepseek/deepseek-v4-flash-0731",
@@ -750,21 +792,9 @@
       "provider_underlying": "deepseek",
       "name": "DeepSeek: DeepSeek V4 Flash 0731",
       "mode": "chat",
-      "input_per_1m_usd": 0.065,
-      "output_per_1m_usd": 0.18,
-      "cache_read_per_1m_usd": 0.016,
-      "context_window_tokens": 1310720,
-      "max_output_tokens": 943718
-    },
-    {
-      "openrouter_id": "deepseek/deepseek-v4-flash-0731:batch",
-      "provider": "openrouter",
-      "provider_underlying": "deepseek",
-      "name": "DeepSeek: DeepSeek V4 Flash 0731 (batch)",
-      "mode": "chat",
-      "input_per_1m_usd": 0.14,
-      "output_per_1m_usd": 0.28,
-      "cache_read_per_1m_usd": 0.03,
+      "input_per_1m_usd": 0.0422,
+      "output_per_1m_usd": 0.1694,
+      "cache_read_per_1m_usd": 0.028,
       "context_window_tokens": 1048576,
       "max_output_tokens": 943718
     },
@@ -774,11 +804,11 @@
       "provider_underlying": "deepseek",
       "name": "DeepSeek: DeepSeek V4 Flash Vision Exp",
       "mode": "chat",
-      "input_per_1m_usd": 0.22,
-      "output_per_1m_usd": 0.66,
-      "cache_read_per_1m_usd": 0.007,
+      "input_per_1m_usd": 0.2156,
+      "output_per_1m_usd": 0.6468,
+      "cache_read_per_1m_usd": 0.0069,
       "context_window_tokens": 1048576,
-      "max_output_tokens": 384000
+      "max_output_tokens": 262144
     },
     {
       "openrouter_id": "deepseek/deepseek-v4-pro",
@@ -786,9 +816,9 @@
       "provider_underlying": "deepseek",
       "name": "DeepSeek: DeepSeek V4 Pro 0423",
       "mode": "chat",
-      "input_per_1m_usd": 0.7282,
-      "output_per_1m_usd": 1.4564,
-      "cache_read_per_1m_usd": 0.0607,
+      "input_per_1m_usd": 0.2088,
+      "output_per_1m_usd": 0.4176,
+      "cache_read_per_1m_usd": 0.0174,
       "context_window_tokens": 1048576,
       "max_output_tokens": 384000
     },
@@ -798,21 +828,69 @@
       "provider_underlying": "deepseek",
       "name": "DeepSeek: DeepSeek V4 Pro 0813",
       "mode": "chat",
-      "input_per_1m_usd": 1.1207,
-      "output_per_1m_usd": 3.362,
-      "cache_read_per_1m_usd": 0.0374,
+      "input_per_1m_usd": 0.66,
+      "output_per_1m_usd": 1.98,
+      "cache_read_per_1m_usd": 0.022,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 393216
+    },
+    {
+      "openrouter_id": "deepseek/deepseek-v4.1-flash",
+      "provider": "openrouter",
+      "provider_underlying": "deepseek",
+      "name": "DeepSeek: DeepSeek V4.1 Flash",
+      "mode": "chat",
+      "input_per_1m_usd": 0.02,
+      "output_per_1m_usd": 1.0,
+      "cache_read_per_1m_usd": 0.015,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 943718
+    },
+    {
+      "openrouter_id": "deepseek/deepseek-v4.1-flash-1017",
+      "provider": "openrouter",
+      "provider_underlying": "deepseek",
+      "name": "DeepSeek: DeepSeek V4.1 Flash 1017",
+      "mode": "chat",
+      "input_per_1m_usd": 0.15,
+      "output_per_1m_usd": 0.6,
+      "cache_read_per_1m_usd": 0.003,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 393216
+    },
+    {
+      "openrouter_id": "deepseek/deepseek-v4.1-flash:batch",
+      "provider": "openrouter",
+      "provider_underlying": "deepseek",
+      "name": "DeepSeek: DeepSeek V4.1 Flash (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 0.05,
+      "output_per_1m_usd": 0.15,
+      "cache_read_per_1m_usd": 0.004,
       "context_window_tokens": 1048576,
       "max_output_tokens": 384000
     },
     {
-      "openrouter_id": "deepseek/deepseek-v4-pro-0813:batch",
+      "openrouter_id": "elorian/glimpse",
       "provider": "openrouter",
-      "provider_underlying": "deepseek",
-      "name": "DeepSeek: DeepSeek V4 Pro 0813 (batch)",
+      "provider_underlying": "elorian",
+      "name": "Elorian: Glimpse",
       "mode": "chat",
-      "input_per_1m_usd": 1.32,
-      "output_per_1m_usd": 3.96,
-      "cache_read_per_1m_usd": 0.13,
+      "input_per_1m_usd": 0.6,
+      "output_per_1m_usd": 3.0,
+      "cache_read_per_1m_usd": 0.06,
+      "context_window_tokens": 262144,
+      "max_output_tokens": 256000
+    },
+    {
+      "openrouter_id": "fireworks/ember-1",
+      "provider": "openrouter",
+      "provider_underlying": "fireworks",
+      "name": "Fireworks: Ember-1",
+      "mode": "chat",
+      "input_per_1m_usd": 3.0,
+      "output_per_1m_usd": 15.0,
+      "cache_read_per_1m_usd": 0.3,
       "context_window_tokens": 1048576,
       "max_output_tokens": 943718
     },
@@ -856,30 +934,6 @@
       "max_output_tokens": 65535
     },
     {
-      "openrouter_id": "google/gemini-2.5-flash-lite:batch",
-      "provider": "openrouter",
-      "provider_underlying": "google",
-      "name": "Google: Gemini 2.5 Flash Lite (batch)",
-      "mode": "chat",
-      "input_per_1m_usd": 0.05,
-      "output_per_1m_usd": 0.2,
-      "cache_read_per_1m_usd": 0.01,
-      "context_window_tokens": 1048576,
-      "max_output_tokens": 65535
-    },
-    {
-      "openrouter_id": "google/gemini-2.5-flash:batch",
-      "provider": "openrouter",
-      "provider_underlying": "google",
-      "name": "Google: Gemini 2.5 Flash (batch)",
-      "mode": "chat",
-      "input_per_1m_usd": 0.15,
-      "output_per_1m_usd": 1.25,
-      "cache_read_per_1m_usd": 0.03,
-      "context_window_tokens": 1048576,
-      "max_output_tokens": 65535
-    },
-    {
       "openrouter_id": "google/gemini-2.5-pro",
       "provider": "openrouter",
       "provider_underlying": "google",
@@ -902,31 +956,6 @@
       "output_per_1m_usd": 10.0,
       "cache_read_per_1m_usd": 0.125,
       "cache_write_per_1m_usd": 0.375,
-      "context_window_tokens": 1048576,
-      "max_output_tokens": 65536
-    },
-    {
-      "openrouter_id": "google/gemini-2.5-pro-preview-05-06",
-      "provider": "openrouter",
-      "provider_underlying": "google",
-      "name": "Google: Gemini 2.5 Pro Preview 05-06",
-      "mode": "chat",
-      "input_per_1m_usd": 1.25,
-      "output_per_1m_usd": 10.0,
-      "cache_read_per_1m_usd": 0.125,
-      "cache_write_per_1m_usd": 0.375,
-      "context_window_tokens": 1048576,
-      "max_output_tokens": 65535
-    },
-    {
-      "openrouter_id": "google/gemini-2.5-pro:batch",
-      "provider": "openrouter",
-      "provider_underlying": "google",
-      "name": "Google: Gemini 2.5 Pro (batch)",
-      "mode": "chat",
-      "input_per_1m_usd": 0.625,
-      "output_per_1m_usd": 5.0,
-      "cache_read_per_1m_usd": 0.125,
       "context_window_tokens": 1048576,
       "max_output_tokens": 65536
     },
@@ -1196,9 +1225,9 @@
       "provider_underlying": "google",
       "name": "Google: Gemini 3.8 Flash",
       "mode": "chat",
-      "input_per_1m_usd": 0.75,
-      "output_per_1m_usd": 3.75,
-      "cache_read_per_1m_usd": 0.075,
+      "input_per_1m_usd": 0.825,
+      "output_per_1m_usd": 4.125,
+      "cache_read_per_1m_usd": 0.0825,
       "cache_write_per_1m_usd": 0.0417,
       "context_window_tokens": 1048576,
       "max_output_tokens": 65536
@@ -1215,6 +1244,43 @@
       "cache_write_per_1m_usd": 0.0417,
       "context_window_tokens": 1048576,
       "max_output_tokens": 65536
+    },
+    {
+      "openrouter_id": "google/gemini-4-argon",
+      "provider": "openrouter",
+      "provider_underlying": "google",
+      "name": "Google: Gemini 4 Argon",
+      "mode": "chat",
+      "input_per_1m_usd": 2.0,
+      "output_per_1m_usd": 10.0,
+      "cache_read_per_1m_usd": 0.1,
+      "cache_write_per_1m_usd": 0.1875,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 943718
+    },
+    {
+      "openrouter_id": "google/gemini-4-argon:batch",
+      "provider": "openrouter",
+      "provider_underlying": "google",
+      "name": "Google: Gemini 4 Argon (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 1.0,
+      "output_per_1m_usd": 5.0,
+      "cache_read_per_1m_usd": 0.05,
+      "cache_write_per_1m_usd": 0.1875,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 943718
+    },
+    {
+      "openrouter_id": "google/gemini-nano-banana-2.1",
+      "provider": "openrouter",
+      "provider_underlying": "google",
+      "name": "Google: Nano Banana 2.1",
+      "mode": "chat",
+      "input_per_1m_usd": 1.5,
+      "output_per_1m_usd": 7.5,
+      "context_window_tokens": 65536,
+      "max_output_tokens": 58982
     },
     {
       "openrouter_id": "google/gemma-2-27b-it",
@@ -1245,7 +1311,7 @@
       "name": "Google: Gemma 3 27B",
       "mode": "chat",
       "input_per_1m_usd": 0.08,
-      "output_per_1m_usd": 0.45,
+      "output_per_1m_usd": 0.35,
       "cache_read_per_1m_usd": 0.04,
       "context_window_tokens": 131072,
       "max_output_tokens": 117964
@@ -1256,10 +1322,11 @@
       "provider_underlying": "google",
       "name": "Google: Gemma 3 4B",
       "mode": "chat",
-      "input_per_1m_usd": 0.05,
-      "output_per_1m_usd": 0.1,
+      "input_per_1m_usd": 0.04,
+      "output_per_1m_usd": 0.05,
+      "cache_read_per_1m_usd": 0.02,
       "context_window_tokens": 131072,
-      "max_output_tokens": 16384
+      "max_output_tokens": 117964
     },
     {
       "openrouter_id": "google/gemma-4-26b-a4b-it",
@@ -1267,10 +1334,11 @@
       "provider_underlying": "google",
       "name": "Google: Gemma 4 26B A4B ",
       "mode": "chat",
-      "input_per_1m_usd": 0.07,
-      "output_per_1m_usd": 0.34,
+      "input_per_1m_usd": 0.0675,
+      "output_per_1m_usd": 0.225,
+      "cache_read_per_1m_usd": 0.0375,
       "context_window_tokens": 262144,
-      "max_output_tokens": 16384
+      "max_output_tokens": 235929
     },
     {
       "openrouter_id": "google/gemma-4-31b-it",
@@ -1278,22 +1346,10 @@
       "provider_underlying": "google",
       "name": "Google: Gemma 4 31B",
       "mode": "chat",
-      "input_per_1m_usd": 0.09,
-      "output_per_1m_usd": 0.34,
-      "cache_read_per_1m_usd": 0.05,
+      "input_per_1m_usd": 0.2,
+      "output_per_1m_usd": 0.4,
       "context_window_tokens": 262144,
       "max_output_tokens": 16384
-    },
-    {
-      "openrouter_id": "google/gemma-4-31b-it:batch",
-      "provider": "openrouter",
-      "provider_underlying": "google",
-      "name": "Google: Gemma 4 31B (batch)",
-      "mode": "chat",
-      "input_per_1m_usd": 0.39,
-      "output_per_1m_usd": 0.97,
-      "context_window_tokens": 262144,
-      "max_output_tokens": 235929
     },
     {
       "openrouter_id": "gryphe/mythomax-l2-13b",
@@ -1301,8 +1357,8 @@
       "provider_underlying": "gryphe",
       "name": "MythoMax 13B",
       "mode": "chat",
-      "input_per_1m_usd": 0.06,
-      "output_per_1m_usd": 0.06,
+      "input_per_1m_usd": 0.08,
+      "output_per_1m_usd": 0.11,
       "context_window_tokens": 8192,
       "max_output_tokens": 3686
     },
@@ -1323,9 +1379,9 @@
       "provider_underlying": "ibm-granite",
       "name": "IBM: Granite 4.2 8B",
       "mode": "chat",
-      "input_per_1m_usd": 0.1,
-      "output_per_1m_usd": 0.15,
-      "cache_read_per_1m_usd": 0.05,
+      "input_per_1m_usd": 0.06,
+      "output_per_1m_usd": 0.25,
+      "cache_read_per_1m_usd": 0.015,
       "context_window_tokens": 131072,
       "max_output_tokens": 117964
     },
@@ -1342,16 +1398,28 @@
       "max_output_tokens": 50000
     },
     {
-      "openrouter_id": "inception/mercury-2.5-preview",
+      "openrouter_id": "inception/mercury-2.5",
       "provider": "openrouter",
       "provider_underlying": "inception",
-      "name": "Inception: Mercury 2.5 Preview",
+      "name": "Inception: Mercury 2.5",
       "mode": "chat",
       "input_per_1m_usd": 0.04,
       "output_per_1m_usd": 0.15,
       "cache_read_per_1m_usd": 0.004,
       "context_window_tokens": 260000,
       "max_output_tokens": 65536
+    },
+    {
+      "openrouter_id": "inception/mercury-3",
+      "provider": "openrouter",
+      "provider_underlying": "inception",
+      "name": "Inception: Mercury 3",
+      "mode": "chat",
+      "input_per_1m_usd": 0.1,
+      "output_per_1m_usd": 0.35,
+      "cache_read_per_1m_usd": 0.01,
+      "context_window_tokens": 1000000,
+      "max_output_tokens": 131072
     },
     {
       "openrouter_id": "inclusionai/ling-3.0-flash",
@@ -1366,40 +1434,76 @@
       "max_output_tokens": 32768
     },
     {
-      "openrouter_id": "inclusionai/ling-3.0-flash-fin",
+      "openrouter_id": "inclusionai/ling-3.0-flash-vl",
       "provider": "openrouter",
       "provider_underlying": "inclusionai",
-      "name": "inclusionAI: Ling 3.0 Flash Fin",
+      "name": "inclusionAI: Ling 3.0 Flash VL",
       "mode": "chat",
       "input_per_1m_usd": 0.06,
       "output_per_1m_usd": 0.18,
       "cache_read_per_1m_usd": 0.012,
+      "context_window_tokens": 131072,
+      "max_output_tokens": 32768
+    },
+    {
+      "openrouter_id": "inclusionai/ling-3.1-flash",
+      "provider": "openrouter",
+      "provider_underlying": "inclusionai",
+      "name": "inclusionAI: Ling 3.1 Flash",
+      "mode": "chat",
+      "input_per_1m_usd": 0.075,
+      "output_per_1m_usd": 0.225,
+      "cache_read_per_1m_usd": 0.015,
       "context_window_tokens": 262144,
       "max_output_tokens": 235929
     },
     {
-      "openrouter_id": "kwaipilot/kat-coder-pro-v2",
+      "openrouter_id": "inference-net/schematron-v2-small",
       "provider": "openrouter",
-      "provider_underlying": "kwaipilot",
-      "name": "Kwaipilot: KAT-Coder-Pro V2",
+      "provider_underlying": "inference-net",
+      "name": "Inference.net: Schematron V2 Small",
       "mode": "chat",
-      "input_per_1m_usd": 0.3,
-      "output_per_1m_usd": 1.2,
-      "cache_read_per_1m_usd": 0.06,
-      "context_window_tokens": 262144,
-      "max_output_tokens": 144000
+      "input_per_1m_usd": 0.05,
+      "output_per_1m_usd": 0.23,
+      "cache_read_per_1m_usd": 0.05,
+      "context_window_tokens": 128000,
+      "max_output_tokens": 4096
     },
     {
-      "openrouter_id": "kwaipilot/kat-coder-pro-v2.5",
+      "openrouter_id": "inference-net/schematron-v2-turbo",
       "provider": "openrouter",
-      "provider_underlying": "kwaipilot",
-      "name": "Kwaipilot: KAT-Coder-Pro V2.5",
+      "provider_underlying": "inference-net",
+      "name": "Inference.net: Schematron V2 Turbo",
       "mode": "chat",
-      "input_per_1m_usd": 0.74,
-      "output_per_1m_usd": 2.96,
-      "cache_read_per_1m_usd": 0.15,
-      "context_window_tokens": 262144,
-      "max_output_tokens": 235929
+      "input_per_1m_usd": 0.03,
+      "output_per_1m_usd": 0.15,
+      "cache_read_per_1m_usd": 0.03,
+      "context_window_tokens": 128000,
+      "max_output_tokens": 8192
+    },
+    {
+      "openrouter_id": "liquid/lfm-2.5-2.6b",
+      "provider": "openrouter",
+      "provider_underlying": "liquid",
+      "name": "LiquidAI: LFM2.5-2.6B",
+      "mode": "chat",
+      "input_per_1m_usd": 0.35,
+      "output_per_1m_usd": 0.5,
+      "cache_read_per_1m_usd": 0.04,
+      "context_window_tokens": 128000,
+      "max_output_tokens": 8192
+    },
+    {
+      "openrouter_id": "liquid/lfm-2.5-24b-a2b",
+      "provider": "openrouter",
+      "provider_underlying": "liquid",
+      "name": "LiquidAI: LFM2.5-24B-A2B",
+      "mode": "chat",
+      "input_per_1m_usd": 0.05,
+      "output_per_1m_usd": 0.7,
+      "cache_read_per_1m_usd": 0.025,
+      "context_window_tokens": 128000,
+      "max_output_tokens": 8192
     },
     {
       "openrouter_id": "mancer/weaver",
@@ -1486,10 +1590,11 @@
       "provider_underlying": "meta-llama",
       "name": "Meta: Llama 4 Maverick",
       "mode": "chat",
-      "input_per_1m_usd": 0.2,
-      "output_per_1m_usd": 0.696,
-      "context_window_tokens": 1048576,
-      "max_output_tokens": 115200
+      "input_per_1m_usd": 0.1875,
+      "output_per_1m_usd": 0.6525,
+      "cache_read_per_1m_usd": 0.05,
+      "context_window_tokens": 524288,
+      "max_output_tokens": 16384
     },
     {
       "openrouter_id": "meta-llama/llama-4-scout",
@@ -1520,22 +1625,10 @@
       "name": "Meta: Muse Glimmer 30B",
       "mode": "chat",
       "input_per_1m_usd": 0.3,
-      "output_per_1m_usd": 1.1,
+      "output_per_1m_usd": 1.2,
       "cache_read_per_1m_usd": 0.04,
       "context_window_tokens": 131072,
-      "max_output_tokens": 117964
-    },
-    {
-      "openrouter_id": "meta/muse-glimmer-30b:batch",
-      "provider": "openrouter",
-      "provider_underlying": "meta",
-      "name": "Meta: Muse Glimmer 30B (batch)",
-      "mode": "chat",
-      "input_per_1m_usd": 0.35,
-      "output_per_1m_usd": 1.5,
-      "cache_read_per_1m_usd": 0.04,
-      "context_window_tokens": 131072,
-      "max_output_tokens": 117964
+      "max_output_tokens": 16384
     },
     {
       "openrouter_id": "meta/muse-spark-1.1",
@@ -1598,6 +1691,30 @@
       "max_output_tokens": 943718
     },
     {
+      "openrouter_id": "meta/muse-spark-open",
+      "provider": "openrouter",
+      "provider_underlying": "meta",
+      "name": "Meta: Muse Spark Open",
+      "mode": "chat",
+      "input_per_1m_usd": 1.25,
+      "output_per_1m_usd": 4.25,
+      "cache_read_per_1m_usd": 0.15,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 943718
+    },
+    {
+      "openrouter_id": "meta/muse-wonder",
+      "provider": "openrouter",
+      "provider_underlying": "meta",
+      "name": "Meta: Muse Wonder",
+      "mode": "chat",
+      "input_per_1m_usd": 4.0,
+      "output_per_1m_usd": 20.0,
+      "cache_read_per_1m_usd": 0.2,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 943718
+    },
+    {
       "openrouter_id": "microsoft/phi-4",
       "provider": "openrouter",
       "provider_underlying": "microsoft",
@@ -1607,17 +1724,6 @@
       "output_per_1m_usd": 0.14,
       "context_window_tokens": 16384,
       "max_output_tokens": 14745
-    },
-    {
-      "openrouter_id": "microsoft/wizardlm-2-8x22b",
-      "provider": "openrouter",
-      "provider_underlying": "microsoft",
-      "name": "WizardLM-2 8x22B",
-      "mode": "chat",
-      "input_per_1m_usd": 0.62,
-      "output_per_1m_usd": 0.62,
-      "context_window_tokens": 65535,
-      "max_output_tokens": 8000
     },
     {
       "openrouter_id": "minimax/minimax-01",
@@ -1682,11 +1788,11 @@
       "provider_underlying": "minimax",
       "name": "MiniMax: MiniMax M2.5",
       "mode": "chat",
-      "input_per_1m_usd": 0.27,
-      "output_per_1m_usd": 1.08,
-      "cache_read_per_1m_usd": 0.027,
+      "input_per_1m_usd": 0.3,
+      "output_per_1m_usd": 1.2,
+      "cache_read_per_1m_usd": 0.03,
       "context_window_tokens": 204800,
-      "max_output_tokens": 128000
+      "max_output_tokens": 131072
     },
     {
       "openrouter_id": "minimax/minimax-m2.7",
@@ -1713,16 +1819,16 @@
       "max_output_tokens": 512000
     },
     {
-      "openrouter_id": "minimax/minimax-m3:batch",
+      "openrouter_id": "minimax/minimax-m3.1-flash",
       "provider": "openrouter",
       "provider_underlying": "minimax",
-      "name": "MiniMax: MiniMax M3 (batch)",
+      "name": "MiniMax: MiniMax M3.1 Flash",
       "mode": "chat",
-      "input_per_1m_usd": 0.3,
-      "output_per_1m_usd": 1.2,
-      "cache_read_per_1m_usd": 0.06,
-      "context_window_tokens": 524288,
-      "max_output_tokens": 471859
+      "input_per_1m_usd": 0.15,
+      "output_per_1m_usd": 0.6,
+      "cache_read_per_1m_usd": 0.015,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 524288
     },
     {
       "openrouter_id": "mistralai/codestral-2508",
@@ -1733,6 +1839,18 @@
       "input_per_1m_usd": 0.3,
       "output_per_1m_usd": 0.9,
       "cache_read_per_1m_usd": 0.03,
+      "context_window_tokens": 256000,
+      "max_output_tokens": 204800
+    },
+    {
+      "openrouter_id": "mistralai/codestral-2508:batch",
+      "provider": "openrouter",
+      "provider_underlying": "mistralai",
+      "name": "Mistral: Codestral 2508 (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 0.15,
+      "output_per_1m_usd": 0.45,
+      "cache_read_per_1m_usd": 0.015,
       "context_window_tokens": 256000,
       "max_output_tokens": 204800
     },
@@ -1785,6 +1903,18 @@
       "max_output_tokens": 209715
     },
     {
+      "openrouter_id": "mistralai/ministral-8b-2512:batch",
+      "provider": "openrouter",
+      "provider_underlying": "mistralai",
+      "name": "Mistral: Ministral 3 8B 2512 (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 0.075,
+      "output_per_1m_usd": 0.075,
+      "cache_read_per_1m_usd": 0.0075,
+      "context_window_tokens": 262144,
+      "max_output_tokens": 209715
+    },
+    {
       "openrouter_id": "mistralai/mistral-large",
       "provider": "openrouter",
       "provider_underlying": "mistralai",
@@ -1821,6 +1951,30 @@
       "max_output_tokens": 209715
     },
     {
+      "openrouter_id": "mistralai/mistral-large-2512:batch",
+      "provider": "openrouter",
+      "provider_underlying": "mistralai",
+      "name": "Mistral: Mistral Large 3 2512 (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 0.25,
+      "output_per_1m_usd": 0.75,
+      "cache_read_per_1m_usd": 0.025,
+      "context_window_tokens": 262144,
+      "max_output_tokens": 209715
+    },
+    {
+      "openrouter_id": "mistralai/mistral-large-4-0",
+      "provider": "openrouter",
+      "provider_underlying": "mistralai",
+      "name": "Mistral: Mistral Large 4",
+      "mode": "chat",
+      "input_per_1m_usd": 1.36,
+      "output_per_1m_usd": 4.18,
+      "cache_read_per_1m_usd": 0.14,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 262144
+    },
+    {
       "openrouter_id": "mistralai/mistral-medium-3",
       "provider": "openrouter",
       "provider_underlying": "mistralai",
@@ -1851,8 +2005,8 @@
       "mode": "chat",
       "input_per_1m_usd": 0.75,
       "output_per_1m_usd": 3.75,
-      "context_window_tokens": 32768,
-      "max_output_tokens": 26214
+      "context_window_tokens": 262144,
+      "max_output_tokens": 209715
     },
     {
       "openrouter_id": "mistralai/mistral-medium-3.1",
@@ -1867,12 +2021,24 @@
       "max_output_tokens": 104857
     },
     {
+      "openrouter_id": "mistralai/mistral-medium-3.1:batch",
+      "provider": "openrouter",
+      "provider_underlying": "mistralai",
+      "name": "Mistral: Mistral Medium 3.1 (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 0.2,
+      "output_per_1m_usd": 1.0,
+      "cache_read_per_1m_usd": 0.02,
+      "context_window_tokens": 131072,
+      "max_output_tokens": 104857
+    },
+    {
       "openrouter_id": "mistralai/mistral-nemo",
       "provider": "openrouter",
       "provider_underlying": "mistralai",
       "name": "Mistral: Mistral Nemo",
       "mode": "chat",
-      "input_per_1m_usd": 0.019,
+      "input_per_1m_usd": 0.029,
       "output_per_1m_usd": 0.03,
       "context_window_tokens": 131072,
       "max_output_tokens": 16384
@@ -1913,6 +2079,18 @@
       "max_output_tokens": 209715
     },
     {
+      "openrouter_id": "mistralai/mistral-small-2603:batch",
+      "provider": "openrouter",
+      "provider_underlying": "mistralai",
+      "name": "Mistral: Mistral Small 4 (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 0.075,
+      "output_per_1m_usd": 0.3,
+      "cache_read_per_1m_usd": 0.0075,
+      "context_window_tokens": 262144,
+      "max_output_tokens": 209715
+    },
+    {
       "openrouter_id": "mistralai/mistral-small-3.1-24b-instruct",
       "provider": "openrouter",
       "provider_underlying": "mistralai",
@@ -1931,7 +2109,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.075,
       "output_per_1m_usd": 0.2,
-      "context_window_tokens": 131072,
+      "context_window_tokens": 256000,
       "max_output_tokens": 16384
     },
     {
@@ -1959,6 +2137,28 @@
       "max_output_tokens": 26214
     },
     {
+      "openrouter_id": "moondream/moondream3-preview",
+      "provider": "openrouter",
+      "provider_underlying": "moondream",
+      "name": "Moondream: Moondream 3 Preview",
+      "mode": "chat",
+      "input_per_1m_usd": 0.3,
+      "output_per_1m_usd": 2.5,
+      "context_window_tokens": 32000,
+      "max_output_tokens": 4096
+    },
+    {
+      "openrouter_id": "moondream/moondream3.1-9b-a2b",
+      "provider": "openrouter",
+      "provider_underlying": "moondream",
+      "name": "Moondream: Moondream 3.1",
+      "mode": "chat",
+      "input_per_1m_usd": 0.3,
+      "output_per_1m_usd": 2.5,
+      "context_window_tokens": 32000,
+      "max_output_tokens": 4096
+    },
+    {
       "openrouter_id": "moonshotai/kimi-k2",
       "provider": "openrouter",
       "provider_underlying": "moonshotai",
@@ -1967,7 +2167,7 @@
       "input_per_1m_usd": 0.57,
       "output_per_1m_usd": 2.3,
       "context_window_tokens": 131072,
-      "max_output_tokens": 100352
+      "max_output_tokens": 98304
     },
     {
       "openrouter_id": "moonshotai/kimi-k2-0905",
@@ -1978,7 +2178,7 @@
       "input_per_1m_usd": 0.6,
       "output_per_1m_usd": 2.5,
       "context_window_tokens": 262144,
-      "max_output_tokens": 100352
+      "max_output_tokens": 98304
     },
     {
       "openrouter_id": "moonshotai/kimi-k2-thinking",
@@ -1990,7 +2190,7 @@
       "output_per_1m_usd": 2.5,
       "cache_read_per_1m_usd": 0.15,
       "context_window_tokens": 262144,
-      "max_output_tokens": 100352
+      "max_output_tokens": 98304
     },
     {
       "openrouter_id": "moonshotai/kimi-k2.5",
@@ -1998,9 +2198,9 @@
       "provider_underlying": "moonshotai",
       "name": "MoonshotAI: Kimi K2.5",
       "mode": "chat",
-      "input_per_1m_usd": 0.45,
-      "output_per_1m_usd": 2.25,
-      "cache_read_per_1m_usd": 0.07,
+      "input_per_1m_usd": 0.5,
+      "output_per_1m_usd": 2.5,
+      "cache_read_per_1m_usd": 0.15,
       "context_window_tokens": 262144,
       "max_output_tokens": 235929
     },
@@ -2010,9 +2210,9 @@
       "provider_underlying": "moonshotai",
       "name": "MoonshotAI: Kimi K2.6",
       "mode": "chat",
-      "input_per_1m_usd": 0.95,
-      "output_per_1m_usd": 4.0,
-      "cache_read_per_1m_usd": 0.16,
+      "input_per_1m_usd": 0.65,
+      "output_per_1m_usd": 3.41,
+      "cache_read_per_1m_usd": 0.15,
       "context_window_tokens": 262144,
       "max_output_tokens": 235929
     },
@@ -2022,9 +2222,9 @@
       "provider_underlying": "moonshotai",
       "name": "MoonshotAI: Kimi K2.7 Code",
       "mode": "chat",
-      "input_per_1m_usd": 0.66,
-      "output_per_1m_usd": 3.4,
-      "cache_read_per_1m_usd": 0.18,
+      "input_per_1m_usd": 0.6712,
+      "output_per_1m_usd": 3.35,
+      "cache_read_per_1m_usd": 0.15,
       "context_window_tokens": 262144,
       "max_output_tokens": 235929
     },
@@ -2034,9 +2234,21 @@
       "provider_underlying": "moonshotai",
       "name": "MoonshotAI: Kimi K3",
       "mode": "chat",
-      "input_per_1m_usd": 3.0,
-      "output_per_1m_usd": 15.0,
-      "cache_read_per_1m_usd": 0.3,
+      "input_per_1m_usd": 0.239,
+      "output_per_1m_usd": 10.8,
+      "cache_read_per_1m_usd": 0.21,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 943718
+    },
+    {
+      "openrouter_id": "moonshotai/kimi-k3.1-pro",
+      "provider": "openrouter",
+      "provider_underlying": "moonshotai",
+      "name": "MoonshotAI: Kimi K3.1 Pro",
+      "mode": "chat",
+      "input_per_1m_usd": 2.0,
+      "output_per_1m_usd": 10.0,
+      "cache_read_per_1m_usd": 0.2,
       "context_window_tokens": 1048576,
       "max_output_tokens": 943718
     },
@@ -2046,11 +2258,11 @@
       "provider_underlying": "moonshotai",
       "name": "MoonshotAI: Kimi K3 (batch)",
       "mode": "chat",
-      "input_per_1m_usd": 3.0,
-      "output_per_1m_usd": 15.0,
-      "cache_read_per_1m_usd": 0.3,
+      "input_per_1m_usd": 2.28,
+      "output_per_1m_usd": 11.4,
+      "cache_read_per_1m_usd": 0.228,
       "context_window_tokens": 1048576,
-      "max_output_tokens": 943718
+      "max_output_tokens": 16384
     },
     {
       "openrouter_id": "morph/morph-v3-fast",
@@ -2060,8 +2272,8 @@
       "mode": "chat",
       "input_per_1m_usd": 0.8,
       "output_per_1m_usd": 1.2,
-      "context_window_tokens": 81920,
-      "max_output_tokens": 38000
+      "context_window_tokens": 262144,
+      "max_output_tokens": 131072
     },
     {
       "openrouter_id": "morph/morph-v3-large",
@@ -2075,10 +2287,10 @@
       "max_output_tokens": 131072
     },
     {
-      "openrouter_id": "nex-agi/nex-n2-mini",
+      "openrouter_id": "nex-agi/nex-n2.5-mini",
       "provider": "openrouter",
       "provider_underlying": "nex-agi",
-      "name": "Nex AGI: Nex-N2-Mini",
+      "name": "Nex AGI: Nex-N2.5-Mini",
       "mode": "chat",
       "input_per_1m_usd": 0.025,
       "output_per_1m_usd": 0.1,
@@ -2087,14 +2299,14 @@
       "max_output_tokens": 235929
     },
     {
-      "openrouter_id": "nex-agi/nex-n2-pro",
+      "openrouter_id": "nex-agi/nex-n2.5-pro",
       "provider": "openrouter",
       "provider_underlying": "nex-agi",
-      "name": "Nex AGI: Nex-N2-Pro",
+      "name": "Nex AGI: Nex-N2.5-Pro",
       "mode": "chat",
-      "input_per_1m_usd": 0.25,
-      "output_per_1m_usd": 1.0,
-      "cache_read_per_1m_usd": 0.025,
+      "input_per_1m_usd": 0.075,
+      "output_per_1m_usd": 0.25,
+      "cache_read_per_1m_usd": 0.015,
       "context_window_tokens": 262144,
       "max_output_tokens": 235929
     },
@@ -2132,25 +2344,13 @@
       "max_output_tokens": 117964
     },
     {
-      "openrouter_id": "nousresearch/hermes-4-70b",
-      "provider": "openrouter",
-      "provider_underlying": "nousresearch",
-      "name": "Nous: Hermes 4 70B",
-      "mode": "chat",
-      "input_per_1m_usd": 0.13,
-      "output_per_1m_usd": 0.4,
-      "context_window_tokens": 131072,
-      "max_output_tokens": 117964
-    },
-    {
       "openrouter_id": "nvidia/nemotron-3-nano-30b-a3b",
       "provider": "openrouter",
       "provider_underlying": "nvidia",
       "name": "NVIDIA: Nemotron 3 Nano 30B A3B",
       "mode": "chat",
-      "input_per_1m_usd": 0.05,
-      "output_per_1m_usd": 0.2,
-      "cache_read_per_1m_usd": 0.03,
+      "input_per_1m_usd": 0.06,
+      "output_per_1m_usd": 0.24,
       "context_window_tokens": 262144,
       "max_output_tokens": 235929
     },
@@ -2160,10 +2360,11 @@
       "provider_underlying": "nvidia",
       "name": "NVIDIA: Nemotron 3 Super",
       "mode": "chat",
-      "input_per_1m_usd": 0.085,
-      "output_per_1m_usd": 0.4,
-      "context_window_tokens": 1000000,
-      "max_output_tokens": 16384
+      "input_per_1m_usd": 0.3,
+      "output_per_1m_usd": 2.4,
+      "cache_read_per_1m_usd": 0.15,
+      "context_window_tokens": 262144,
+      "max_output_tokens": 235929
     },
     {
       "openrouter_id": "nvidia/nemotron-3-ultra-550b-a55b",
@@ -2171,11 +2372,11 @@
       "provider_underlying": "nvidia",
       "name": "NVIDIA: Nemotron 3 Ultra",
       "mode": "chat",
-      "input_per_1m_usd": 0.625,
-      "output_per_1m_usd": 3.125,
-      "cache_read_per_1m_usd": 0.1875,
+      "input_per_1m_usd": 0.6,
+      "output_per_1m_usd": 2.4,
+      "cache_read_per_1m_usd": 0.12,
       "context_window_tokens": 262144,
-      "max_output_tokens": 32768
+      "max_output_tokens": 182520
     },
     {
       "openrouter_id": "nvidia/nemotron-3.5-content-safety",
@@ -2194,22 +2395,23 @@
       "provider_underlying": "nvidia",
       "name": "NVIDIA: Nemotron 3.5 Lightning",
       "mode": "chat",
-      "input_per_1m_usd": 0.08,
+      "input_per_1m_usd": 0.07,
       "output_per_1m_usd": 0.2,
       "cache_read_per_1m_usd": 0.04,
       "context_window_tokens": 262144,
-      "max_output_tokens": 131072
+      "max_output_tokens": 235929
     },
     {
-      "openrouter_id": "openai/gpt-3.5-turbo",
+      "openrouter_id": "nvidia/nemotron-3.5-super-vl",
       "provider": "openrouter",
-      "provider_underlying": "openai",
-      "name": "OpenAI: GPT-3.5 Turbo",
+      "provider_underlying": "nvidia",
+      "name": "NVIDIA: Nemotron 3.5 Super VL",
       "mode": "chat",
-      "input_per_1m_usd": 0.5,
-      "output_per_1m_usd": 1.5,
-      "context_window_tokens": 16385,
-      "max_output_tokens": 4096
+      "input_per_1m_usd": 0.15,
+      "output_per_1m_usd": 0.5,
+      "cache_read_per_1m_usd": 0.02,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 235929
     },
     {
       "openrouter_id": "openai/gpt-3.5-turbo-0613",
@@ -2234,28 +2436,6 @@
       "max_output_tokens": 4096
     },
     {
-      "openrouter_id": "openai/gpt-3.5-turbo-instruct",
-      "provider": "openrouter",
-      "provider_underlying": "openai",
-      "name": "OpenAI: GPT-3.5 Turbo Instruct",
-      "mode": "chat",
-      "input_per_1m_usd": 1.5,
-      "output_per_1m_usd": 2.0,
-      "context_window_tokens": 4095,
-      "max_output_tokens": 3685
-    },
-    {
-      "openrouter_id": "openai/gpt-3.5-turbo:batch",
-      "provider": "openrouter",
-      "provider_underlying": "openai",
-      "name": "OpenAI: GPT-3.5 Turbo (batch)",
-      "mode": "chat",
-      "input_per_1m_usd": 0.25,
-      "output_per_1m_usd": 0.75,
-      "context_window_tokens": 16385,
-      "max_output_tokens": 4096
-    },
-    {
       "openrouter_id": "openai/gpt-4",
       "provider": "openrouter",
       "provider_underlying": "openai",
@@ -2271,17 +2451,6 @@
       "provider": "openrouter",
       "provider_underlying": "openai",
       "name": "OpenAI: GPT-4 Turbo",
-      "mode": "chat",
-      "input_per_1m_usd": 10.0,
-      "output_per_1m_usd": 30.0,
-      "context_window_tokens": 128000,
-      "max_output_tokens": 4096
-    },
-    {
-      "openrouter_id": "openai/gpt-4-turbo-preview",
-      "provider": "openrouter",
-      "provider_underlying": "openai",
-      "name": "OpenAI: GPT-4 Turbo Preview",
       "mode": "chat",
       "input_per_1m_usd": 10.0,
       "output_per_1m_usd": 30.0,
@@ -2922,10 +3091,10 @@
       "provider_underlying": "openai",
       "name": "OpenAI: GPT-5.6 Sol",
       "mode": "chat",
-      "input_per_1m_usd": 2.0,
-      "output_per_1m_usd": 10.0,
-      "cache_read_per_1m_usd": 0.2,
-      "cache_write_per_1m_usd": 2.5,
+      "input_per_1m_usd": 4.0,
+      "output_per_1m_usd": 20.0,
+      "cache_read_per_1m_usd": 0.4,
+      "cache_write_per_1m_usd": 5.0,
       "context_window_tokens": 1050000,
       "max_output_tokens": 128000
     },
@@ -2935,10 +3104,10 @@
       "provider_underlying": "openai",
       "name": "OpenAI: GPT-5.6 Sol Pro",
       "mode": "chat",
-      "input_per_1m_usd": 2.0,
-      "output_per_1m_usd": 10.0,
-      "cache_read_per_1m_usd": 0.2,
-      "cache_write_per_1m_usd": 2.5,
+      "input_per_1m_usd": 4.0,
+      "output_per_1m_usd": 20.0,
+      "cache_read_per_1m_usd": 0.4,
+      "cache_write_per_1m_usd": 5.0,
       "context_window_tokens": 1050000,
       "max_output_tokens": 128000
     },
@@ -2948,10 +3117,10 @@
       "provider_underlying": "openai",
       "name": "OpenAI: GPT-5.6 Sol Pro (batch)",
       "mode": "chat",
-      "input_per_1m_usd": 1.0,
-      "output_per_1m_usd": 5.0,
-      "cache_read_per_1m_usd": 0.1,
-      "cache_write_per_1m_usd": 1.25,
+      "input_per_1m_usd": 2.0,
+      "output_per_1m_usd": 10.0,
+      "cache_read_per_1m_usd": 0.2,
+      "cache_write_per_1m_usd": 2.5,
       "context_window_tokens": 1050000,
       "max_output_tokens": 128000
     },
@@ -2961,10 +3130,10 @@
       "provider_underlying": "openai",
       "name": "OpenAI: GPT-5.6 Sol (batch)",
       "mode": "chat",
-      "input_per_1m_usd": 1.0,
-      "output_per_1m_usd": 5.0,
-      "cache_read_per_1m_usd": 0.1,
-      "cache_write_per_1m_usd": 1.25,
+      "input_per_1m_usd": 2.0,
+      "output_per_1m_usd": 10.0,
+      "cache_read_per_1m_usd": 0.2,
+      "cache_write_per_1m_usd": 2.5,
       "context_window_tokens": 1050000,
       "max_output_tokens": 128000
     },
@@ -3083,6 +3252,162 @@
       "max_output_tokens": 128000
     },
     {
+      "openrouter_id": "openai/gpt-6-luna",
+      "provider": "openrouter",
+      "provider_underlying": "openai",
+      "name": "OpenAI: GPT-6 Luna",
+      "mode": "chat",
+      "input_per_1m_usd": 0.1,
+      "output_per_1m_usd": 0.5,
+      "cache_read_per_1m_usd": 0.01,
+      "cache_write_per_1m_usd": 0.125,
+      "context_window_tokens": 1050000,
+      "max_output_tokens": 128000
+    },
+    {
+      "openrouter_id": "openai/gpt-6-luna-pro",
+      "provider": "openrouter",
+      "provider_underlying": "openai",
+      "name": "OpenAI: GPT-6 Luna Pro",
+      "mode": "chat",
+      "input_per_1m_usd": 0.1,
+      "output_per_1m_usd": 0.5,
+      "cache_read_per_1m_usd": 0.01,
+      "cache_write_per_1m_usd": 0.125,
+      "context_window_tokens": 1050000,
+      "max_output_tokens": 128000
+    },
+    {
+      "openrouter_id": "openai/gpt-6-luna-pro:batch",
+      "provider": "openrouter",
+      "provider_underlying": "openai",
+      "name": "OpenAI: GPT-6 Luna Pro (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 0.05,
+      "output_per_1m_usd": 0.25,
+      "cache_read_per_1m_usd": 0.005,
+      "cache_write_per_1m_usd": 0.0625,
+      "context_window_tokens": 1050000,
+      "max_output_tokens": 128000
+    },
+    {
+      "openrouter_id": "openai/gpt-6-luna:batch",
+      "provider": "openrouter",
+      "provider_underlying": "openai",
+      "name": "OpenAI: GPT-6 Luna (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 0.05,
+      "output_per_1m_usd": 0.25,
+      "cache_read_per_1m_usd": 0.005,
+      "cache_write_per_1m_usd": 0.0625,
+      "context_window_tokens": 1050000,
+      "max_output_tokens": 128000
+    },
+    {
+      "openrouter_id": "openai/gpt-6-sol",
+      "provider": "openrouter",
+      "provider_underlying": "openai",
+      "name": "OpenAI: GPT-6 Sol",
+      "mode": "chat",
+      "input_per_1m_usd": 2.0,
+      "output_per_1m_usd": 10.0,
+      "cache_read_per_1m_usd": 0.2,
+      "cache_write_per_1m_usd": 2.5,
+      "context_window_tokens": 1050000,
+      "max_output_tokens": 128000
+    },
+    {
+      "openrouter_id": "openai/gpt-6-sol-pro",
+      "provider": "openrouter",
+      "provider_underlying": "openai",
+      "name": "OpenAI: GPT-6 Sol Pro",
+      "mode": "chat",
+      "input_per_1m_usd": 2.0,
+      "output_per_1m_usd": 10.0,
+      "cache_read_per_1m_usd": 0.2,
+      "cache_write_per_1m_usd": 2.5,
+      "context_window_tokens": 1050000,
+      "max_output_tokens": 128000
+    },
+    {
+      "openrouter_id": "openai/gpt-6-sol-pro:batch",
+      "provider": "openrouter",
+      "provider_underlying": "openai",
+      "name": "OpenAI: GPT-6 Sol Pro (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 1.0,
+      "output_per_1m_usd": 5.0,
+      "cache_read_per_1m_usd": 0.1,
+      "cache_write_per_1m_usd": 1.25,
+      "context_window_tokens": 1050000,
+      "max_output_tokens": 128000
+    },
+    {
+      "openrouter_id": "openai/gpt-6-sol:batch",
+      "provider": "openrouter",
+      "provider_underlying": "openai",
+      "name": "OpenAI: GPT-6 Sol (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 1.0,
+      "output_per_1m_usd": 5.0,
+      "cache_read_per_1m_usd": 0.1,
+      "cache_write_per_1m_usd": 1.25,
+      "context_window_tokens": 1050000,
+      "max_output_tokens": 128000
+    },
+    {
+      "openrouter_id": "openai/gpt-6.1-sol",
+      "provider": "openrouter",
+      "provider_underlying": "openai",
+      "name": "OpenAI: GPT-6.1 Sol",
+      "mode": "chat",
+      "input_per_1m_usd": 2.0,
+      "output_per_1m_usd": 10.0,
+      "cache_read_per_1m_usd": 0.1,
+      "cache_write_per_1m_usd": 2.5,
+      "context_window_tokens": 1050000,
+      "max_output_tokens": 128000
+    },
+    {
+      "openrouter_id": "openai/gpt-6.1-sol-pro",
+      "provider": "openrouter",
+      "provider_underlying": "openai",
+      "name": "OpenAI: GPT-6.1 Sol Pro",
+      "mode": "chat",
+      "input_per_1m_usd": 2.0,
+      "output_per_1m_usd": 10.0,
+      "cache_read_per_1m_usd": 0.1,
+      "cache_write_per_1m_usd": 2.5,
+      "context_window_tokens": 1050000,
+      "max_output_tokens": 128000
+    },
+    {
+      "openrouter_id": "openai/gpt-6.1-sol-pro:batch",
+      "provider": "openrouter",
+      "provider_underlying": "openai",
+      "name": "OpenAI: GPT-6.1 Sol Pro (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 1.0,
+      "output_per_1m_usd": 5.0,
+      "cache_read_per_1m_usd": 0.05,
+      "cache_write_per_1m_usd": 1.25,
+      "context_window_tokens": 1050000,
+      "max_output_tokens": 128000
+    },
+    {
+      "openrouter_id": "openai/gpt-6.1-sol:batch",
+      "provider": "openrouter",
+      "provider_underlying": "openai",
+      "name": "OpenAI: GPT-6.1 Sol (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 1.0,
+      "output_per_1m_usd": 5.0,
+      "cache_read_per_1m_usd": 0.05,
+      "cache_write_per_1m_usd": 1.25,
+      "context_window_tokens": 1050000,
+      "max_output_tokens": 128000
+    },
+    {
       "openrouter_id": "openai/gpt-audio",
       "provider": "openrouter",
       "provider_underlying": "openai",
@@ -3122,10 +3447,11 @@
       "provider_underlying": "openai",
       "name": "OpenAI: gpt-oss-120b",
       "mode": "chat",
-      "input_per_1m_usd": 0.037,
-      "output_per_1m_usd": 0.17,
+      "input_per_1m_usd": 0.15,
+      "output_per_1m_usd": 0.6,
+      "cache_read_per_1m_usd": 0.075,
       "context_window_tokens": 131072,
-      "max_output_tokens": 117964
+      "max_output_tokens": 65536
     },
     {
       "openrouter_id": "openai/gpt-oss-120b:batch",
@@ -3133,8 +3459,8 @@
       "provider_underlying": "openai",
       "name": "OpenAI: gpt-oss-120b (batch)",
       "mode": "chat",
-      "input_per_1m_usd": 0.15,
-      "output_per_1m_usd": 0.6,
+      "input_per_1m_usd": 0.0296,
+      "output_per_1m_usd": 0.136,
       "context_window_tokens": 131072,
       "max_output_tokens": 117964
     },
@@ -3144,11 +3470,11 @@
       "provider_underlying": "openai",
       "name": "OpenAI: gpt-oss-20b",
       "mode": "chat",
-      "input_per_1m_usd": 0.03,
-      "output_per_1m_usd": 0.13,
-      "cache_read_per_1m_usd": 0.03,
+      "input_per_1m_usd": 0.018,
+      "output_per_1m_usd": 0.09,
+      "cache_read_per_1m_usd": 0.009,
       "context_window_tokens": 131072,
-      "max_output_tokens": 117964
+      "max_output_tokens": 32768
     },
     {
       "openrouter_id": "openai/gpt-oss-20b:batch",
@@ -3156,8 +3482,8 @@
       "provider_underlying": "openai",
       "name": "OpenAI: gpt-oss-20b (batch)",
       "mode": "chat",
-      "input_per_1m_usd": 0.05,
-      "output_per_1m_usd": 0.2,
+      "input_per_1m_usd": 0.024,
+      "output_per_1m_usd": 0.112,
       "context_window_tokens": 131072,
       "max_output_tokens": 117964
     },
@@ -3315,6 +3641,17 @@
       "max_output_tokens": 8192
     },
     {
+      "openrouter_id": "perceptron/perceptron-mk1.5",
+      "provider": "openrouter",
+      "provider_underlying": "perceptron",
+      "name": "Perceptron: Perceptron Mk1.5",
+      "mode": "chat",
+      "input_per_1m_usd": 0.15,
+      "output_per_1m_usd": 1.5,
+      "context_window_tokens": 36864,
+      "max_output_tokens": 8192
+    },
+    {
       "openrouter_id": "perplexity/sonar",
       "provider": "openrouter",
       "provider_underlying": "perplexity",
@@ -3394,6 +3731,18 @@
       "max_output_tokens": 32768
     },
     {
+      "openrouter_id": "prism-ml/ternary-bonsai-2-27b",
+      "provider": "openrouter",
+      "provider_underlying": "prism-ml",
+      "name": "PrismML: Ternary Bonsai 2 27B",
+      "mode": "chat",
+      "input_per_1m_usd": 0.075,
+      "output_per_1m_usd": 0.5,
+      "cache_read_per_1m_usd": 0.0375,
+      "context_window_tokens": 262144,
+      "max_output_tokens": 32768
+    },
+    {
       "openrouter_id": "qwen/qwen-2.5-72b-instruct",
       "provider": "openrouter",
       "provider_underlying": "qwen",
@@ -3440,17 +3789,6 @@
       "max_output_tokens": 32768
     },
     {
-      "openrouter_id": "qwen/qwen-plus-2025-07-28",
-      "provider": "openrouter",
-      "provider_underlying": "qwen",
-      "name": "Qwen: Qwen Plus 0728",
-      "mode": "chat",
-      "input_per_1m_usd": 0.26,
-      "output_per_1m_usd": 0.78,
-      "context_window_tokens": 1000000,
-      "max_output_tokens": 32768
-    },
-    {
       "openrouter_id": "qwen/qwen2.5-vl-72b-instruct",
       "provider": "openrouter",
       "provider_underlying": "qwen",
@@ -3470,19 +3808,8 @@
       "mode": "chat",
       "input_per_1m_usd": 0.12,
       "output_per_1m_usd": 0.24,
-      "context_window_tokens": 131072,
+      "context_window_tokens": 40960,
       "max_output_tokens": 16384
-    },
-    {
-      "openrouter_id": "qwen/qwen3-235b-a22b",
-      "provider": "openrouter",
-      "provider_underlying": "qwen",
-      "name": "Qwen: Qwen3 235B A22B",
-      "mode": "chat",
-      "input_per_1m_usd": 0.455,
-      "output_per_1m_usd": 1.82,
-      "context_window_tokens": 131072,
-      "max_output_tokens": 8192
     },
     {
       "openrouter_id": "qwen/qwen3-235b-a22b-2507",
@@ -3501,10 +3828,10 @@
       "provider_underlying": "qwen",
       "name": "Qwen: Qwen3 235B A22B Thinking 2507",
       "mode": "chat",
-      "input_per_1m_usd": 0.23,
-      "output_per_1m_usd": 2.3,
-      "context_window_tokens": 131072,
-      "max_output_tokens": 117964
+      "input_per_1m_usd": 0.45,
+      "output_per_1m_usd": 3.5,
+      "context_window_tokens": 128000,
+      "max_output_tokens": 16384
     },
     {
       "openrouter_id": "qwen/qwen3-30b-a3b",
@@ -3514,7 +3841,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.12,
       "output_per_1m_usd": 0.5,
-      "context_window_tokens": 131072,
+      "context_window_tokens": 40960,
       "max_output_tokens": 16384
     },
     {
@@ -3523,21 +3850,10 @@
       "provider_underlying": "qwen",
       "name": "Qwen: Qwen3 30B A3B Instruct 2507",
       "mode": "chat",
-      "input_per_1m_usd": 0.0481,
-      "output_per_1m_usd": 0.193,
+      "input_per_1m_usd": 0.09,
+      "output_per_1m_usd": 0.3,
       "context_window_tokens": 262144,
-      "max_output_tokens": 32000
-    },
-    {
-      "openrouter_id": "qwen/qwen3-30b-a3b-thinking-2507",
-      "provider": "openrouter",
-      "provider_underlying": "qwen",
-      "name": "Qwen: Qwen3 30B A3B Thinking 2507",
-      "mode": "chat",
-      "input_per_1m_usd": 0.2,
-      "output_per_1m_usd": 2.4,
-      "context_window_tokens": 81920,
-      "max_output_tokens": 32768
+      "max_output_tokens": 235929
     },
     {
       "openrouter_id": "qwen/qwen3-32b",
@@ -3549,17 +3865,6 @@
       "output_per_1m_usd": 0.28,
       "context_window_tokens": 131072,
       "max_output_tokens": 16384
-    },
-    {
-      "openrouter_id": "qwen/qwen3-8b",
-      "provider": "openrouter",
-      "provider_underlying": "qwen",
-      "name": "Qwen: Qwen3 8B",
-      "mode": "chat",
-      "input_per_1m_usd": 0.117,
-      "output_per_1m_usd": 0.455,
-      "context_window_tokens": 131072,
-      "max_output_tokens": 8192
     },
     {
       "openrouter_id": "qwen/qwen3-coder",
@@ -3610,53 +3915,15 @@
       "max_output_tokens": 235929
     },
     {
-      "openrouter_id": "qwen/qwen3-coder-plus",
-      "provider": "openrouter",
-      "provider_underlying": "qwen",
-      "name": "Qwen: Qwen3 Coder Plus",
-      "mode": "chat",
-      "input_per_1m_usd": 0.65,
-      "output_per_1m_usd": 3.25,
-      "cache_read_per_1m_usd": 0.13,
-      "cache_write_per_1m_usd": 0.8125,
-      "context_window_tokens": 1000000,
-      "max_output_tokens": 65536
-    },
-    {
-      "openrouter_id": "qwen/qwen3-max",
-      "provider": "openrouter",
-      "provider_underlying": "qwen",
-      "name": "Qwen: Qwen3 Max",
-      "mode": "chat",
-      "input_per_1m_usd": 0.78,
-      "output_per_1m_usd": 3.9,
-      "cache_read_per_1m_usd": 0.156,
-      "cache_write_per_1m_usd": 0.975,
-      "context_window_tokens": 262144,
-      "max_output_tokens": 65536
-    },
-    {
-      "openrouter_id": "qwen/qwen3-max-thinking",
-      "provider": "openrouter",
-      "provider_underlying": "qwen",
-      "name": "Qwen: Qwen3 Max Thinking",
-      "mode": "chat",
-      "input_per_1m_usd": 0.78,
-      "output_per_1m_usd": 3.9,
-      "context_window_tokens": 262144,
-      "max_output_tokens": 65536
-    },
-    {
       "openrouter_id": "qwen/qwen3-next-80b-a3b-instruct",
       "provider": "openrouter",
       "provider_underlying": "qwen",
       "name": "Qwen: Qwen3 Next 80B A3B Instruct",
       "mode": "chat",
-      "input_per_1m_usd": 0.1,
+      "input_per_1m_usd": 0.09,
       "output_per_1m_usd": 1.1,
-      "cache_read_per_1m_usd": 0.07,
       "context_window_tokens": 262144,
-      "max_output_tokens": 235929
+      "max_output_tokens": 16384
     },
     {
       "openrouter_id": "qwen/qwen3-next-80b-a3b-thinking",
@@ -3667,7 +3934,7 @@
       "input_per_1m_usd": 0.15,
       "output_per_1m_usd": 1.2,
       "context_window_tokens": 262144,
-      "max_output_tokens": 32768
+      "max_output_tokens": 235929
     },
     {
       "openrouter_id": "qwen/qwen3-vl-235b-a22b-instruct",
@@ -3679,17 +3946,6 @@
       "output_per_1m_usd": 1.9,
       "cache_read_per_1m_usd": 0.1,
       "context_window_tokens": 262144,
-      "max_output_tokens": 32768
-    },
-    {
-      "openrouter_id": "qwen/qwen3-vl-235b-a22b-thinking",
-      "provider": "openrouter",
-      "provider_underlying": "qwen",
-      "name": "Qwen: Qwen3 VL 235B A22B Thinking",
-      "mode": "chat",
-      "input_per_1m_usd": 0.4,
-      "output_per_1m_usd": 4.0,
-      "context_window_tokens": 131072,
       "max_output_tokens": 32768
     },
     {
@@ -3709,21 +3965,10 @@
       "provider_underlying": "qwen",
       "name": "Qwen: Qwen3 VL 30B A3B Thinking",
       "mode": "chat",
-      "input_per_1m_usd": 0.2,
-      "output_per_1m_usd": 2.4,
+      "input_per_1m_usd": 0.29,
+      "output_per_1m_usd": 1.0,
       "context_window_tokens": 262144,
-      "max_output_tokens": 32768
-    },
-    {
-      "openrouter_id": "qwen/qwen3-vl-32b-instruct",
-      "provider": "openrouter",
-      "provider_underlying": "qwen",
-      "name": "Qwen: Qwen3 VL 32B Instruct",
-      "mode": "chat",
-      "input_per_1m_usd": 0.104,
-      "output_per_1m_usd": 0.416,
-      "context_window_tokens": 131072,
-      "max_output_tokens": 32768
+      "max_output_tokens": 235929
     },
     {
       "openrouter_id": "qwen/qwen3-vl-8b-instruct",
@@ -3731,21 +3976,11 @@
       "provider_underlying": "qwen",
       "name": "Qwen: Qwen3 VL 8B Instruct",
       "mode": "chat",
-      "input_per_1m_usd": 0.117,
-      "output_per_1m_usd": 0.455,
+      "input_per_1m_usd": 0.25,
+      "output_per_1m_usd": 0.75,
+      "cache_read_per_1m_usd": 0.12,
       "context_window_tokens": 262144,
-      "max_output_tokens": 32768
-    },
-    {
-      "openrouter_id": "qwen/qwen3-vl-8b-thinking",
-      "provider": "openrouter",
-      "provider_underlying": "qwen",
-      "name": "Qwen: Qwen3 VL 8B Thinking",
-      "mode": "chat",
-      "input_per_1m_usd": 0.18,
-      "output_per_1m_usd": 2.1,
-      "context_window_tokens": 131072,
-      "max_output_tokens": 32768
+      "max_output_tokens": 235929
     },
     {
       "openrouter_id": "qwen/qwen3.5-122b-a10b",
@@ -3753,10 +3988,10 @@
       "provider_underlying": "qwen",
       "name": "Qwen: Qwen3.5-122B-A10B",
       "mode": "chat",
-      "input_per_1m_usd": 0.29,
-      "output_per_1m_usd": 2.4,
+      "input_per_1m_usd": 0.4,
+      "output_per_1m_usd": 3.2,
       "context_window_tokens": 262144,
-      "max_output_tokens": 81920
+      "max_output_tokens": 65536
     },
     {
       "openrouter_id": "qwen/qwen3.5-27b",
@@ -3764,8 +3999,9 @@
       "provider_underlying": "qwen",
       "name": "Qwen: Qwen3.5-27B",
       "mode": "chat",
-      "input_per_1m_usd": 0.195,
-      "output_per_1m_usd": 1.56,
+      "input_per_1m_usd": 0.27,
+      "output_per_1m_usd": 2.16,
+      "cache_read_per_1m_usd": 0.27,
       "context_window_tokens": 262144,
       "max_output_tokens": 65536
     },
@@ -3775,11 +4011,11 @@
       "provider_underlying": "qwen",
       "name": "Qwen: Qwen3.5-35B-A3B",
       "mode": "chat",
-      "input_per_1m_usd": 0.3125,
-      "output_per_1m_usd": 1.25,
-      "cache_read_per_1m_usd": 0.1562,
+      "input_per_1m_usd": 0.14,
+      "output_per_1m_usd": 1.0,
+      "cache_read_per_1m_usd": 0.05,
       "context_window_tokens": 262144,
-      "max_output_tokens": 16384
+      "max_output_tokens": 81920
     },
     {
       "openrouter_id": "qwen/qwen3.5-397b-a17b",
@@ -3787,9 +4023,9 @@
       "provider_underlying": "qwen",
       "name": "Qwen: Qwen3.5 397B A17B",
       "mode": "chat",
-      "input_per_1m_usd": 0.55,
-      "output_per_1m_usd": 3.5,
-      "cache_read_per_1m_usd": 0.225,
+      "input_per_1m_usd": 0.5,
+      "output_per_1m_usd": 3.6,
+      "cache_read_per_1m_usd": 0.3,
       "context_window_tokens": 262144,
       "max_output_tokens": 235929
     },
@@ -3798,17 +4034,6 @@
       "provider": "openrouter",
       "provider_underlying": "qwen",
       "name": "Qwen: Qwen3.5-9B",
-      "mode": "chat",
-      "input_per_1m_usd": 0.1,
-      "output_per_1m_usd": 0.15,
-      "context_window_tokens": 262144,
-      "max_output_tokens": 235929
-    },
-    {
-      "openrouter_id": "qwen/qwen3.5-9b:batch",
-      "provider": "openrouter",
-      "provider_underlying": "qwen",
-      "name": "Qwen: Qwen3.5-9B (batch)",
       "mode": "chat",
       "input_per_1m_usd": 0.17,
       "output_per_1m_usd": 0.25,
@@ -3855,9 +4080,9 @@
       "provider_underlying": "qwen",
       "name": "Qwen: Qwen3.6 27B",
       "mode": "chat",
-      "input_per_1m_usd": 0.3,
+      "input_per_1m_usd": 0.25,
       "output_per_1m_usd": 2.0,
-      "cache_read_per_1m_usd": 0.03,
+      "cache_read_per_1m_usd": 0.025,
       "context_window_tokens": 262144,
       "max_output_tokens": 65536
     },
@@ -3868,7 +4093,7 @@
       "name": "Qwen: Qwen3.6 35B A3B",
       "mode": "chat",
       "input_per_1m_usd": 0.1,
-      "output_per_1m_usd": 0.9,
+      "output_per_1m_usd": 0.95,
       "cache_read_per_1m_usd": 0.05,
       "context_window_tokens": 262144,
       "max_output_tokens": 235929
@@ -3883,18 +4108,6 @@
       "output_per_1m_usd": 1.125,
       "cache_write_per_1m_usd": 0.2344,
       "context_window_tokens": 1000000,
-      "max_output_tokens": 65536
-    },
-    {
-      "openrouter_id": "qwen/qwen3.6-max-preview",
-      "provider": "openrouter",
-      "provider_underlying": "qwen",
-      "name": "Qwen: Qwen3.6 Max Preview",
-      "mode": "chat",
-      "input_per_1m_usd": 1.027,
-      "output_per_1m_usd": 6.162,
-      "cache_write_per_1m_usd": 1.2837,
-      "context_window_tokens": 262144,
       "max_output_tokens": 65536
     },
     {
@@ -3949,6 +4162,17 @@
       "max_output_tokens": 131072
     },
     {
+      "openrouter_id": "qwen/qwen3.7-plus:batch",
+      "provider": "openrouter",
+      "provider_underlying": "qwen",
+      "name": "Qwen: Qwen3.7 Plus (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 0.23,
+      "output_per_1m_usd": 0.92,
+      "context_window_tokens": 262144,
+      "max_output_tokens": 131072
+    },
+    {
       "openrouter_id": "qwen/qwen3.8-2.4t-a95b",
       "provider": "openrouter",
       "provider_underlying": "qwen",
@@ -3958,18 +4182,6 @@
       "output_per_1m_usd": 6.0,
       "cache_read_per_1m_usd": 0.25,
       "context_window_tokens": 1048576,
-      "max_output_tokens": 262144
-    },
-    {
-      "openrouter_id": "qwen/qwen3.8-2.4t-a95b:batch",
-      "provider": "openrouter",
-      "provider_underlying": "qwen",
-      "name": "Qwen: Qwen3.8 2.4T A95B (batch)",
-      "mode": "chat",
-      "input_per_1m_usd": 2.0,
-      "output_per_1m_usd": 6.0,
-      "cache_read_per_1m_usd": 0.25,
-      "context_window_tokens": 1010000,
       "max_output_tokens": 909000
     },
     {
@@ -3978,11 +4190,11 @@
       "provider_underlying": "qwen",
       "name": "Qwen: Qwen3.8 27B",
       "mode": "chat",
-      "input_per_1m_usd": 0.42,
-      "output_per_1m_usd": 3.0,
-      "cache_read_per_1m_usd": 0.085,
+      "input_per_1m_usd": 0.2,
+      "output_per_1m_usd": 2.5,
+      "cache_read_per_1m_usd": 0.09,
       "context_window_tokens": 1000000,
-      "max_output_tokens": 131072
+      "max_output_tokens": 235929
     },
     {
       "openrouter_id": "qwen/qwen3.8-flash",
@@ -3993,7 +4205,6 @@
       "input_per_1m_usd": 0.15,
       "output_per_1m_usd": 0.47,
       "cache_read_per_1m_usd": 0.016,
-      "cache_write_per_1m_usd": 0.2,
       "context_window_tokens": 1000000,
       "max_output_tokens": 131072
     },
@@ -4006,8 +4217,43 @@
       "input_per_1m_usd": 2.0,
       "output_per_1m_usd": 6.0,
       "cache_read_per_1m_usd": 0.25,
-      "cache_write_per_1m_usd": 2.5,
       "context_window_tokens": 1000000,
+      "max_output_tokens": 131072
+    },
+    {
+      "openrouter_id": "qwen/qwen3.8-max-prime",
+      "provider": "openrouter",
+      "provider_underlying": "qwen",
+      "name": "Qwen: Qwen3.8 Max Prime",
+      "mode": "chat",
+      "input_per_1m_usd": 4.0,
+      "output_per_1m_usd": 12.0,
+      "cache_read_per_1m_usd": 0.5,
+      "context_window_tokens": 1000000,
+      "max_output_tokens": 131072
+    },
+    {
+      "openrouter_id": "qwen/qwen3.8-omni-flash",
+      "provider": "openrouter",
+      "provider_underlying": "qwen",
+      "name": "Qwen: Qwen3.8 Omni Flash",
+      "mode": "chat",
+      "input_per_1m_usd": 0.15,
+      "output_per_1m_usd": 0.47,
+      "cache_read_per_1m_usd": 0.016,
+      "context_window_tokens": 1000000,
+      "max_output_tokens": 131072
+    },
+    {
+      "openrouter_id": "reflection/beam-1.0-501b-a23b",
+      "provider": "openrouter",
+      "provider_underlying": "reflection",
+      "name": "Reflection: Beam 1.0 501B A23B",
+      "mode": "chat",
+      "input_per_1m_usd": 0.25,
+      "output_per_1m_usd": 1.0,
+      "cache_read_per_1m_usd": 0.05,
+      "context_window_tokens": 1048576,
       "max_output_tokens": 131072
     },
     {
@@ -4055,10 +4301,34 @@
       "max_output_tokens": 128000
     },
     {
+      "openrouter_id": "sakana/fugu-max",
+      "provider": "openrouter",
+      "provider_underlying": "sakana",
+      "name": "Sakana: Fugu Max",
+      "mode": "chat",
+      "input_per_1m_usd": 2.0,
+      "output_per_1m_usd": 6.0,
+      "cache_read_per_1m_usd": 0.25,
+      "context_window_tokens": 1000000,
+      "max_output_tokens": 128000
+    },
+    {
       "openrouter_id": "sakana/fugu-ultra",
       "provider": "openrouter",
       "provider_underlying": "sakana",
       "name": "Sakana: Fugu Ultra",
+      "mode": "chat",
+      "input_per_1m_usd": 5.0,
+      "output_per_1m_usd": 30.0,
+      "cache_read_per_1m_usd": 0.5,
+      "context_window_tokens": 1000000,
+      "max_output_tokens": 128000
+    },
+    {
+      "openrouter_id": "sakana/fugu-ultra-v2",
+      "provider": "openrouter",
+      "provider_underlying": "sakana",
+      "name": "Sakana: Fugu Ultra v2",
       "mode": "chat",
       "input_per_1m_usd": 5.0,
       "output_per_1m_usd": 30.0,
@@ -4101,15 +4371,26 @@
       "max_output_tokens": 16384
     },
     {
-      "openrouter_id": "sao10k/l3.3-euryale-70b",
+      "openrouter_id": "scaledown/extract",
       "provider": "openrouter",
-      "provider_underlying": "sao10k",
-      "name": "Sao10K: Llama 3.3 Euryale 70B",
+      "provider_underlying": "scaledown",
+      "name": "ScaleDown: Extract",
       "mode": "chat",
-      "input_per_1m_usd": 0.65,
-      "output_per_1m_usd": 0.75,
-      "context_window_tokens": 131072,
-      "max_output_tokens": 16384
+      "input_per_1m_usd": 0.04,
+      "output_per_1m_usd": 0.0,
+      "context_window_tokens": 1000000,
+      "max_output_tokens": 900000
+    },
+    {
+      "openrouter_id": "scaledown/summarize",
+      "provider": "openrouter",
+      "provider_underlying": "scaledown",
+      "name": "ScaleDown: Summarize",
+      "mode": "chat",
+      "input_per_1m_usd": 0.04,
+      "output_per_1m_usd": 0.0,
+      "context_window_tokens": 1000000,
+      "max_output_tokens": 4000
     },
     {
       "openrouter_id": "stepfun/step-3.5-flash",
@@ -4133,6 +4414,18 @@
       "cache_read_per_1m_usd": 0.04,
       "context_window_tokens": 262144,
       "max_output_tokens": 230400
+    },
+    {
+      "openrouter_id": "stepfun/step-5-preview",
+      "provider": "openrouter",
+      "provider_underlying": "stepfun",
+      "name": "StepFun: Step 5 Preview",
+      "mode": "chat",
+      "input_per_1m_usd": 1.0,
+      "output_per_1m_usd": 2.7,
+      "cache_read_per_1m_usd": 0.1,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 64000
     },
     {
       "openrouter_id": "tencent/hunyuan-a13b-instruct",
@@ -4258,7 +4551,7 @@
       "input_per_1m_usd": 1.0,
       "output_per_1m_usd": 4.05,
       "cache_read_per_1m_usd": 0.17,
-      "context_window_tokens": 1048576,
+      "context_window_tokens": 524288,
       "max_output_tokens": 471859
     },
     {
@@ -4270,32 +4563,32 @@
       "input_per_1m_usd": 0.45,
       "output_per_1m_usd": 1.2,
       "cache_read_per_1m_usd": 0.1,
-      "context_window_tokens": 1048576,
+      "context_window_tokens": 524288,
       "max_output_tokens": 262144
     },
     {
-      "openrouter_id": "thinkingmachines/inkling-small:batch",
+      "openrouter_id": "unbiased/pareto-26.10",
       "provider": "openrouter",
-      "provider_underlying": "thinkingmachines",
-      "name": "Thinking Machines: Inkling Small (batch)",
+      "provider_underlying": "unbiased",
+      "name": "Pareto 26.10",
       "mode": "chat",
-      "input_per_1m_usd": 0.5,
-      "output_per_1m_usd": 1.2,
-      "cache_read_per_1m_usd": 0.1,
-      "context_window_tokens": 524288,
-      "max_output_tokens": 471859
+      "input_per_1m_usd": 0.8,
+      "output_per_1m_usd": 3.2,
+      "cache_read_per_1m_usd": 0.03,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 131072
     },
     {
-      "openrouter_id": "thinkingmachines/inkling:batch",
+      "openrouter_id": "unbiased/pareto-26.9",
       "provider": "openrouter",
-      "provider_underlying": "thinkingmachines",
-      "name": "Thinking Machines: Inkling (batch)",
+      "provider_underlying": "unbiased",
+      "name": "Pareto 26.9",
       "mode": "chat",
-      "input_per_1m_usd": 1.0,
-      "output_per_1m_usd": 4.05,
-      "cache_read_per_1m_usd": 0.17,
-      "context_window_tokens": 524288,
-      "max_output_tokens": 471859
+      "input_per_1m_usd": 2.5,
+      "output_per_1m_usd": 7.5,
+      "cache_read_per_1m_usd": 0.25,
+      "context_window_tokens": 262144,
+      "max_output_tokens": 131072
     },
     {
       "openrouter_id": "undi95/remm-slerp-l2-13b",
@@ -4307,6 +4600,18 @@
       "output_per_1m_usd": 0.65,
       "context_window_tokens": 6144,
       "max_output_tokens": 5529
+    },
+    {
+      "openrouter_id": "upstage/solar-mini4",
+      "provider": "openrouter",
+      "provider_underlying": "upstage",
+      "name": "Upstage: Solar Mini 4",
+      "mode": "chat",
+      "input_per_1m_usd": 0.05,
+      "output_per_1m_usd": 0.2,
+      "cache_read_per_1m_usd": 0.005,
+      "context_window_tokens": 524288,
+      "max_output_tokens": 131072
     },
     {
       "openrouter_id": "upstage/solar-pro-3",
@@ -4326,9 +4631,9 @@
       "provider_underlying": "upstage",
       "name": "Upstage: Solar Pro 4",
       "mode": "chat",
-      "input_per_1m_usd": 0.03,
-      "output_per_1m_usd": 0.12,
-      "cache_read_per_1m_usd": 0.006,
+      "input_per_1m_usd": 0.15,
+      "output_per_1m_usd": 0.6,
+      "cache_read_per_1m_usd": 0.03,
       "context_window_tokens": 524288,
       "max_output_tokens": 131072
     },
@@ -4416,6 +4721,18 @@
       "max_output_tokens": 450000
     },
     {
+      "openrouter_id": "x-ai/grok-4.7",
+      "provider": "openrouter",
+      "provider_underlying": "x-ai",
+      "name": "SpaceXAI: Grok 4.7",
+      "mode": "chat",
+      "input_per_1m_usd": 2.0,
+      "output_per_1m_usd": 6.0,
+      "cache_read_per_1m_usd": 0.5,
+      "context_window_tokens": 500000,
+      "max_output_tokens": 450000
+    },
+    {
       "openrouter_id": "x-ai/grok-build-0.1",
       "provider": "openrouter",
       "provider_underlying": "x-ai",
@@ -4433,11 +4750,11 @@
       "provider_underlying": "xiaomi",
       "name": "Xiaomi: MiMo-V2.5",
       "mode": "chat",
-      "input_per_1m_usd": 0.14,
-      "output_per_1m_usd": 0.28,
-      "cache_read_per_1m_usd": 0.0028,
+      "input_per_1m_usd": 0.119,
+      "output_per_1m_usd": 0.238,
+      "cache_read_per_1m_usd": 0.0026,
       "context_window_tokens": 1050000,
-      "max_output_tokens": 131072
+      "max_output_tokens": 945000
     },
     {
       "openrouter_id": "xiaomi/mimo-v2.5-pro",
@@ -4445,10 +4762,46 @@
       "provider_underlying": "xiaomi",
       "name": "Xiaomi: MiMo-V2.5-Pro",
       "mode": "chat",
+      "input_per_1m_usd": 0.3045,
+      "output_per_1m_usd": 0.609,
+      "cache_read_per_1m_usd": 0.0028,
+      "context_window_tokens": 1050000,
+      "max_output_tokens": 945000
+    },
+    {
+      "openrouter_id": "xiaomi/mimo-v2.6-flash",
+      "provider": "openrouter",
+      "provider_underlying": "xiaomi",
+      "name": "Xiaomi: MiMo-V2.6-Flash",
+      "mode": "chat",
+      "input_per_1m_usd": 0.14,
+      "output_per_1m_usd": 0.28,
+      "cache_read_per_1m_usd": 0.0028,
+      "context_window_tokens": 1050000,
+      "max_output_tokens": 131072
+    },
+    {
+      "openrouter_id": "xiaomi/mimo-v2.6-pro",
+      "provider": "openrouter",
+      "provider_underlying": "xiaomi",
+      "name": "Xiaomi: MiMo-V2.6-Pro",
+      "mode": "chat",
       "input_per_1m_usd": 0.435,
       "output_per_1m_usd": 0.87,
       "cache_read_per_1m_usd": 0.0036,
       "context_window_tokens": 1050000,
+      "max_output_tokens": 131072
+    },
+    {
+      "openrouter_id": "xiaomi/mimo-v2.6-pro-ultraspeed",
+      "provider": "openrouter",
+      "provider_underlying": "xiaomi",
+      "name": "Xiaomi: MiMo-V2.6-Pro-UltraSpeed",
+      "mode": "chat",
+      "input_per_1m_usd": 4.35,
+      "output_per_1m_usd": 8.7,
+      "cache_read_per_1m_usd": 0.036,
+      "context_window_tokens": 1048576,
       "max_output_tokens": 131072
     },
     {
@@ -4507,7 +4860,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.3,
       "output_per_1m_usd": 0.9,
-      "cache_read_per_1m_usd": 0.055,
+      "cache_read_per_1m_usd": 0.05,
       "context_window_tokens": 131072,
       "max_output_tokens": 32768
     },
@@ -4517,9 +4870,9 @@
       "provider_underlying": "z-ai",
       "name": "Z.ai: GLM 4.7",
       "mode": "chat",
-      "input_per_1m_usd": 0.4,
-      "output_per_1m_usd": 1.75,
-      "cache_read_per_1m_usd": 0.08,
+      "input_per_1m_usd": 0.54,
+      "output_per_1m_usd": 1.98,
+      "cache_read_per_1m_usd": 0.099,
       "context_window_tokens": 204800,
       "max_output_tokens": 131072
     },
@@ -4529,11 +4882,10 @@
       "provider_underlying": "z-ai",
       "name": "Z.ai: GLM 4.7 Flash",
       "mode": "chat",
-      "input_per_1m_usd": 0.06,
+      "input_per_1m_usd": 0.0605,
       "output_per_1m_usd": 0.4,
-      "cache_read_per_1m_usd": 0.01,
-      "context_window_tokens": 202752,
-      "max_output_tokens": 16384
+      "context_window_tokens": 200000,
+      "max_output_tokens": 117964
     },
     {
       "openrouter_id": "z-ai/glm-5",
@@ -4541,11 +4893,11 @@
       "provider_underlying": "z-ai",
       "name": "Z.ai: GLM 5",
       "mode": "chat",
-      "input_per_1m_usd": 0.6,
-      "output_per_1m_usd": 1.92,
-      "cache_read_per_1m_usd": 0.12,
+      "input_per_1m_usd": 1.0,
+      "output_per_1m_usd": 3.2,
+      "cache_read_per_1m_usd": 0.2,
       "context_window_tokens": 204800,
-      "max_output_tokens": 128000
+      "max_output_tokens": 131072
     },
     {
       "openrouter_id": "z-ai/glm-5-turbo",
@@ -4565,11 +4917,11 @@
       "provider_underlying": "z-ai",
       "name": "Z.ai: GLM 5.1",
       "mode": "chat",
-      "input_per_1m_usd": 0.966,
-      "output_per_1m_usd": 3.036,
-      "cache_read_per_1m_usd": 0.1794,
+      "input_per_1m_usd": 1.4,
+      "output_per_1m_usd": 4.4,
+      "cache_read_per_1m_usd": 0.26,
       "context_window_tokens": 204800,
-      "max_output_tokens": 128000
+      "max_output_tokens": 131072
     },
     {
       "openrouter_id": "z-ai/glm-5.2",
@@ -4577,11 +4929,11 @@
       "provider_underlying": "z-ai",
       "name": "Z.ai: GLM 5.2",
       "mode": "chat",
-      "input_per_1m_usd": 0.966,
-      "output_per_1m_usd": 3.036,
-      "cache_read_per_1m_usd": 0.1932,
+      "input_per_1m_usd": 0.0341,
+      "output_per_1m_usd": 7.0,
+      "cache_read_per_1m_usd": 0.033,
       "context_window_tokens": 1048576,
-      "max_output_tokens": 131072
+      "max_output_tokens": 943718
     },
     {
       "openrouter_id": "z-ai/glm-5.3",
@@ -4589,11 +4941,11 @@
       "provider_underlying": "z-ai",
       "name": "Z.ai: GLM 5.3",
       "mode": "chat",
-      "input_per_1m_usd": 1.4,
-      "output_per_1m_usd": 4.4,
-      "cache_read_per_1m_usd": 0.14,
-      "context_window_tokens": 1310720,
-      "max_output_tokens": 262144
+      "input_per_1m_usd": 0.079,
+      "output_per_1m_usd": 1.4,
+      "cache_read_per_1m_usd": 0.078,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 943718
     },
     {
       "openrouter_id": "z-ai/glm-5.3-flash",
@@ -4601,11 +4953,11 @@
       "provider_underlying": "z-ai",
       "name": "Z.ai: GLM 5.3 Flash",
       "mode": "chat",
-      "input_per_1m_usd": 0.075,
-      "output_per_1m_usd": 0.25,
-      "cache_read_per_1m_usd": 0.015,
-      "context_window_tokens": 1310720,
-      "max_output_tokens": 131072
+      "input_per_1m_usd": 0.15,
+      "output_per_1m_usd": 0.5,
+      "cache_read_per_1m_usd": 0.03,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 943717
     },
     {
       "openrouter_id": "z-ai/glm-5.3-flash:batch",
@@ -4613,11 +4965,47 @@
       "provider_underlying": "z-ai",
       "name": "Z.ai: GLM 5.3 Flash (batch)",
       "mode": "chat",
-      "input_per_1m_usd": 0.15,
-      "output_per_1m_usd": 0.5,
-      "cache_read_per_1m_usd": 0.03,
-      "context_window_tokens": 1048575,
-      "max_output_tokens": 943717
+      "input_per_1m_usd": 0.05,
+      "output_per_1m_usd": 0.18,
+      "cache_read_per_1m_usd": 0.01,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 131072
+    },
+    {
+      "openrouter_id": "z-ai/glm-5.3-flashx",
+      "provider": "openrouter",
+      "provider_underlying": "z-ai",
+      "name": "Z.ai: GLM 5.3 FlashX",
+      "mode": "chat",
+      "input_per_1m_usd": 0.37,
+      "output_per_1m_usd": 1.25,
+      "cache_read_per_1m_usd": 0.09,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 131072
+    },
+    {
+      "openrouter_id": "z-ai/glm-5.3-prime",
+      "provider": "openrouter",
+      "provider_underlying": "z-ai",
+      "name": "Z.ai: GLM 5.3 Prime",
+      "mode": "chat",
+      "input_per_1m_usd": 2.8,
+      "output_per_1m_usd": 8.8,
+      "cache_read_per_1m_usd": 0.56,
+      "context_window_tokens": 1000000,
+      "max_output_tokens": 131072
+    },
+    {
+      "openrouter_id": "z-ai/glm-5.3:batch",
+      "provider": "openrouter",
+      "provider_underlying": "z-ai",
+      "name": "Z.ai: GLM 5.3 (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 0.45,
+      "output_per_1m_usd": 2.0,
+      "cache_read_per_1m_usd": 0.1,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 131072
     },
     {
       "openrouter_id": "z-ai/glm-5v-turbo",
@@ -4648,14 +5036,14 @@
       "openrouter_id": "~anthropic/claude-haiku-latest",
       "provider": "openrouter",
       "provider_underlying": "~anthropic",
-      "name": "Anthropic Claude Haiku Latest",
+      "name": "Anthropic: Claude Haiku Latest",
       "mode": "chat",
-      "input_per_1m_usd": 1.0,
-      "output_per_1m_usd": 5.0,
-      "cache_read_per_1m_usd": 0.1,
-      "cache_write_per_1m_usd": 1.25,
-      "context_window_tokens": 200000,
-      "max_output_tokens": 64000
+      "input_per_1m_usd": 0.1,
+      "output_per_1m_usd": 0.5,
+      "cache_read_per_1m_usd": 0.01,
+      "cache_write_per_1m_usd": 0.125,
+      "context_window_tokens": 1000000,
+      "max_output_tokens": 128000
     },
     {
       "openrouter_id": "~anthropic/claude-opus-latest",
@@ -4663,10 +5051,10 @@
       "provider_underlying": "~anthropic",
       "name": "Anthropic: Claude Opus Latest",
       "mode": "chat",
-      "input_per_1m_usd": 5.0,
-      "output_per_1m_usd": 25.0,
-      "cache_read_per_1m_usd": 0.5,
-      "cache_write_per_1m_usd": 6.25,
+      "input_per_1m_usd": 4.0,
+      "output_per_1m_usd": 20.0,
+      "cache_read_per_1m_usd": 0.2,
+      "cache_write_per_1m_usd": 5.0,
       "context_window_tokens": 1000000,
       "max_output_tokens": 128000
     },
@@ -4674,32 +5062,56 @@
       "openrouter_id": "~anthropic/claude-sonnet-latest",
       "provider": "openrouter",
       "provider_underlying": "~anthropic",
-      "name": "Anthropic Claude Sonnet Latest",
+      "name": "Anthropic: Claude Sonnet Latest",
       "mode": "chat",
       "input_per_1m_usd": 2.0,
       "output_per_1m_usd": 10.0,
-      "cache_read_per_1m_usd": 0.2,
+      "cache_read_per_1m_usd": 0.1,
       "cache_write_per_1m_usd": 2.5,
       "context_window_tokens": 1000000,
       "max_output_tokens": 128000
     },
     {
+      "openrouter_id": "~deepseek/deepseek-flash-latest",
+      "provider": "openrouter",
+      "provider_underlying": "~deepseek",
+      "name": "DeepSeek: DeepSeek Flash Latest",
+      "mode": "chat",
+      "input_per_1m_usd": 0.02,
+      "output_per_1m_usd": 1.0,
+      "cache_read_per_1m_usd": 0.015,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 943718
+    },
+    {
+      "openrouter_id": "~deepseek/deepseek-pro-latest",
+      "provider": "openrouter",
+      "provider_underlying": "~deepseek",
+      "name": "DeepSeek: DeepSeek Pro Latest",
+      "mode": "chat",
+      "input_per_1m_usd": 0.1188,
+      "output_per_1m_usd": 8.0,
+      "cache_read_per_1m_usd": 0.12,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 393216
+    },
+    {
       "openrouter_id": "~deepseek/deepseek-v4-flash-latest",
       "provider": "openrouter",
       "provider_underlying": "~deepseek",
-      "name": "DeepSeek V4 Flash Latest",
+      "name": "DeepSeek: DeepSeek V4 Flash Latest",
       "mode": "chat",
-      "input_per_1m_usd": 0.05,
-      "output_per_1m_usd": 0.1,
-      "cache_read_per_1m_usd": 0.01,
-      "context_window_tokens": 1310720,
-      "max_output_tokens": 131072
+      "input_per_1m_usd": 0.0422,
+      "output_per_1m_usd": 0.1694,
+      "cache_read_per_1m_usd": 0.028,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 943718
     },
     {
       "openrouter_id": "~google/gemini-flash-latest",
       "provider": "openrouter",
       "provider_underlying": "~google",
-      "name": "Google Gemini Flash Latest",
+      "name": "Google: Gemini Flash Latest",
       "mode": "chat",
       "input_per_1m_usd": 0.75,
       "output_per_1m_usd": 3.75,
@@ -4712,37 +5124,50 @@
       "openrouter_id": "~google/gemini-pro-latest",
       "provider": "openrouter",
       "provider_underlying": "~google",
-      "name": "Google Gemini Pro Latest",
+      "name": "Google: Gemini Pro Latest",
       "mode": "chat",
       "input_per_1m_usd": 2.0,
-      "output_per_1m_usd": 12.0,
-      "cache_read_per_1m_usd": 0.2,
-      "cache_write_per_1m_usd": 0.375,
+      "output_per_1m_usd": 10.0,
+      "cache_read_per_1m_usd": 0.1,
+      "cache_write_per_1m_usd": 0.1875,
       "context_window_tokens": 1048576,
-      "max_output_tokens": 65536
+      "max_output_tokens": 943718
     },
     {
       "openrouter_id": "~moonshotai/kimi-latest",
       "provider": "openrouter",
       "provider_underlying": "~moonshotai",
-      "name": "MoonshotAI Kimi Latest",
+      "name": "MoonshotAI: Kimi Latest",
       "mode": "chat",
-      "input_per_1m_usd": 2.55,
-      "output_per_1m_usd": 12.75,
-      "cache_read_per_1m_usd": 0.256,
+      "input_per_1m_usd": 0.19,
+      "output_per_1m_usd": 8.94,
+      "cache_read_per_1m_usd": 0.19,
       "context_window_tokens": 1048576,
       "max_output_tokens": 943718
     },
     {
-      "openrouter_id": "~openai/gpt-latest",
+      "openrouter_id": "~openai/gpt-astra-latest",
       "provider": "openrouter",
       "provider_underlying": "~openai",
-      "name": "OpenAI GPT Latest",
+      "name": "OpenAI: GPT Astra Latest",
       "mode": "chat",
-      "input_per_1m_usd": 2.0,
-      "output_per_1m_usd": 10.0,
-      "cache_read_per_1m_usd": 0.2,
-      "cache_write_per_1m_usd": 2.5,
+      "input_per_1m_usd": 10.0,
+      "output_per_1m_usd": 50.0,
+      "cache_read_per_1m_usd": 1.0,
+      "cache_write_per_1m_usd": 12.5,
+      "context_window_tokens": 1050000,
+      "max_output_tokens": 128000
+    },
+    {
+      "openrouter_id": "~openai/gpt-luna-latest",
+      "provider": "openrouter",
+      "provider_underlying": "~openai",
+      "name": "OpenAI: GPT Luna Latest",
+      "mode": "chat",
+      "input_per_1m_usd": 0.1,
+      "output_per_1m_usd": 0.5,
+      "cache_read_per_1m_usd": 0.01,
+      "cache_write_per_1m_usd": 0.125,
       "context_window_tokens": 1050000,
       "max_output_tokens": 128000
     },
@@ -4750,13 +5175,51 @@
       "openrouter_id": "~openai/gpt-mini-latest",
       "provider": "openrouter",
       "provider_underlying": "~openai",
-      "name": "OpenAI GPT Mini Latest",
+      "name": "OpenAI: GPT Mini Latest",
       "mode": "chat",
       "input_per_1m_usd": 0.75,
       "output_per_1m_usd": 4.5,
       "cache_read_per_1m_usd": 0.075,
       "context_window_tokens": 400000,
       "max_output_tokens": 128000
+    },
+    {
+      "openrouter_id": "~openai/gpt-sol-latest",
+      "provider": "openrouter",
+      "provider_underlying": "~openai",
+      "name": "OpenAI: GPT Sol Latest",
+      "mode": "chat",
+      "input_per_1m_usd": 2.0,
+      "output_per_1m_usd": 10.0,
+      "cache_read_per_1m_usd": 0.1,
+      "cache_write_per_1m_usd": 2.5,
+      "context_window_tokens": 1050000,
+      "max_output_tokens": 128000
+    },
+    {
+      "openrouter_id": "~openai/gpt-terra-latest",
+      "provider": "openrouter",
+      "provider_underlying": "~openai",
+      "name": "OpenAI: GPT Terra Latest",
+      "mode": "chat",
+      "input_per_1m_usd": 2.0,
+      "output_per_1m_usd": 12.0,
+      "cache_read_per_1m_usd": 0.2,
+      "cache_write_per_1m_usd": 2.5,
+      "context_window_tokens": 1050000,
+      "max_output_tokens": 128000
+    },
+    {
+      "openrouter_id": "~unbiased/pareto-latest",
+      "provider": "openrouter",
+      "provider_underlying": "~unbiased",
+      "name": "Pareto Latest",
+      "mode": "chat",
+      "input_per_1m_usd": 0.8,
+      "output_per_1m_usd": 3.2,
+      "cache_read_per_1m_usd": 0.03,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 131072
     },
     {
       "openrouter_id": "~x-ai/grok-latest",
@@ -4776,11 +5239,11 @@
       "provider_underlying": "~z-ai",
       "name": "Z.ai: GLM Flash Latest",
       "mode": "chat",
-      "input_per_1m_usd": 0.075,
-      "output_per_1m_usd": 0.25,
-      "cache_read_per_1m_usd": 0.015,
-      "context_window_tokens": 1310720,
-      "max_output_tokens": 943718
+      "input_per_1m_usd": 0.0418,
+      "output_per_1m_usd": 0.077,
+      "cache_read_per_1m_usd": 0.03,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 131072
     },
     {
       "openrouter_id": "~z-ai/glm-latest",
@@ -4788,11 +5251,11 @@
       "provider_underlying": "~z-ai",
       "name": "Z.ai: GLM Latest",
       "mode": "chat",
-      "input_per_1m_usd": 1.17,
-      "output_per_1m_usd": 3.96,
-      "cache_read_per_1m_usd": 0.234,
-      "context_window_tokens": 1310720,
-      "max_output_tokens": 235929
+      "input_per_1m_usd": 0.0703,
+      "output_per_1m_usd": 4.3843,
+      "cache_read_per_1m_usd": 0.0703,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 131072
     }
   ]
 }

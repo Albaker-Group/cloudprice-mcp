@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-09-06",
+  "as_of": "2026-10-25",
   "currency": "USD",
   "notes": "On-demand Linux compute + block-storage pricing for representative SKUs. Sourced from public AWS/Azure/GCP price lists. Future: live-fetch mode that hits each cloud's public pricing API.",
   "aws": {
@@ -10,112 +10,112 @@
         "vcpus": 2,
         "memory_gb": 1,
         "hourly_usd": 0.0104,
-        "spot_hourly_usd": 0.00446
+        "spot_hourly_usd": 0.00304
       },
       {
         "sku": "t3.small",
         "vcpus": 2,
         "memory_gb": 2,
         "hourly_usd": 0.0208,
-        "spot_hourly_usd": 0.00898
+        "spot_hourly_usd": 0.00642
       },
       {
         "sku": "t3.medium",
         "vcpus": 2,
         "memory_gb": 4,
         "hourly_usd": 0.0416,
-        "spot_hourly_usd": 0.0183
+        "spot_hourly_usd": 0.01596
       },
       {
         "sku": "t3.large",
         "vcpus": 2,
         "memory_gb": 8,
         "hourly_usd": 0.0832,
-        "spot_hourly_usd": 0.03786
+        "spot_hourly_usd": 0.02834
       },
       {
         "sku": "t3.xlarge",
         "vcpus": 4,
         "memory_gb": 16,
         "hourly_usd": 0.1664,
-        "spot_hourly_usd": 0.06222
+        "spot_hourly_usd": 0.05312
       },
       {
         "sku": "t3.2xlarge",
         "vcpus": 8,
         "memory_gb": 32,
         "hourly_usd": 0.3328,
-        "spot_hourly_usd": 0.1264
+        "spot_hourly_usd": 0.10852
       },
       {
         "sku": "m5.large",
         "vcpus": 2,
         "memory_gb": 8,
         "hourly_usd": 0.096,
-        "spot_hourly_usd": 0.04366
+        "spot_hourly_usd": 0.0443
       },
       {
         "sku": "m5.xlarge",
         "vcpus": 4,
         "memory_gb": 16,
         "hourly_usd": 0.192,
-        "spot_hourly_usd": 0.07044
+        "spot_hourly_usd": 0.06482
       },
       {
         "sku": "m5.2xlarge",
         "vcpus": 8,
         "memory_gb": 32,
         "hourly_usd": 0.384,
-        "spot_hourly_usd": 0.18826
+        "spot_hourly_usd": 0.18342
       },
       {
         "sku": "m5.4xlarge",
         "vcpus": 16,
         "memory_gb": 64,
         "hourly_usd": 0.768,
-        "spot_hourly_usd": 0.29678
+        "spot_hourly_usd": 0.29136
       },
       {
         "sku": "c5.large",
         "vcpus": 2,
         "memory_gb": 4,
         "hourly_usd": 0.085,
-        "spot_hourly_usd": 0.03404
+        "spot_hourly_usd": 0.02696
       },
       {
         "sku": "c5.xlarge",
         "vcpus": 4,
         "memory_gb": 8,
         "hourly_usd": 0.17,
-        "spot_hourly_usd": 0.07154
+        "spot_hourly_usd": 0.07066
       },
       {
         "sku": "c5.2xlarge",
         "vcpus": 8,
         "memory_gb": 16,
         "hourly_usd": 0.34,
-        "spot_hourly_usd": 0.14878
+        "spot_hourly_usd": 0.1407
       },
       {
         "sku": "r5.large",
         "vcpus": 2,
         "memory_gb": 16,
         "hourly_usd": 0.126,
-        "spot_hourly_usd": 0.0489
+        "spot_hourly_usd": 0.04708
       },
       {
         "sku": "r5.xlarge",
         "vcpus": 4,
         "memory_gb": 32,
         "hourly_usd": 0.252,
-        "spot_hourly_usd": 0.07836
+        "spot_hourly_usd": 0.0789
       },
       {
         "sku": "r5.2xlarge",
         "vcpus": 8,
         "memory_gb": 64,
         "hourly_usd": 0.504,
-        "spot_hourly_usd": 0.16554
+        "spot_hourly_usd": 0.168
       },
       {
         "sku": "g4dn.xlarge",
@@ -124,7 +124,8 @@
         "hourly_usd": 0.526,
         "gpu_type": "T4",
         "gpu_count": 1,
-        "gpu_memory_gb_each": 16
+        "gpu_memory_gb_each": 16,
+        "spot_hourly_usd": 0.32806
       },
       {
         "sku": "g5.xlarge",
@@ -133,7 +134,8 @@
         "hourly_usd": 1.006,
         "gpu_type": "A10G",
         "gpu_count": 1,
-        "gpu_memory_gb_each": 24
+        "gpu_memory_gb_each": 24,
+        "spot_hourly_usd": 0.50814
       },
       {
         "sku": "g6.xlarge",
@@ -142,7 +144,8 @@
         "hourly_usd": 0.8048,
         "gpu_type": "L4",
         "gpu_count": 1,
-        "gpu_memory_gb_each": 24
+        "gpu_memory_gb_each": 24,
+        "spot_hourly_usd": 0.63826
       },
       {
         "sku": "g6e.xlarge",
@@ -151,7 +154,8 @@
         "hourly_usd": 1.861,
         "gpu_type": "L40S",
         "gpu_count": 1,
-        "gpu_memory_gb_each": 48
+        "gpu_memory_gb_each": 48,
+        "spot_hourly_usd": 1.542625
       },
       {
         "sku": "p3.2xlarge",
@@ -169,7 +173,8 @@
         "hourly_usd": 21.957642,
         "gpu_type": "A100",
         "gpu_count": 8,
-        "gpu_memory_gb_each": 40
+        "gpu_memory_gb_each": 40,
+        "spot_hourly_usd": 18.775475
       },
       {
         "sku": "p5.48xlarge",
@@ -178,7 +183,8 @@
         "hourly_usd": 55.04,
         "gpu_type": "H100",
         "gpu_count": 8,
-        "gpu_memory_gb_each": 80
+        "gpu_memory_gb_each": 80,
+        "spot_hourly_usd": 32.666733
       }
     ],
     "storage": [
@@ -376,91 +382,106 @@
         "sku": "e2-micro",
         "vcpus": 2,
         "memory_gb": 1,
-        "hourly_usd": 0.00838
+        "hourly_usd": 0.008376,
+        "spot_hourly_usd": 0.005026
       },
       {
         "sku": "e2-small",
         "vcpus": 2,
         "memory_gb": 2,
-        "hourly_usd": 0.01675
+        "hourly_usd": 0.016753,
+        "spot_hourly_usd": 0.010053
       },
       {
         "sku": "e2-medium",
         "vcpus": 2,
         "memory_gb": 4,
-        "hourly_usd": 0.0335
+        "hourly_usd": 0.033506,
+        "spot_hourly_usd": 0.020106
       },
       {
         "sku": "e2-standard-2",
         "vcpus": 2,
         "memory_gb": 8,
-        "hourly_usd": 0.067
+        "hourly_usd": 0.067011,
+        "spot_hourly_usd": 0.040212
       },
       {
         "sku": "e2-standard-4",
         "vcpus": 4,
         "memory_gb": 16,
-        "hourly_usd": 0.134
+        "hourly_usd": 0.134023,
+        "spot_hourly_usd": 0.080424
       },
       {
         "sku": "e2-standard-8",
         "vcpus": 8,
         "memory_gb": 32,
-        "hourly_usd": 0.268
+        "hourly_usd": 0.268046,
+        "spot_hourly_usd": 0.160848
       },
       {
         "sku": "e2-standard-16",
         "vcpus": 16,
         "memory_gb": 64,
-        "hourly_usd": 0.536
+        "hourly_usd": 0.536091,
+        "spot_hourly_usd": 0.321696
       },
       {
         "sku": "n2-standard-2",
         "vcpus": 2,
         "memory_gb": 8,
-        "hourly_usd": 0.0971
+        "hourly_usd": 0.097118,
+        "spot_hourly_usd": 0.058256
       },
       {
         "sku": "n2-standard-4",
         "vcpus": 4,
         "memory_gb": 16,
-        "hourly_usd": 0.1942
+        "hourly_usd": 0.194236,
+        "spot_hourly_usd": 0.116512
       },
       {
         "sku": "n2-standard-8",
         "vcpus": 8,
         "memory_gb": 32,
-        "hourly_usd": 0.3885
+        "hourly_usd": 0.388472,
+        "spot_hourly_usd": 0.233024
       },
       {
         "sku": "c2-standard-4",
         "vcpus": 4,
         "memory_gb": 16,
-        "hourly_usd": 0.2088
+        "hourly_usd": 0.208808,
+        "spot_hourly_usd": 0.107328
       },
       {
         "sku": "c2-standard-8",
         "vcpus": 8,
         "memory_gb": 32,
-        "hourly_usd": 0.4176
+        "hourly_usd": 0.417616,
+        "spot_hourly_usd": 0.214656
       },
       {
         "sku": "n2-highmem-2",
         "vcpus": 2,
         "memory_gb": 16,
-        "hourly_usd": 0.131
+        "hourly_usd": 0.131014,
+        "spot_hourly_usd": 0.078592
       },
       {
         "sku": "n2-highmem-4",
         "vcpus": 4,
         "memory_gb": 32,
-        "hourly_usd": 0.262
+        "hourly_usd": 0.262028,
+        "spot_hourly_usd": 0.157184
       },
       {
         "sku": "n2-highcpu-4",
         "vcpus": 4,
         "memory_gb": 4,
-        "hourly_usd": 0.1432
+        "hourly_usd": 0.143392,
+        "spot_hourly_usd": 0.086008
       },
       {
         "sku": "n1-standard-4+t4",
