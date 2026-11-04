@@ -23,12 +23,15 @@ dependencies = [
     "pyyaml>=6.0",
 ]
 
-[project.optional-dependencies]
+# Dev tools live in a uv dependency group, locked in uv.lock: `uv sync` installs
+# them, and they never ship as an installable extra of the published package.
+[dependency-groups]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23",
+    "pytest-cov>=6.0",
     "pytest-httpx>=0.30",
-    "ruff>=0.5",
+    "ruff==0.17.3",  # exact: a new ruff release adds rules and reformats code
 ]
 
 [project.scripts]
@@ -87,3 +90,10 @@ ignore = [
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["cloudprice_mcp"]
+
+[tool.coverage.report]
+# Today's level (75% on 2026-11-04). Raise it as tests are added; never lower it.
+fail_under = 74
