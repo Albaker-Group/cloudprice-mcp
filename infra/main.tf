@@ -67,6 +67,9 @@ resource "aws_iam_role_policy_attachment" "logs" {
 # with never-expire retention, which quietly accrues cost forever.
 
 resource "aws_cloudwatch_log_group" "lambda" {
+  # Reviewed 2026-11-04; reasons recorded so the decision is visible in review.
+  #checkov:skip=CKV_AWS_158:Customer-managed KMS keys cost ~$1/month each; default AWS-managed encryption already applies
+  #checkov:skip=CKV_AWS_338:14 days is enough to debug a stateless pricing function; a year of logs is cost with no use
   name              = "/aws/lambda/${local.name}"
   retention_in_days = var.log_retention_days
 }
@@ -74,6 +77,11 @@ resource "aws_cloudwatch_log_group" "lambda" {
 # ── The function ──────────────────────────────────────────────────────────
 
 resource "aws_lambda_function" "gateway_target" {
+  # Reviewed 2026-11-04; reasons recorded so the decision is visible in review.
+  #checkov:skip=CKV_AWS_116:The AgentCore Gateway invokes this synchronously; a DLQ only receives failed asynchronous invocations
+  #checkov:skip=CKV_AWS_117:Reads only bundled JSON and reaches nothing private; a VPC would need a NAT gateway (~$32/month) for no isolation gain
+  #checkov:skip=CKV_AWS_272:Code is built and deployed by Terraform from this repo; signing adds a Signer profile for no change in who can deploy
+  #checkov:skip=CKV_AWS_50:AgentCore Observability already traces gateway calls; X-Ray on a pure-compute function adds cost, not insight
   function_name = local.name
   description   = "cloudprice-mcp tools, exposed to Amazon Bedrock AgentCore Gateway"
   role          = aws_iam_role.lambda.arn

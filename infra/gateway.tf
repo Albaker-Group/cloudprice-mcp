@@ -16,6 +16,11 @@
 # nested HCL blocks would be thousands of unreadable lines.
 
 resource "aws_s3_bucket" "artifacts" {
+  # Reviewed 2026-11-04; reasons recorded so the decision is visible in review.
+  #checkov:skip=CKV_AWS_145:Customer-managed KMS keys cost ~$1/month each; default AWS-managed encryption already applies
+  #checkov:skip=CKV_AWS_144:cross-region replication is impossible here: the account denies every region except us-east-1
+  #checkov:skip=CKV_AWS_18:Build-artifact bucket, written only by Terraform; access logs would add a bucket and cost for no reader
+  #checkov:skip=CKV2_AWS_62:Nothing consumes events from the artifact bucket
   bucket = "${local.name}-artifacts-${data.aws_caller_identity.current.account_id}"
 }
 
