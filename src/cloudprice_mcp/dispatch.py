@@ -525,6 +525,18 @@ def _handle_reprice_bill(catalog, args):
         return _err(f"reprice_bill: {e}")
 
 
+def _handle_analyze_ai_spend(catalog, args):
+    from .finops.bill_ai import analyze_ai_spend
+    from .finops.focus_ingest import BillError
+
+    if not args.get("file_path"):
+        return _err("analyze_ai_spend: file_path is required")
+    try:
+        return _ok(analyze_ai_spend(args["file_path"], top_n=int(args.get("top_n", 10))))
+    except BillError as e:
+        return _err(f"analyze_ai_spend: {e}")
+
+
 def _handle_compare_llm_vs_selfhost(catalog, args):
     from .finops.selfhost import compare_llm_vs_selfhost
 
@@ -728,6 +740,7 @@ _TOOL_HANDLERS = {
     "forecast_spend": _handle_forecast_spend,
     "calculate_unit_cost": _handle_calculate_unit_cost,
     "reprice_bill": _handle_reprice_bill,
+    "analyze_ai_spend": _handle_analyze_ai_spend,
     "export_focus": _handle_export_focus,
     # v0.13.0 anomaly detection
     "detect_price_anomalies": _handle_detect_price_anomalies,
@@ -748,6 +761,7 @@ LOCAL_ONLY_TOOLS = frozenset(
         "forecast_spend",
         "calculate_unit_cost",
         "reprice_bill",
+        "analyze_ai_spend",
     }
 )
 
