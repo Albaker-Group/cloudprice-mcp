@@ -90,7 +90,10 @@ def sanitize(node):
 
 
 def main() -> int:
-    tools = asyncio.run(server.list_tools())
+    # Local-only tools read files on the host; the gateway must never offer them.
+    from cloudprice_mcp.dispatch import LOCAL_ONLY_TOOLS
+
+    tools = [t for t in asyncio.run(server.list_tools()) if t.name not in LOCAL_ONLY_TOOLS]
 
     schema = [
         {

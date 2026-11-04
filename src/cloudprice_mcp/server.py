@@ -846,6 +846,45 @@ async def list_tools() -> list[Tool]:
         ),
         # --- v0.18.0 FOCUS 1.3 export ---
         Tool(
+            name="analyze_bill",
+            description=(
+                "Analyse the user's actual cloud bill from a FOCUS 1.x CSV export "
+                "(AWS Data Exports, Azure Cost Management, GCP BigQuery FOCUS view, OCI). "
+                "Read from local disk only; nothing is sent anywhere. Returns total cost, "
+                "top cost drivers grouped by service / category / provider / region / "
+                "SKU / resource, cost by month, the biggest month-over-month movers, "
+                "list vs effective cost (what discounts saved), and commitment coverage "
+                "of usage when the export carries commitment columns. Use for: 'where is "
+                "our cloud money going', 'what jumped last month', 'how much of our "
+                "usage is covered by RIs / Savings Plans'. Ask the user for the path to "
+                "their export file."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "Local path to a FOCUS export, .csv or .csv.gz.",
+                    },
+                    "group_by": {
+                        "type": "string",
+                        "enum": [
+                            "ServiceName",
+                            "ServiceCategory",
+                            "ProviderName",
+                            "RegionId",
+                            "SkuId",
+                            "ResourceId",
+                        ],
+                        "default": "ServiceName",
+                    },
+                    "top_n": {"type": "integer", "minimum": 1, "default": 10},
+                },
+                "required": ["file_path"],
+                "additionalProperties": False,
+            },
+        ),
+        Tool(
             name="compare_llm_vs_selfhost",
             description=(
                 "Pay per token or rent GPUs and serve the model yourself? Prices a "
@@ -1310,7 +1349,9 @@ async def list_tools() -> list[Tool]:
 @server.call_tool()
 async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
     """Adapt the protocol-free dispatch in `dispatch.py` to MCP content."""
-    result = dispatch.call(name, arguments)
+    # stdio runs on the user's own machine, so local-only tools (reading their
+    # own billing export) are allowed here and nowhere else.
+    result = dispatch.call(name, arguments, allow_local=True)
     return [TextContent(type="text", text=json.dumps(result, indent=2))]
 
 

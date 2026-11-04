@@ -410,6 +410,23 @@ def _handle_lookup_extended_model_pricing(catalog, args):
     return _ok(result)
 
 
+def _handle_analyze_bill(catalog, args):
+    from .finops.focus_ingest import BillError, analyze_bill
+
+    if not args.get("file_path"):
+        return _err("analyze_bill: file_path is required")
+    try:
+        return _ok(
+            analyze_bill(
+                args["file_path"],
+                group_by=args.get("group_by", "ServiceName"),
+                top_n=int(args.get("top_n", 10)),
+            )
+        )
+    except BillError as e:
+        return _err(f"analyze_bill: {e}")
+
+
 def _handle_compare_llm_vs_selfhost(catalog, args):
     from .finops.selfhost import compare_llm_vs_selfhost
 
@@ -606,6 +623,7 @@ _TOOL_HANDLERS = {
     "llm_price_changes": _handle_llm_price_changes,
     "estimate_agent_cost": _handle_estimate_agent_cost,
     "compare_llm_vs_selfhost": _handle_compare_llm_vs_selfhost,
+    "analyze_bill": _handle_analyze_bill,
     "export_focus": _handle_export_focus,
     # v0.13.0 anomaly detection
     "detect_price_anomalies": _handle_detect_price_anomalies,
@@ -614,18 +632,25 @@ _TOOL_HANDLERS = {
 }
 
 
-def call(name: str, arguments: dict[str, Any] | None = None) -> Any:
+# Tools that read files from the machine they run on. Safe on a user's own
+# machine (the stdio server); never on a hosted front end, where "read this
+# path" would read the server's disk. Refused unless the caller opts in.
+LOCAL_ONLY_TOOLS = frozenset({"analyze_bill"})
+
+
+def call(name: str, arguments: dict[str, Any] | None = None, *, allow_local: bool = False) -> Any:
     """Run one tool by name and return plain data.
 
     Unknown tools return an ``{"error": ...}`` payload rather than raising,
     so a caller can surface the problem to a model instead of a stack trace.
+    LOCAL_ONLY_TOOLS run only with ``allow_local=True``.
     """
     handler = _TOOL_HANDLERS.get(name)
-    if handler is None:
+    if handler is None or (name in LOCAL_ONLY_TOOLS and not allow_local):
         return _err(f"Unknown tool: {name}")
     return handler(load_catalog(), arguments or {})
 
 
-def tool_names() -> list[str]:
-    """Every tool name `call()` accepts."""
-    return sorted(_TOOL_HANDLERS)
+def tool_names(*, include_local: bool = False) -> list[str]:
+    """Every tool name `call()` accepts; local-only tools only on request."""
+    return sorted(n for n in _TOOL_HANDLERS if include_local or n not in LOCAL_ONLY_TOOLS)

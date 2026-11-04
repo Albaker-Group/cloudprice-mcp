@@ -50,7 +50,7 @@ pip install cloudprice-mcp
 cloudprice-mcp setup
 ```
 
-Restart the client and the **28 tools** appear. Problems? `cloudprice-mcp doctor`
+Restart the client and the **29 tools** appear. Problems? `cloudprice-mcp doctor`
 says what is wrong; [INSTALL.md](INSTALL.md) has per-client steps for Windows,
 macOS and Linux. Python 3.10+.
 
@@ -87,12 +87,17 @@ macOS and Linux. Python 3.10+.
 
 > *"How has OCI E5.Flex pricing moved since May?"* → `get_price_history`
 
+> *"Here's our FOCUS export (~/Downloads/focus-2026-10.csv). Where is the money
+> going, what jumped last month, and how much of our usage do Savings Plans
+> cover?"* → `analyze_bill` — reads the file on your machine; nothing is sent
+> anywhere, and hosted deployments cannot call it.
+
 Every answer carries the catalogue date and an `honest_gaps` list of what the
 tool does not model, so the AI can tell you where the number stops being exact.
 
 ## Tools
 
-**28 tools**, grouped by job. Full descriptions and arguments:
+**29 tools**, grouped by job. Full descriptions and arguments:
 **[docs/TOOLS.md](docs/TOOLS.md)** (generated from the server, so it is always
 current).
 
@@ -104,6 +109,7 @@ current).
 | Spot, GPU, carbon | `compare_spot`, `compare_gpu_workload`, `compare_carbon_footprint` |
 | Price history | `get_price_history`, `list_tracked_skus`, `detect_price_anomalies`, `watch_workload` |
 | AI / LLM costs | `estimate_agent_cost`, `compare_llm_vs_selfhost`, `compare_token_pricing`, `lookup_extended_model_pricing`, `llm_price_changes` |
+| Your actual bill (local only) | `analyze_bill` |
 | Export | `export_focus` |
 
 ### Example: `compare_workload` input
