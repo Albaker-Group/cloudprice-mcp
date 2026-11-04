@@ -1065,6 +1065,37 @@ async def list_tools() -> list[Tool]:
             },
         ),
         Tool(
+            name="reprice_bill",
+            description=(
+                "FinOps benchmarking on the user's actual bill (a local FOCUS 1.x CSV "
+                "export; nothing is sent anywhere). Works out the vCPU-hours and memory "
+                "the bill's compute actually used and prices that same capacity at list "
+                "price on AWS, Azure, GCP and OCI, per instance type and in total, next "
+                "to what the user really paid. Reports what it could not reprice (GPUs, "
+                "licensed OS, unknown types) with its cost. Use for: 'what would our "
+                "bill cost on another cloud', 'are we on the cheapest cloud for this "
+                "compute', 'is a migration worth looking at'."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "Local path to a FOCUS export, .csv or .csv.gz.",
+                    },
+                    "top_n": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 50,
+                        "default": 10,
+                        "description": "How many workload lines to return, largest first.",
+                    },
+                },
+                "required": ["file_path"],
+                "additionalProperties": False,
+            },
+        ),
+        Tool(
             name="compare_llm_vs_selfhost",
             description=(
                 "Pay per token or rent GPUs and serve the model yourself? Prices a "
