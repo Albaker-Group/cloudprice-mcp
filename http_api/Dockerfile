@@ -29,7 +29,7 @@
 # different days, which makes a build unreproducible and lets an upstream
 # compromise reach this image without any change here. Update the digest
 # deliberately, as a reviewable commit.
-FROM python:3.12-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f AS build
+FROM python:3.12-slim@sha256:b18b261e1b4974b4f321451ad5251ded85abb22c2b8b262da527dda1d031ab30 AS build
 
 WORKDIR /build
 
@@ -50,12 +50,20 @@ COPY src/ ./src/
 RUN pip install --no-cache-dir --no-deps .
 
 # ---- runtime --------------------------------------------------------------
-FROM python:3.12-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f
+FROM python:3.12-slim@sha256:b18b261e1b4974b4f321451ad5251ded85abb22c2b8b262da527dda1d031ab30
 
 # Non-root. Kubernetes will not enforce this for you unless a securityContext
 # says so, and the Helm chart does - but an image that only works as root makes
 # that setting fail at deploy time rather than never being needed.
 RUN useradd --create-home --uid 10001 app
+
+# The pinned base digest goes stale between Python image rebuilds: on
+# 2026-11-03 it carried 4 HIGH Debian CVEs (openssl, pcre2) whose fixes were
+# already in the Debian security archive, and the image scan failed the build.
+# Pull those fixes at build time rather than wait for upstream to republish.
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /opt/venv /opt/venv
 COPY http_api/app.py /app/app.py
