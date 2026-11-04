@@ -50,7 +50,7 @@ pip install cloudprice-mcp
 cloudprice-mcp setup
 ```
 
-Restart the client and the **27 tools** appear. Problems? `cloudprice-mcp doctor`
+Restart the client and the **28 tools** appear. Problems? `cloudprice-mcp doctor`
 says what is wrong; [INSTALL.md](INSTALL.md) has per-client steps for Windows,
 macOS and Linux. Python 3.10+.
 
@@ -73,6 +73,10 @@ macOS and Linux. Python 3.10+.
 > *"Which H100 instance is cheapest per GPU-hour across the four clouds?"* →
 > `compare_gpu_workload`
 
+> *"We send 2B input / 500M output tokens a month to an API. Would renting
+> 8×H100 and serving Llama ourselves be cheaper, and at what volume?"* →
+> `compare_llm_vs_selfhost`
+
 > *"My support agent averages 8 steps with a 2k system prompt and 3k of tool
 > definitions. What does 50,000 runs a month cost on Sonnet vs Haiku, and how
 > much does prompt caching save?"* → `estimate_agent_cost`
@@ -87,7 +91,7 @@ tool does not model, so the AI can tell you where the number stops being exact.
 
 ## Tools
 
-**27 tools**, grouped by job. Full descriptions and arguments:
+**28 tools**, grouped by job. Full descriptions and arguments:
 **[docs/TOOLS.md](docs/TOOLS.md)** (generated from the server, so it is always
 current).
 
@@ -98,7 +102,7 @@ current).
 | FinOps decisions | `assess_migration`, `optimize_commitment`, `compare_total_cost_of_ownership`, `find_egress_arbitrage`, `generate_decision_report` |
 | Spot, GPU, carbon | `compare_spot`, `compare_gpu_workload`, `compare_carbon_footprint` |
 | Price history | `get_price_history`, `list_tracked_skus`, `detect_price_anomalies`, `watch_workload` |
-| AI / LLM costs | `estimate_agent_cost`, `compare_token_pricing`, `lookup_extended_model_pricing`, `llm_price_changes` |
+| AI / LLM costs | `estimate_agent_cost`, `compare_llm_vs_selfhost`, `compare_token_pricing`, `lookup_extended_model_pricing`, `llm_price_changes` |
 | Export | `export_focus` |
 
 ### Example: `compare_workload` input

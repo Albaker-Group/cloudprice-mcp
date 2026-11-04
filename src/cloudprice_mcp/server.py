@@ -846,6 +846,69 @@ async def list_tools() -> list[Tool]:
         ),
         # --- v0.18.0 FOCUS 1.3 export ---
         Tool(
+            name="compare_llm_vs_selfhost",
+            description=(
+                "Pay per token or rent GPUs and serve the model yourself? Prices a "
+                "monthly token volume on an LLM API, then the GPU servers needed to "
+                "serve the same volume on AWS, Azure, GCP and OCI, and the break-even "
+                "volume. Needs the measured generation throughput of one server "
+                "(output tokens/second, e.g. from a vLLM benchmark): it decides the "
+                "answer and is never guessed. Use for: 'should we self-host Llama 3.3 "
+                "70B instead of paying Together', 'at what volume do H100s beat the "
+                "DeepSeek API', 'cheapest cloud to serve our open model'. Self-host "
+                "cost is GPU rental only; see honest_gaps."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "model": {
+                        "type": "string",
+                        "description": "API model ID to price, as in the LLM catalogue, e.g. 'deepseek/deepseek-chat', 'together_ai/meta-llama/Llama-3.3-70B-Instruct-Turbo'.",
+                    },
+                    "api_provider": {
+                        "type": "string",
+                        "description": "Host for the API price. Default: first-party.",
+                    },
+                    "monthly_input_tokens": {"type": "integer", "minimum": 0},
+                    "monthly_output_tokens": {"type": "integer", "minimum": 0},
+                    "gpu_type": {
+                        "type": "string",
+                        "description": "GPU to self-host on: T4, L4, A10, A10G, L40S, V100, A100, H100.",
+                    },
+                    "gpu_count": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "default": 1,
+                        "description": "GPUs per server.",
+                    },
+                    "output_tokens_per_second": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "description": "Measured aggregate generation throughput of ONE server of this size for this model, across concurrent requests.",
+                    },
+                    "utilization": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "maximum": 1,
+                        "default": 0.6,
+                        "description": "Share of each hour the server is busy. Real traffic is bursty; 0.4-0.7 is typical.",
+                    },
+                    "prefill_speedup": {
+                        "type": "number",
+                        "minimum": 1,
+                        "default": 10,
+                        "description": "How much faster input (prefill) is processed than output is generated.",
+                    },
+                    "targets": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": ["aws", "azure", "gcp", "oci"]},
+                    },
+                },
+                "required": ["model", "gpu_type", "output_tokens_per_second"],
+                "additionalProperties": False,
+            },
+        ),
+        Tool(
             name="estimate_agent_cost",
             description=(
                 "Estimate what one run of an AI agent costs, and a month of runs. "

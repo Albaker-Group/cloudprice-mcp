@@ -410,6 +410,33 @@ def _handle_lookup_extended_model_pricing(catalog, args):
     return _ok(result)
 
 
+def _handle_compare_llm_vs_selfhost(catalog, args):
+    from .finops.selfhost import compare_llm_vs_selfhost
+
+    missing = [
+        k for k in ("model", "gpu_type", "output_tokens_per_second") if args.get(k) in (None, "")
+    ]
+    if missing:
+        return _err(f"compare_llm_vs_selfhost: required: {', '.join(missing)}")
+    try:
+        result = compare_llm_vs_selfhost(
+            catalog,
+            model=args["model"],
+            monthly_input_tokens=int(args.get("monthly_input_tokens", 0)),
+            monthly_output_tokens=int(args.get("monthly_output_tokens", 0)),
+            gpu_type=args["gpu_type"],
+            gpu_count=int(args.get("gpu_count", 1)),
+            output_tokens_per_second=float(args["output_tokens_per_second"]),
+            utilization=float(args.get("utilization", 0.6)),
+            prefill_speedup=float(args.get("prefill_speedup", 10.0)),
+            api_provider=args.get("api_provider"),
+            targets=args.get("targets"),
+        )
+    except ValueError as e:
+        return _err(f"compare_llm_vs_selfhost: {e}")
+    return _ok(result)
+
+
 def _handle_estimate_agent_cost(catalog, args):
     from .finops.agent_cost import estimate_agent_cost
 
@@ -577,6 +604,7 @@ _TOOL_HANDLERS = {
     "lookup_extended_model_pricing": _handle_lookup_extended_model_pricing,
     "llm_price_changes": _handle_llm_price_changes,
     "estimate_agent_cost": _handle_estimate_agent_cost,
+    "compare_llm_vs_selfhost": _handle_compare_llm_vs_selfhost,
     "export_focus": _handle_export_focus,
     # v0.13.0 anomaly detection
     "detect_price_anomalies": _handle_detect_price_anomalies,
