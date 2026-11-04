@@ -128,3 +128,24 @@ def test_local_only_gate(bill):
     }
     r = dispatch.call("analyze_bill", {"file_path": str(bill)}, allow_local=True)
     assert r["kind"] == "bill_analysis"
+
+
+def test_unused_commitment_is_not_counted_as_covered_usage(tmp_path):
+    header = [*HEADER, "CommitmentDiscountStatus"]
+    path = tmp_path / "unused.csv"
+    with path.open("w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(header)
+        w.writerow(["USD", "2026-10-01", "Usage", "AWS", "Amazon EC2", "Compute",
+                    "us-east-1", 100, 60, 60, "sp-1", "Used"])  # fmt: skip
+        w.writerow(["USD", "2026-10-01", "Usage", "AWS", "Amazon EC2", "Compute",
+                    "us-east-1", 40, 40, 40, "sp-1", "Unused"])  # fmt: skip
+        w.writerow(["USD", "2026-10-01", "Usage", "AWS", "Amazon EC2", "Compute",
+                    "us-east-1", 60, 60, 60, "", ""])  # fmt: skip
+    cov = analyze_bill(str(path))["commitment_coverage"]
+    # Idle commitment hours are waste, not usage: 60 covered of 120 used.
+    assert cov == {
+        "usage_covered_by_commitments": 60.0,
+        "usage_on_demand": 60.0,
+        "coverage_pct": 50.0,
+    }

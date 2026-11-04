@@ -427,6 +427,57 @@ def _handle_analyze_bill(catalog, args):
         return _err(f"analyze_bill: {e}")
 
 
+def _handle_find_commitment_gaps(catalog, args):
+    from .finops.bill_insights import find_commitment_gaps
+    from .finops.focus_ingest import BillError
+
+    if not args.get("file_path"):
+        return _err("find_commitment_gaps: file_path is required")
+    try:
+        return _ok(find_commitment_gaps(args["file_path"]))
+    except BillError as e:
+        return _err(f"find_commitment_gaps: {e}")
+
+
+def _handle_detect_bill_anomalies(catalog, args):
+    from .finops.bill_insights import detect_bill_anomalies
+    from .finops.focus_ingest import BillError
+
+    if not args.get("file_path"):
+        return _err("detect_bill_anomalies: file_path is required")
+    try:
+        return _ok(
+            detect_bill_anomalies(
+                args["file_path"],
+                group_by=args.get("group_by", "ServiceName"),
+                sensitivity=args.get("sensitivity", "moderate"),
+                min_impact=float(args.get("min_impact", 10.0)),
+                limit=int(args.get("limit", 10)),
+            )
+        )
+    except BillError as e:
+        return _err(f"detect_bill_anomalies: {e}")
+
+
+def _handle_analyze_cost_allocation(catalog, args):
+    from .finops.bill_insights import analyze_cost_allocation
+    from .finops.focus_ingest import BillError
+
+    if not args.get("file_path"):
+        return _err("analyze_cost_allocation: file_path is required")
+    try:
+        return _ok(
+            analyze_cost_allocation(
+                args["file_path"],
+                required_tags=args.get("required_tags"),
+                tag_key=args.get("tag_key"),
+                top_n=int(args.get("top_n", 10)),
+            )
+        )
+    except BillError as e:
+        return _err(f"analyze_cost_allocation: {e}")
+
+
 def _handle_compare_llm_vs_selfhost(catalog, args):
     from .finops.selfhost import compare_llm_vs_selfhost
 
@@ -624,6 +675,9 @@ _TOOL_HANDLERS = {
     "estimate_agent_cost": _handle_estimate_agent_cost,
     "compare_llm_vs_selfhost": _handle_compare_llm_vs_selfhost,
     "analyze_bill": _handle_analyze_bill,
+    "find_commitment_gaps": _handle_find_commitment_gaps,
+    "detect_bill_anomalies": _handle_detect_bill_anomalies,
+    "analyze_cost_allocation": _handle_analyze_cost_allocation,
     "export_focus": _handle_export_focus,
     # v0.13.0 anomaly detection
     "detect_price_anomalies": _handle_detect_price_anomalies,
@@ -635,7 +689,9 @@ _TOOL_HANDLERS = {
 # Tools that read files from the machine they run on. Safe on a user's own
 # machine (the stdio server); never on a hosted front end, where "read this
 # path" would read the server's disk. Refused unless the caller opts in.
-LOCAL_ONLY_TOOLS = frozenset({"analyze_bill"})
+LOCAL_ONLY_TOOLS = frozenset(
+    {"analyze_bill", "find_commitment_gaps", "detect_bill_anomalies", "analyze_cost_allocation"}
+)
 
 
 def call(name: str, arguments: dict[str, Any] | None = None, *, allow_local: bool = False) -> Any:

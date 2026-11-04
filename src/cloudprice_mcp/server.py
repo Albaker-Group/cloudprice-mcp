@@ -885,6 +885,110 @@ async def list_tools() -> list[Tool]:
             },
         ),
         Tool(
+            name="find_commitment_gaps",
+            description=(
+                "FinOps rate optimisation on the user's actual bill (a local FOCUS 1.x CSV "
+                "export; nothing is sent anywhere). Returns commitment coverage of "
+                "eligible compute and database usage, utilisation of existing Savings "
+                "Plans / RIs / CUDs (and what unused commitment cost), and per cloud the "
+                "steady on-demand spend that could be committed, with the $/hour "
+                "commitment and annual saving for 1-year and 3-year no-upfront terms. "
+                "Use for: 'are we under-committed', 'how much would a Savings Plan "
+                "save us', 'are our reservations being used'."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "Local path to a FOCUS export, .csv or .csv.gz.",
+                    },
+                },
+                "required": ["file_path"],
+                "additionalProperties": False,
+            },
+        ),
+        Tool(
+            name="detect_bill_anomalies",
+            description=(
+                "FinOps anomaly management on the user's actual bill (a local FOCUS 1.x "
+                "CSV export; nothing is sent anywhere). Compares each service's daily (or "
+                "monthly) cost with its own recent normal and reports spikes, drops and "
+                "new spend as events, ranked by excess cost, flagging events still "
+                "going in the latest period. Use for: 'what blew up our bill', 'did "
+                "anything unusual happen last week', 'what new spend appeared'."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "Local path to a FOCUS export, .csv or .csv.gz.",
+                    },
+                    "group_by": {
+                        "type": "string",
+                        "enum": [
+                            "ServiceName",
+                            "ServiceCategory",
+                            "ProviderName",
+                            "RegionId",
+                            "SkuId",
+                            "ResourceId",
+                        ],
+                        "default": "ServiceName",
+                    },
+                    "sensitivity": {
+                        "type": "string",
+                        "enum": ["strict", "moderate", "permissive"],
+                        "default": "moderate",
+                    },
+                    "min_impact": {
+                        "type": "number",
+                        "minimum": 0,
+                        "default": 10,
+                        "description": "Ignore moves smaller than this, in billing currency.",
+                    },
+                    "limit": {"type": "integer", "minimum": 1, "default": 10},
+                },
+                "required": ["file_path"],
+                "additionalProperties": False,
+            },
+        ),
+        Tool(
+            name="analyze_cost_allocation",
+            description=(
+                "FinOps allocation on the user's actual bill (a local FOCUS 1.x CSV "
+                "export; nothing is sent anywhere). Measures how much allocatable cost "
+                "carries the tags used for showback / chargeback, coverage per required "
+                "tag, cost by the values of one tag (e.g. team), cost by sub-account, "
+                "and the biggest untagged services and resources. Use for: 'how much of "
+                "our spend is tagged', 'cost per team', 'what is missing a cost-center "
+                "tag'."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "Local path to a FOCUS export, .csv or .csv.gz.",
+                    },
+                    "required_tags": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Tag keys every resource should carry, e.g. "
+                        "['team', 'env']. Omit to count any tag as tagged.",
+                    },
+                    "tag_key": {
+                        "type": "string",
+                        "description": "Break cost down by the values of this tag.",
+                    },
+                    "top_n": {"type": "integer", "minimum": 1, "default": 10},
+                },
+                "required": ["file_path"],
+                "additionalProperties": False,
+            },
+        ),
+        Tool(
             name="compare_llm_vs_selfhost",
             description=(
                 "Pay per token or rent GPUs and serve the model yourself? Prices a "
