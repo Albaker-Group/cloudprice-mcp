@@ -1,12 +1,12 @@
 {
-  "as_of": "2026-11-01",
+  "as_of": "2026-11-04",
   "source": "litellm",
   "source_url": "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json",
   "license": "MIT (from BerriAI/litellm)",
   "currency": "USD",
   "schema_version": 1,
   "notes": "Auto-ingested from LiteLLM's public price feed. Models filtered to chat/completion/responses modes. Prices normalized from per-token to per-1M tokens. Provider names normalized where LiteLLM uses verbose IDs (e.g., 'vertex_ai-anthropic_models' -> 'vertex'). For curated, vetted pricing on the most-popular 19 models see token_prices.json + the compare_token_pricing tool.",
-  "model_count": 3237,
+  "model_count": 3209,
   "models": [
     {
       "litellm_id": "abliteration/abliterated-model",
@@ -2321,117 +2321,6 @@
       "supports_prompt_caching": true
     },
     {
-      "litellm_id": "azure_ai/Meta-Llama-3-70B-Instruct",
-      "provider": "azure_ai",
-      "provider_raw": "azure_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 1.1,
-      "output_per_1m_usd": 0.37,
-      "context_window_tokens": 8192,
-      "max_output_tokens": 2048
-    },
-    {
-      "litellm_id": "azure_ai/Meta-Llama-3.1-70B-Instruct",
-      "provider": "azure_ai",
-      "provider_raw": "azure_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 2.68,
-      "output_per_1m_usd": 3.54,
-      "context_window_tokens": 128000,
-      "max_output_tokens": 2048
-    },
-    {
-      "litellm_id": "azure_ai/Phi-3-medium-128k-instruct",
-      "provider": "azure_ai",
-      "provider_raw": "azure_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 0.17,
-      "output_per_1m_usd": 0.68,
-      "context_window_tokens": 128000,
-      "max_output_tokens": 4096
-    },
-    {
-      "litellm_id": "azure_ai/Phi-3-medium-4k-instruct",
-      "provider": "azure_ai",
-      "provider_raw": "azure_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 0.17,
-      "output_per_1m_usd": 0.68,
-      "context_window_tokens": 4096,
-      "max_output_tokens": 4096
-    },
-    {
-      "litellm_id": "azure_ai/Phi-3-mini-128k-instruct",
-      "provider": "azure_ai",
-      "provider_raw": "azure_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 0.13,
-      "output_per_1m_usd": 0.52,
-      "context_window_tokens": 128000,
-      "max_output_tokens": 4096
-    },
-    {
-      "litellm_id": "azure_ai/Phi-3-mini-4k-instruct",
-      "provider": "azure_ai",
-      "provider_raw": "azure_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 0.13,
-      "output_per_1m_usd": 0.52,
-      "context_window_tokens": 4096,
-      "max_output_tokens": 4096
-    },
-    {
-      "litellm_id": "azure_ai/Phi-3-small-128k-instruct",
-      "provider": "azure_ai",
-      "provider_raw": "azure_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 0.15,
-      "output_per_1m_usd": 0.6,
-      "context_window_tokens": 128000,
-      "max_output_tokens": 4096
-    },
-    {
-      "litellm_id": "azure_ai/Phi-3-small-8k-instruct",
-      "provider": "azure_ai",
-      "provider_raw": "azure_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 0.15,
-      "output_per_1m_usd": 0.6,
-      "context_window_tokens": 8192,
-      "max_output_tokens": 4096
-    },
-    {
-      "litellm_id": "azure_ai/Phi-3.5-MoE-instruct",
-      "provider": "azure_ai",
-      "provider_raw": "azure_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 0.16,
-      "output_per_1m_usd": 0.64,
-      "context_window_tokens": 128000,
-      "max_output_tokens": 4096
-    },
-    {
-      "litellm_id": "azure_ai/Phi-3.5-mini-instruct",
-      "provider": "azure_ai",
-      "provider_raw": "azure_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 0.13,
-      "output_per_1m_usd": 0.52,
-      "context_window_tokens": 128000,
-      "max_output_tokens": 4096
-    },
-    {
-      "litellm_id": "azure_ai/Phi-3.5-vision-instruct",
-      "provider": "azure_ai",
-      "provider_raw": "azure_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 0.13,
-      "output_per_1m_usd": 0.52,
-      "context_window_tokens": 128000,
-      "max_output_tokens": 4096,
-      "supports_vision": true
-    },
-    {
       "litellm_id": "azure_ai/Phi-4",
       "provider": "azure_ai",
       "provider_raw": "azure_ai",
@@ -2544,6 +2433,22 @@
       "output_per_1m_usd": 0.5,
       "cache_read_per_1m_usd": 0.01,
       "cache_write_per_1m_usd": 0.125,
+      "context_window_tokens": 1000000,
+      "max_output_tokens": 128000,
+      "supports_vision": true,
+      "supports_function_calling": true,
+      "supports_prompt_caching": true,
+      "supports_response_schema": true
+    },
+    {
+      "litellm_id": "azure_ai/claude-mythos-5-1",
+      "provider": "azure_ai",
+      "provider_raw": "azure_ai",
+      "mode": "chat",
+      "input_per_1m_usd": 10.0,
+      "output_per_1m_usd": 50.0,
+      "cache_read_per_1m_usd": 0.25,
+      "cache_write_per_1m_usd": 12.5,
       "context_window_tokens": 1000000,
       "max_output_tokens": 128000,
       "supports_vision": true,
@@ -2760,16 +2665,6 @@
       "mode": "chat",
       "input_per_1m_usd": 1.35,
       "output_per_1m_usd": 5.4
-    },
-    {
-      "litellm_id": "azure_ai/deepseek-v3",
-      "provider": "azure_ai",
-      "provider_raw": "azure_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 1.14,
-      "output_per_1m_usd": 4.56,
-      "context_window_tokens": 128000,
-      "max_output_tokens": 8192
     },
     {
       "litellm_id": "azure_ai/deepseek-v3-0324",
@@ -3286,16 +3181,6 @@
       "max_output_tokens": 8192
     },
     {
-      "litellm_id": "azure_ai/jamba-instruct",
-      "provider": "azure_ai",
-      "provider_raw": "azure_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 0.5,
-      "output_per_1m_usd": 0.7,
-      "context_window_tokens": 70000,
-      "max_output_tokens": 4096
-    },
-    {
       "litellm_id": "azure_ai/kimi-k2-thinking",
       "provider": "azure_ai",
       "provider_raw": "azure_ai",
@@ -3360,28 +3245,6 @@
       "supports_function_calling": true
     },
     {
-      "litellm_id": "azure_ai/mistral-large",
-      "provider": "azure_ai",
-      "provider_raw": "azure_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 4.0,
-      "output_per_1m_usd": 12.0,
-      "context_window_tokens": 32000,
-      "max_output_tokens": 8191,
-      "supports_function_calling": true
-    },
-    {
-      "litellm_id": "azure_ai/mistral-large-2407",
-      "provider": "azure_ai",
-      "provider_raw": "azure_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 2.0,
-      "output_per_1m_usd": 6.0,
-      "context_window_tokens": 128000,
-      "max_output_tokens": 4096,
-      "supports_function_calling": true
-    },
-    {
       "litellm_id": "azure_ai/mistral-large-3",
       "provider": "azure_ai",
       "provider_raw": "azure_ai",
@@ -3436,17 +3299,6 @@
       "output_per_1m_usd": 0.15,
       "context_window_tokens": 131072,
       "max_output_tokens": 4096,
-      "supports_function_calling": true
-    },
-    {
-      "litellm_id": "azure_ai/mistral-small",
-      "provider": "azure_ai",
-      "provider_raw": "azure_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 1.0,
-      "output_per_1m_usd": 3.0,
-      "context_window_tokens": 32000,
-      "max_output_tokens": 8191,
       "supports_function_calling": true
     },
     {
@@ -3542,17 +3394,6 @@
       "supports_function_calling": true,
       "supports_prompt_caching": true,
       "supports_response_schema": true
-    },
-    {
-      "litellm_id": "azure/command-r-plus",
-      "provider": "azure_openai",
-      "provider_raw": "azure",
-      "mode": "chat",
-      "input_per_1m_usd": 3.0,
-      "output_per_1m_usd": 15.0,
-      "context_window_tokens": 128000,
-      "max_output_tokens": 4096,
-      "supports_function_calling": true
     },
     {
       "litellm_id": "azure/computer-use-preview",
@@ -4212,18 +4053,6 @@
       "supports_prompt_caching": true
     },
     {
-      "litellm_id": "azure/eu/o1-preview",
-      "provider": "azure_openai",
-      "provider_raw": "azure",
-      "mode": "chat",
-      "input_per_1m_usd": 16.5,
-      "output_per_1m_usd": 66.0,
-      "cache_read_per_1m_usd": 8.25,
-      "context_window_tokens": 128000,
-      "max_output_tokens": 32768,
-      "supports_prompt_caching": true
-    },
-    {
       "litellm_id": "azure/eu/o3",
       "provider": "azure_openai",
       "provider_raw": "azure",
@@ -4440,38 +4269,6 @@
       "supports_function_calling": true
     },
     {
-      "litellm_id": "azure/gpt-35-turbo-16k",
-      "provider": "azure_openai",
-      "provider_raw": "azure",
-      "mode": "chat",
-      "input_per_1m_usd": 3.0,
-      "output_per_1m_usd": 4.0,
-      "context_window_tokens": 16385,
-      "max_output_tokens": 4096
-    },
-    {
-      "litellm_id": "azure/gpt-35-turbo-16k-0613",
-      "provider": "azure_openai",
-      "provider_raw": "azure",
-      "mode": "chat",
-      "input_per_1m_usd": 3.0,
-      "output_per_1m_usd": 4.0,
-      "context_window_tokens": 16385,
-      "max_output_tokens": 4096,
-      "supports_function_calling": true
-    },
-    {
-      "litellm_id": "azure/gpt-4",
-      "provider": "azure_openai",
-      "provider_raw": "azure",
-      "mode": "chat",
-      "input_per_1m_usd": 30.0,
-      "output_per_1m_usd": 60.0,
-      "context_window_tokens": 8192,
-      "max_output_tokens": 4096,
-      "supports_function_calling": true
-    },
-    {
       "litellm_id": "azure/gpt-4-0125-preview",
       "provider": "azure_openai",
       "provider_raw": "azure",
@@ -4479,17 +4276,6 @@
       "input_per_1m_usd": 10.0,
       "output_per_1m_usd": 30.0,
       "context_window_tokens": 128000,
-      "max_output_tokens": 4096,
-      "supports_function_calling": true
-    },
-    {
-      "litellm_id": "azure/gpt-4-0613",
-      "provider": "azure_openai",
-      "provider_raw": "azure",
-      "mode": "chat",
-      "input_per_1m_usd": 30.0,
-      "output_per_1m_usd": 60.0,
-      "context_window_tokens": 8192,
       "max_output_tokens": 4096,
       "supports_function_calling": true
     },
@@ -4503,26 +4289,6 @@
       "context_window_tokens": 128000,
       "max_output_tokens": 4096,
       "supports_function_calling": true
-    },
-    {
-      "litellm_id": "azure/gpt-4-32k",
-      "provider": "azure_openai",
-      "provider_raw": "azure",
-      "mode": "chat",
-      "input_per_1m_usd": 60.0,
-      "output_per_1m_usd": 120.0,
-      "context_window_tokens": 32768,
-      "max_output_tokens": 4096
-    },
-    {
-      "litellm_id": "azure/gpt-4-32k-0613",
-      "provider": "azure_openai",
-      "provider_raw": "azure",
-      "mode": "chat",
-      "input_per_1m_usd": 60.0,
-      "output_per_1m_usd": 120.0,
-      "context_window_tokens": 32768,
-      "max_output_tokens": 4096
     },
     {
       "litellm_id": "azure/gpt-4-turbo",
@@ -4643,21 +4409,6 @@
       "cache_read_per_1m_usd": 0.025,
       "context_window_tokens": 1047576,
       "max_output_tokens": 32768,
-      "supports_vision": true,
-      "supports_function_calling": true,
-      "supports_prompt_caching": true,
-      "supports_response_schema": true
-    },
-    {
-      "litellm_id": "azure/gpt-4.5-preview",
-      "provider": "azure_openai",
-      "provider_raw": "azure",
-      "mode": "chat",
-      "input_per_1m_usd": 75.0,
-      "output_per_1m_usd": 150.0,
-      "cache_read_per_1m_usd": 37.5,
-      "context_window_tokens": 128000,
-      "max_output_tokens": 16384,
       "supports_vision": true,
       "supports_function_calling": true,
       "supports_prompt_caching": true,
@@ -6614,18 +6365,6 @@
       "supports_prompt_caching": true
     },
     {
-      "litellm_id": "azure/us/o1-preview",
-      "provider": "azure_openai",
-      "provider_raw": "azure",
-      "mode": "chat",
-      "input_per_1m_usd": 16.5,
-      "output_per_1m_usd": 66.0,
-      "cache_read_per_1m_usd": 8.25,
-      "context_window_tokens": 128000,
-      "max_output_tokens": 32768,
-      "supports_prompt_caching": true
-    },
-    {
       "litellm_id": "azure/us/o3",
       "provider": "azure_openai",
       "provider_raw": "azure",
@@ -8277,7 +8016,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.74,
       "output_per_1m_usd": 2.22,
-      "context_window_tokens": 163840,
+      "context_window_tokens": 156000,
       "max_output_tokens": 8000,
       "supports_function_calling": true,
       "supports_response_schema": true
@@ -8381,7 +8120,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.74,
       "output_per_1m_usd": 2.22,
-      "context_window_tokens": 163840,
+      "context_window_tokens": 156000,
       "max_output_tokens": 8000,
       "supports_function_calling": true,
       "supports_response_schema": true
@@ -8529,7 +8268,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.74,
       "output_per_1m_usd": 2.22,
-      "context_window_tokens": 163840,
+      "context_window_tokens": 156000,
       "max_output_tokens": 8000,
       "supports_function_calling": true,
       "supports_response_schema": true
@@ -8900,7 +8639,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.74,
       "output_per_1m_usd": 2.22,
-      "context_window_tokens": 163840,
+      "context_window_tokens": 156000,
       "max_output_tokens": 8000,
       "supports_function_calling": true,
       "supports_response_schema": true
@@ -9223,7 +8962,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.74,
       "output_per_1m_usd": 2.22,
-      "context_window_tokens": 163840,
+      "context_window_tokens": 156000,
       "max_output_tokens": 8000,
       "supports_function_calling": true,
       "supports_response_schema": true
@@ -9357,7 +9096,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.62,
       "output_per_1m_usd": 1.85,
-      "context_window_tokens": 163840,
+      "context_window_tokens": 156000,
       "max_output_tokens": 8000,
       "supports_function_calling": true,
       "supports_response_schema": true
@@ -9492,7 +9231,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.62,
       "output_per_1m_usd": 1.85,
-      "context_window_tokens": 163840,
+      "context_window_tokens": 156000,
       "max_output_tokens": 8000,
       "supports_function_calling": true,
       "supports_response_schema": true
@@ -10239,7 +9978,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.62,
       "output_per_1m_usd": 1.85,
-      "context_window_tokens": 163840,
+      "context_window_tokens": 156000,
       "max_output_tokens": 8000,
       "supports_function_calling": true,
       "supports_response_schema": true
@@ -10426,7 +10165,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.62,
       "output_per_1m_usd": 1.85,
-      "context_window_tokens": 164000,
+      "context_window_tokens": 156000,
       "max_output_tokens": 8000,
       "supports_function_calling": true,
       "supports_response_schema": true
@@ -14110,17 +13849,6 @@
       "supports_function_calling": true
     },
     {
-      "litellm_id": "cerebras/llama3.1-70b",
-      "provider": "cerebras",
-      "provider_raw": "cerebras",
-      "mode": "chat",
-      "input_per_1m_usd": 0.6,
-      "output_per_1m_usd": 0.6,
-      "context_window_tokens": 128000,
-      "max_output_tokens": 128000,
-      "supports_function_calling": true
-    },
-    {
       "litellm_id": "cerebras/llama3.1-8b",
       "provider": "cerebras",
       "provider_raw": "cerebras",
@@ -16954,7 +16682,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.5,
       "output_per_1m_usd": 2.15,
-      "cache_read_per_1m_usd": 0.4,
+      "cache_read_per_1m_usd": 0.35,
       "context_window_tokens": 163840,
       "max_output_tokens": 163840,
       "supports_function_calling": true
@@ -17033,7 +16761,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.25,
       "output_per_1m_usd": 0.95,
-      "cache_read_per_1m_usd": 0.216,
+      "cache_read_per_1m_usd": 0.13,
       "context_window_tokens": 163840,
       "max_output_tokens": 163840,
       "supports_function_calling": true
@@ -17083,9 +16811,9 @@
       "provider": "deepinfra",
       "provider_raw": "deepinfra",
       "mode": "chat",
-      "input_per_1m_usd": 0.08,
+      "input_per_1m_usd": 0.06,
       "output_per_1m_usd": 0.18,
-      "cache_read_per_1m_usd": 0.016,
+      "cache_read_per_1m_usd": 0.015,
       "context_window_tokens": 1048576,
       "max_output_tokens": 1048576,
       "supports_function_calling": true,
@@ -17279,8 +17007,8 @@
       "provider": "deepinfra",
       "provider_raw": "deepinfra",
       "mode": "chat",
-      "input_per_1m_usd": 0.13,
-      "output_per_1m_usd": 0.38,
+      "input_per_1m_usd": 0.2,
+      "output_per_1m_usd": 0.4,
       "context_window_tokens": 262144,
       "max_output_tokens": 262144,
       "supports_vision": true,
@@ -22973,16 +22701,6 @@
       "max_output_tokens": 100000
     },
     {
-      "litellm_id": "groq/llama-guard-3-8b",
-      "provider": "groq",
-      "provider_raw": "groq",
-      "mode": "chat",
-      "input_per_1m_usd": 0.2,
-      "output_per_1m_usd": 0.2,
-      "context_window_tokens": 8192,
-      "max_output_tokens": 8192
-    },
-    {
       "litellm_id": "groq/meta-llama/llama-prompt-guard-2-22m",
       "provider": "groq",
       "provider_raw": "groq",
@@ -25918,9 +25636,9 @@
       "provider": "mistral",
       "provider_raw": "mistral",
       "mode": "chat",
-      "input_per_1m_usd": 1.36,
-      "output_per_1m_usd": 4.18,
-      "cache_read_per_1m_usd": 0.14,
+      "input_per_1m_usd": 0.7,
+      "output_per_1m_usd": 2.1,
+      "cache_read_per_1m_usd": 0.07,
       "context_window_tokens": 1048576,
       "max_output_tokens": 1048576,
       "supports_vision": true,
@@ -25933,9 +25651,9 @@
       "provider": "mistral",
       "provider_raw": "mistral",
       "mode": "chat",
-      "input_per_1m_usd": 1.36,
-      "output_per_1m_usd": 4.18,
-      "cache_read_per_1m_usd": 0.14,
+      "input_per_1m_usd": 0.7,
+      "output_per_1m_usd": 2.1,
+      "cache_read_per_1m_usd": 0.07,
       "context_window_tokens": 1048576,
       "max_output_tokens": 1048576,
       "supports_vision": true,
@@ -26577,8 +26295,21 @@
       "mode": "chat",
       "input_per_1m_usd": 0.3,
       "output_per_1m_usd": 1.2,
+      "cache_read_per_1m_usd": 0.06,
       "context_window_tokens": 1048576,
       "max_output_tokens": 1048576,
+      "supports_vision": true,
+      "supports_function_calling": true
+    },
+    {
+      "litellm_id": "nebius/MiniMaxAI/MiniMax-M3.1-Flash",
+      "provider": "nebius",
+      "provider_raw": "nebius",
+      "mode": "chat",
+      "input_per_1m_usd": 0.15,
+      "output_per_1m_usd": 0.6,
+      "cache_read_per_1m_usd": 0.015,
+      "context_window_tokens": 1048576,
       "supports_vision": true,
       "supports_function_calling": true
     },
@@ -26600,6 +26331,7 @@
       "mode": "chat",
       "input_per_1m_usd": 1.0,
       "output_per_1m_usd": 3.0,
+      "cache_read_per_1m_usd": 0.2,
       "context_window_tokens": 131072,
       "max_output_tokens": 131072,
       "supports_function_calling": true
@@ -26723,6 +26455,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.2,
       "output_per_1m_usd": 0.6,
+      "cache_read_per_1m_usd": 0.05,
       "context_window_tokens": 262144,
       "max_output_tokens": 262144,
       "supports_function_calling": true
@@ -26745,6 +26478,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.1,
       "output_per_1m_usd": 0.3,
+      "cache_read_per_1m_usd": 0.1,
       "context_window_tokens": 262144,
       "max_output_tokens": 262144,
       "supports_function_calling": true
@@ -26789,6 +26523,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.6,
       "output_per_1m_usd": 3.6,
+      "cache_read_per_1m_usd": 0.12,
       "context_window_tokens": 262144,
       "max_output_tokens": 262144,
       "supports_function_calling": true
@@ -26800,6 +26535,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.45,
       "output_per_1m_usd": 3.0,
+      "cache_read_per_1m_usd": 0.1,
       "context_window_tokens": 262144,
       "supports_function_calling": true
     },
@@ -26876,7 +26612,8 @@
       "mode": "chat",
       "input_per_1m_usd": 0.14,
       "output_per_1m_usd": 0.28,
-      "context_window_tokens": 1024000,
+      "cache_read_per_1m_usd": 0.01,
+      "context_window_tokens": 1048576,
       "max_output_tokens": 1024000,
       "supports_function_calling": true
     },
@@ -26887,6 +26624,7 @@
       "mode": "chat",
       "input_per_1m_usd": 1.75,
       "output_per_1m_usd": 3.5,
+      "cache_read_per_1m_usd": 0.14,
       "context_window_tokens": 1048576,
       "max_output_tokens": 1048576,
       "supports_function_calling": true
@@ -26898,7 +26636,8 @@
       "mode": "chat",
       "input_per_1m_usd": 1.32,
       "output_per_1m_usd": 3.96,
-      "context_window_tokens": 979000,
+      "cache_read_per_1m_usd": 0.04,
+      "context_window_tokens": 1048576,
       "supports_function_calling": true
     },
     {
@@ -26908,8 +26647,21 @@
       "mode": "chat",
       "input_per_1m_usd": 0.3,
       "output_per_1m_usd": 1.2,
-      "context_window_tokens": 1048000,
+      "cache_read_per_1m_usd": 0.01,
+      "context_window_tokens": 1048576,
       "max_output_tokens": 384000,
+      "supports_vision": true,
+      "supports_function_calling": true
+    },
+    {
+      "litellm_id": "nebius/deepseek-ai/DeepSeek-V4.1-Flash-1017",
+      "provider": "nebius",
+      "provider_raw": "nebius",
+      "mode": "chat",
+      "input_per_1m_usd": 0.3,
+      "output_per_1m_usd": 1.2,
+      "cache_read_per_1m_usd": 0.006,
+      "context_window_tokens": 1048576,
       "supports_vision": true,
       "supports_function_calling": true
     },
@@ -26920,6 +26672,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.1,
       "output_per_1m_usd": 0.3,
+      "cache_read_per_1m_usd": 0.04,
       "context_window_tokens": 110000,
       "max_output_tokens": 110000,
       "supports_vision": true,
@@ -26980,6 +26733,18 @@
       "supports_function_calling": true
     },
     {
+      "litellm_id": "nebius/meta-models/muse-spark-open",
+      "provider": "nebius",
+      "provider_raw": "nebius",
+      "mode": "chat",
+      "input_per_1m_usd": 1.25,
+      "output_per_1m_usd": 4.25,
+      "cache_read_per_1m_usd": 0.15,
+      "context_window_tokens": 1048576,
+      "supports_vision": true,
+      "supports_function_calling": true
+    },
+    {
       "litellm_id": "nebius/mistralai/Mistral-Nemo-Instruct-2407",
       "provider": "nebius",
       "provider_raw": "nebius",
@@ -26997,6 +26762,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.95,
       "output_per_1m_usd": 4.0,
+      "cache_read_per_1m_usd": 0.16,
       "context_window_tokens": 262144,
       "max_output_tokens": 262144,
       "supports_vision": true,
@@ -27009,6 +26775,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.95,
       "output_per_1m_usd": 4.0,
+      "cache_read_per_1m_usd": 0.15,
       "context_window_tokens": 262144,
       "max_output_tokens": 262144,
       "supports_vision": true,
@@ -27021,7 +26788,8 @@
       "mode": "chat",
       "input_per_1m_usd": 3.0,
       "output_per_1m_usd": 15.0,
-      "context_window_tokens": 1024000,
+      "cache_read_per_1m_usd": 0.3,
+      "context_window_tokens": 1048576,
       "max_output_tokens": 1024000,
       "supports_vision": true,
       "supports_function_calling": true
@@ -27077,6 +26845,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.06,
       "output_per_1m_usd": 0.24,
+      "cache_read_per_1m_usd": 0.012,
       "context_window_tokens": 262144,
       "max_output_tokens": 262144,
       "supports_function_calling": true
@@ -27100,8 +26869,21 @@
       "mode": "chat",
       "input_per_1m_usd": 1.0,
       "output_per_1m_usd": 3.0,
+      "cache_read_per_1m_usd": 0.12,
       "context_window_tokens": 1048576,
       "max_output_tokens": 1048576,
+      "supports_function_calling": true
+    },
+    {
+      "litellm_id": "nebius/nvidia/Nemotron-3.5-Super-VL",
+      "provider": "nebius",
+      "provider_raw": "nebius",
+      "mode": "chat",
+      "input_per_1m_usd": 0.3,
+      "output_per_1m_usd": 0.9,
+      "cache_read_per_1m_usd": 0.06,
+      "context_window_tokens": 1048576,
+      "supports_vision": true,
       "supports_function_calling": true
     },
     {
@@ -27111,6 +26893,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.06,
       "output_per_1m_usd": 0.24,
+      "cache_read_per_1m_usd": 0.03,
       "context_window_tokens": 1048576,
       "max_output_tokens": 1048576,
       "supports_function_calling": true
@@ -27122,6 +26905,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.3,
       "output_per_1m_usd": 0.9,
+      "cache_read_per_1m_usd": 0.06,
       "context_window_tokens": 262144,
       "max_output_tokens": 262144,
       "supports_function_calling": true
@@ -27133,6 +26917,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.15,
       "output_per_1m_usd": 0.6,
+      "cache_read_per_1m_usd": 0.1,
       "context_window_tokens": 131072,
       "max_output_tokens": 131072,
       "supports_function_calling": true
@@ -27144,6 +26929,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.658,
       "output_per_1m_usd": 1.11,
+      "cache_read_per_1m_usd": 0.13,
       "context_window_tokens": 32000,
       "max_output_tokens": 32000,
       "supports_vision": true
@@ -27155,6 +26941,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.25,
       "output_per_1m_usd": 1.0,
+      "cache_read_per_1m_usd": 0.05,
       "context_window_tokens": 1048576,
       "max_output_tokens": 1048576,
       "supports_function_calling": true
@@ -27166,6 +26953,7 @@
       "mode": "chat",
       "input_per_1m_usd": 1.4,
       "output_per_1m_usd": 4.4,
+      "cache_read_per_1m_usd": 0.26,
       "context_window_tokens": 202752,
       "max_output_tokens": 202752,
       "supports_function_calling": true
@@ -27177,6 +26965,7 @@
       "mode": "chat",
       "input_per_1m_usd": 1.4,
       "output_per_1m_usd": 4.4,
+      "cache_read_per_1m_usd": 0.14,
       "context_window_tokens": 1048576,
       "max_output_tokens": 1048576,
       "supports_function_calling": true
@@ -27188,7 +26977,8 @@
       "mode": "chat",
       "input_per_1m_usd": 1.4,
       "output_per_1m_usd": 4.4,
-      "context_window_tokens": 1024000,
+      "cache_read_per_1m_usd": 0.26,
+      "context_window_tokens": 1048576,
       "max_output_tokens": 1024000,
       "supports_function_calling": true
     },
@@ -27199,7 +26989,8 @@
       "mode": "chat",
       "input_per_1m_usd": 0.15,
       "output_per_1m_usd": 0.5,
-      "context_window_tokens": 1024000,
+      "cache_read_per_1m_usd": 0.03,
+      "context_window_tokens": 1048576,
       "max_output_tokens": 1024000,
       "supports_vision": true,
       "supports_function_calling": true
@@ -27599,7 +27390,7 @@
       "mode": "chat",
       "input_per_1m_usd": 1.32,
       "output_per_1m_usd": 3.96,
-      "cache_read_per_1m_usd": 0.132,
+      "cache_read_per_1m_usd": 0.044,
       "context_window_tokens": 1048576,
       "max_output_tokens": 393216,
       "supports_function_calling": true,
@@ -27821,9 +27612,9 @@
       "provider": "novita",
       "provider_raw": "novita",
       "mode": "chat",
-      "input_per_1m_usd": 0.45,
-      "output_per_1m_usd": 2.6,
-      "cache_read_per_1m_usd": 0.08,
+      "input_per_1m_usd": 0.2475,
+      "output_per_1m_usd": 1.43,
+      "cache_read_per_1m_usd": 0.044,
       "context_window_tokens": 262144,
       "max_output_tokens": 32768,
       "supports_function_calling": true,
@@ -27834,9 +27625,9 @@
       "provider": "novita",
       "provider_raw": "novita",
       "mode": "chat",
-      "input_per_1m_usd": 1.5,
-      "output_per_1m_usd": 4.5,
-      "cache_read_per_1m_usd": 0.3,
+      "input_per_1m_usd": 0.825,
+      "output_per_1m_usd": 2.475,
+      "cache_read_per_1m_usd": 0.165,
       "context_window_tokens": 1048576,
       "max_output_tokens": 131072,
       "supports_function_calling": true,
@@ -31847,7 +31638,7 @@
       "mode": "responses",
       "input_per_1m_usd": 2.0,
       "output_per_1m_usd": 10.0,
-      "cache_read_per_1m_usd": 0.2,
+      "cache_read_per_1m_usd": 0.1,
       "supports_function_calling": true
     },
     {
@@ -31948,6 +31739,15 @@
       "input_per_1m_usd": 0.75,
       "output_per_1m_usd": 3.75,
       "cache_read_per_1m_usd": 0.075
+    },
+    {
+      "litellm_id": "perplexity/google/gemini-4-argon",
+      "provider": "perplexity",
+      "provider_raw": "perplexity",
+      "mode": "responses",
+      "input_per_1m_usd": 2.0,
+      "output_per_1m_usd": 10.0,
+      "cache_read_per_1m_usd": 0.1
     },
     {
       "litellm_id": "perplexity/llama-2-70b-chat",
@@ -32252,6 +32052,15 @@
       "output_per_1m_usd": 0.17,
       "cache_read_per_1m_usd": 0.0011,
       "supports_function_calling": true
+    },
+    {
+      "litellm_id": "perplexity/perplexity/nemotron-3.5-super-120b-a12b",
+      "provider": "perplexity",
+      "provider_raw": "perplexity",
+      "mode": "responses",
+      "input_per_1m_usd": 0.2,
+      "output_per_1m_usd": 0.5,
+      "cache_read_per_1m_usd": 0.04
     },
     {
       "litellm_id": "perplexity/perplexity/sonar",
@@ -35254,52 +35063,12 @@
       "supports_prompt_caching": true
     },
     {
-      "litellm_id": "together_ai/NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO",
-      "provider": "together_ai",
-      "provider_raw": "together_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 0.6,
-      "output_per_1m_usd": 0.6,
-      "context_window_tokens": 32768,
-      "max_output_tokens": 32768
-    },
-    {
-      "litellm_id": "together_ai/Qwen/QwQ-32B",
-      "provider": "together_ai",
-      "provider_raw": "together_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 1.2,
-      "output_per_1m_usd": 1.2,
-      "context_window_tokens": 131072,
-      "max_output_tokens": 131072
-    },
-    {
       "litellm_id": "together_ai/Qwen/Qwen2-1.5B-Instruct",
       "provider": "together_ai",
       "provider_raw": "together_ai",
       "mode": "chat",
       "input_per_1m_usd": 0.02,
       "output_per_1m_usd": 0.02,
-      "context_window_tokens": 32768,
-      "max_output_tokens": 32768
-    },
-    {
-      "litellm_id": "together_ai/Qwen/Qwen2-72B-Instruct",
-      "provider": "together_ai",
-      "provider_raw": "together_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 0.9,
-      "output_per_1m_usd": 0.9,
-      "context_window_tokens": 32768,
-      "max_output_tokens": 32768
-    },
-    {
-      "litellm_id": "together_ai/Qwen/Qwen2-VL-72B-Instruct",
-      "provider": "together_ai",
-      "provider_raw": "together_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 1.2,
-      "output_per_1m_usd": 1.2,
       "context_window_tokens": 32768,
       "max_output_tokens": 32768
     },
@@ -35343,16 +35112,6 @@
       "context_window_tokens": 32768,
       "supports_function_calling": true,
       "supports_response_schema": true
-    },
-    {
-      "litellm_id": "together_ai/Qwen/Qwen2.5-Coder-32B-Instruct",
-      "provider": "together_ai",
-      "provider_raw": "together_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 0.8,
-      "output_per_1m_usd": 0.8,
-      "context_window_tokens": 16384,
-      "max_output_tokens": 16384
     },
     {
       "litellm_id": "together_ai/Qwen/Qwen2.5-VL-72B-Instruct",
@@ -35532,36 +35291,6 @@
       "context_window_tokens": 163840
     },
     {
-      "litellm_id": "together_ai/deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
-      "provider": "together_ai",
-      "provider_raw": "together_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 2.0,
-      "output_per_1m_usd": 2.0,
-      "context_window_tokens": 131072,
-      "max_output_tokens": 131072
-    },
-    {
-      "litellm_id": "together_ai/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
-      "provider": "together_ai",
-      "provider_raw": "together_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 0.18,
-      "output_per_1m_usd": 0.18,
-      "context_window_tokens": 131072,
-      "max_output_tokens": 131072
-    },
-    {
-      "litellm_id": "together_ai/deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
-      "provider": "together_ai",
-      "provider_raw": "together_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 1.6,
-      "output_per_1m_usd": 1.6,
-      "context_window_tokens": 131072,
-      "max_output_tokens": 131072
-    },
-    {
       "litellm_id": "together_ai/deepseek-ai/DeepSeek-V3",
       "provider": "together_ai",
       "provider_raw": "together_ai",
@@ -35641,26 +35370,6 @@
       "supports_response_schema": true
     },
     {
-      "litellm_id": "together_ai/deepseek-ai/deepseek-coder-33b-instruct",
-      "provider": "together_ai",
-      "provider_raw": "together_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 0.8,
-      "output_per_1m_usd": 0.8,
-      "context_window_tokens": 16384,
-      "max_output_tokens": 16384
-    },
-    {
-      "litellm_id": "together_ai/google/gemma-2-27b-it",
-      "provider": "together_ai",
-      "provider_raw": "together_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 0.8,
-      "output_per_1m_usd": 0.8,
-      "context_window_tokens": 8192,
-      "max_output_tokens": 8192
-    },
-    {
       "litellm_id": "together_ai/google/gemma-4-31B-it",
       "provider": "together_ai",
       "provider_raw": "together_ai",
@@ -35669,16 +35378,6 @@
       "output_per_1m_usd": 0.97,
       "context_window_tokens": 262144,
       "max_output_tokens": 262144
-    },
-    {
-      "litellm_id": "together_ai/meta-llama/Llama-3-8b-chat-hf",
-      "provider": "together_ai",
-      "provider_raw": "together_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 0.2,
-      "output_per_1m_usd": 0.2,
-      "context_window_tokens": 8192,
-      "max_output_tokens": 8192
     },
     {
       "litellm_id": "together_ai/meta-llama/Llama-3.1-405B-Instruct",
@@ -35731,26 +35430,6 @@
       "output_per_1m_usd": 0.59,
       "context_window_tokens": 1048576,
       "max_output_tokens": 1048576
-    },
-    {
-      "litellm_id": "together_ai/meta-llama/Meta-Llama-3-70B-Instruct-Turbo",
-      "provider": "together_ai",
-      "provider_raw": "together_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 0.88,
-      "output_per_1m_usd": 0.88,
-      "context_window_tokens": 8192,
-      "max_output_tokens": 8192
-    },
-    {
-      "litellm_id": "together_ai/meta-llama/Meta-Llama-3-8B-Instruct",
-      "provider": "together_ai",
-      "provider_raw": "together_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 0.2,
-      "output_per_1m_usd": 0.2,
-      "context_window_tokens": 8192,
-      "max_output_tokens": 8192
     },
     {
       "litellm_id": "together_ai/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
@@ -35816,16 +35495,6 @@
       "input_per_1m_usd": 0.2,
       "output_per_1m_usd": 0.2,
       "context_window_tokens": 262144
-    },
-    {
-      "litellm_id": "together_ai/mistralai/Mistral-7B-Instruct-v0.1",
-      "provider": "together_ai",
-      "provider_raw": "together_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 0.2,
-      "output_per_1m_usd": 0.2,
-      "context_window_tokens": 32768,
-      "max_output_tokens": 32768
     },
     {
       "litellm_id": "together_ai/mistralai/Mistral-7B-Instruct-v0.3",
@@ -35911,16 +35580,6 @@
       "supports_function_calling": true,
       "supports_prompt_caching": true,
       "supports_response_schema": true
-    },
-    {
-      "litellm_id": "together_ai/nvidia/Llama-3.1-Nemotron-70B-Instruct-HF",
-      "provider": "together_ai",
-      "provider_raw": "together_ai",
-      "mode": "chat",
-      "input_per_1m_usd": 0.88,
-      "output_per_1m_usd": 0.88,
-      "context_window_tokens": 32768,
-      "max_output_tokens": 32768
     },
     {
       "litellm_id": "together_ai/nvidia/NVIDIA-Nemotron-3.5-Super-VL",
@@ -37561,8 +37220,8 @@
       "mode": "chat",
       "input_per_1m_usd": 1.5,
       "output_per_1m_usd": 9.0,
-      "context_window_tokens": 1048576,
-      "max_output_tokens": 65535,
+      "context_window_tokens": 131072,
+      "max_output_tokens": 57920,
       "supports_vision": true
     },
     {
@@ -37658,30 +37317,6 @@
       "mode": "chat",
       "input_per_1m_usd": 0.25,
       "output_per_1m_usd": 1.25,
-      "context_window_tokens": 200000,
-      "max_output_tokens": 4096,
-      "supports_vision": true,
-      "supports_function_calling": true
-    },
-    {
-      "litellm_id": "vertex_ai/claude-3-opus",
-      "provider": "vertex",
-      "provider_raw": "vertex_ai-anthropic_models",
-      "mode": "chat",
-      "input_per_1m_usd": 15.0,
-      "output_per_1m_usd": 75.0,
-      "context_window_tokens": 200000,
-      "max_output_tokens": 4096,
-      "supports_vision": true,
-      "supports_function_calling": true
-    },
-    {
-      "litellm_id": "vertex_ai/claude-3-opus@20240229",
-      "provider": "vertex",
-      "provider_raw": "vertex_ai-anthropic_models",
-      "mode": "chat",
-      "input_per_1m_usd": 15.0,
-      "output_per_1m_usd": 75.0,
       "context_window_tokens": 200000,
       "max_output_tokens": 4096,
       "supports_vision": true,
@@ -38736,7 +38371,7 @@
       "mode": "chat",
       "input_per_1m_usd": 1.5,
       "output_per_1m_usd": 9.0,
-      "context_window_tokens": 57920,
+      "context_window_tokens": 131072,
       "max_output_tokens": 57920,
       "supports_vision": true
     },
@@ -39141,6 +38776,148 @@
       "supports_prompt_caching": true
     },
     {
+      "litellm_id": "wally/deepseek-v4-flash-0731",
+      "provider": "wally",
+      "provider_raw": "wally",
+      "mode": "chat",
+      "input_per_1m_usd": 0.44,
+      "output_per_1m_usd": 1.32,
+      "cache_read_per_1m_usd": 0.014,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 65536,
+      "supports_function_calling": true,
+      "supports_prompt_caching": true,
+      "supports_response_schema": true
+    },
+    {
+      "litellm_id": "wally/deepseek-v4-pro-fast",
+      "provider": "wally",
+      "provider_raw": "wally",
+      "mode": "chat",
+      "input_per_1m_usd": 1.91,
+      "output_per_1m_usd": 3.83,
+      "cache_read_per_1m_usd": 0.16,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 65536,
+      "supports_function_calling": true,
+      "supports_prompt_caching": true,
+      "supports_response_schema": true
+    },
+    {
+      "litellm_id": "wally/deepseek-v4.1-flash",
+      "provider": "wally",
+      "provider_raw": "wally",
+      "mode": "chat",
+      "input_per_1m_usd": 0.3,
+      "output_per_1m_usd": 1.2,
+      "cache_read_per_1m_usd": 0.006,
+      "context_window_tokens": 1048569,
+      "max_output_tokens": 65536,
+      "supports_vision": true,
+      "supports_function_calling": true,
+      "supports_prompt_caching": true,
+      "supports_response_schema": true
+    },
+    {
+      "litellm_id": "wally/deepseek-v4.1-flash-1017",
+      "provider": "wally",
+      "provider_raw": "wally",
+      "mode": "chat",
+      "input_per_1m_usd": 0.375,
+      "output_per_1m_usd": 1.5,
+      "cache_read_per_1m_usd": 0.008,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 65536,
+      "supports_function_calling": true,
+      "supports_prompt_caching": true
+    },
+    {
+      "litellm_id": "wally/deepseek-v4.1-flash-f2",
+      "provider": "wally",
+      "provider_raw": "wally",
+      "mode": "chat",
+      "input_per_1m_usd": 0.3,
+      "output_per_1m_usd": 1.2,
+      "cache_read_per_1m_usd": 0.006,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 65536,
+      "supports_vision": true,
+      "supports_function_calling": true,
+      "supports_prompt_caching": true
+    },
+    {
+      "litellm_id": "wally/deepseek-v4.1-flash-fast",
+      "provider": "wally",
+      "provider_raw": "wally",
+      "mode": "chat",
+      "input_per_1m_usd": 0.6,
+      "output_per_1m_usd": 2.4,
+      "cache_read_per_1m_usd": 0.014,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 65536,
+      "supports_vision": true,
+      "supports_function_calling": true,
+      "supports_prompt_caching": true,
+      "supports_response_schema": true
+    },
+    {
+      "litellm_id": "wally/glm-5.3-fast",
+      "provider": "wally",
+      "provider_raw": "wally",
+      "mode": "chat",
+      "input_per_1m_usd": 2.1,
+      "output_per_1m_usd": 6.6,
+      "cache_read_per_1m_usd": 0.39,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 131072,
+      "supports_function_calling": true,
+      "supports_prompt_caching": true,
+      "supports_response_schema": true
+    },
+    {
+      "litellm_id": "wally/glm-5.3-flash",
+      "provider": "wally",
+      "provider_raw": "wally",
+      "mode": "chat",
+      "input_per_1m_usd": 0.272,
+      "output_per_1m_usd": 0.65,
+      "cache_read_per_1m_usd": 0.076,
+      "context_window_tokens": 1048567,
+      "max_output_tokens": 131072,
+      "supports_function_calling": true,
+      "supports_prompt_caching": true,
+      "supports_response_schema": true
+    },
+    {
+      "litellm_id": "wally/kimi-k3",
+      "provider": "wally",
+      "provider_raw": "wally",
+      "mode": "chat",
+      "input_per_1m_usd": 3.0,
+      "output_per_1m_usd": 15.0,
+      "cache_read_per_1m_usd": 0.3,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 65536,
+      "supports_vision": true,
+      "supports_function_calling": true,
+      "supports_prompt_caching": true,
+      "supports_response_schema": true
+    },
+    {
+      "litellm_id": "wally/minimax-m3",
+      "provider": "wally",
+      "provider_raw": "wally",
+      "mode": "chat",
+      "input_per_1m_usd": 0.33,
+      "output_per_1m_usd": 1.32,
+      "cache_read_per_1m_usd": 0.066,
+      "context_window_tokens": 524287,
+      "max_output_tokens": 131072,
+      "supports_function_calling": true,
+      "supports_prompt_caching": true,
+      "supports_response_schema": true
+    },
+    {
       "litellm_id": "wandb/JetBrains/Mellum2-12B-A2.5B-Instruct",
       "provider": "wandb",
       "provider_raw": "wandb",
@@ -39238,7 +39015,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.55,
       "output_per_1m_usd": 1.65,
-      "context_window_tokens": 161000,
+      "context_window_tokens": 128000,
       "max_output_tokens": 128000
     },
     {
@@ -39364,7 +39141,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.22,
       "output_per_1m_usd": 0.22,
-      "context_window_tokens": 131000,
+      "context_window_tokens": 128000,
       "max_output_tokens": 128000
     },
     {
