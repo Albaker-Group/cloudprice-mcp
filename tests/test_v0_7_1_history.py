@@ -126,6 +126,7 @@ def synthetic_snapshots(monkeypatch, tmp_path):
 
     def fake_resources_files(_pkg):
         return _FakeFiles(snap_dir)
+
     monkeypatch.setattr(
         history, "resources", type("R", (), {"files": staticmethod(fake_resources_files)})
     )

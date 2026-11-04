@@ -149,7 +149,7 @@ def test_target_cost_includes_inter_region_egress():
     )
     result = assess_migration(catalog, inv)
     # Each target should have a non-zero monthly that includes inter-region
-    for cloud, t in result["targets"].items():
+    for t in result["targets"].values():
         # 10 TB inter-region at $0.0085-$0.02 per GB → at least $85
         assert t["monthly_usd"] > 80
 

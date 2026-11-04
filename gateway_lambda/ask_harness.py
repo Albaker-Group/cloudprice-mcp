@@ -23,6 +23,7 @@ import boto3
 # requires recreation). Override with CLOUDPRICE_HARNESS_ARN if needed.
 def _harness_arn():
     import os
+
     if os.environ.get("CLOUDPRICE_HARNESS_ARN"):
         return os.environ["CLOUDPRICE_HARNESS_ARN"]
     ctl = boto3.client("bedrock-agentcore-control", region_name="us-east-1")

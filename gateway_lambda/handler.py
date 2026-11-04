@@ -30,6 +30,7 @@ logger.setLevel(logging.INFO)
 # Gateway prefixes tool names as "<target>___<tool>".
 _TOOL_NAME_SEPARATOR = "___"
 
+
 def _resolve_tool_name(context: Any) -> str | None:
     """Pull the bare tool name off the Lambda context.
 
@@ -57,7 +58,7 @@ def lambda_handler(event: dict, context: Any) -> dict:
         logger.error("No bedrockAgentCoreToolName on the invocation context")
         return {
             "error": "Tool name missing from the request context. This "
-                     "function is only callable through AgentCore Gateway."
+            "function is only callable through AgentCore Gateway."
         }
 
     if tool_name not in dispatch.tool_names():

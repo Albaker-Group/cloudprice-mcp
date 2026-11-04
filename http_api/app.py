@@ -28,6 +28,7 @@ It also does NOT import `mcp`. dispatch has no MCP dependency, so the container
 ships without the SDK: a smaller image and a smaller attack surface for
 something that will sit on a public-ish cluster.
 """
+
 from __future__ import annotations
 
 import logging
@@ -63,9 +64,7 @@ class ToolCall(BaseModel):
     """A single tool invocation."""
 
     tool: str = Field(..., description="Tool name, as returned by GET /tools")
-    arguments: dict[str, Any] = Field(
-        default_factory=dict, description="Tool arguments"
-    )
+    arguments: dict[str, Any] = Field(default_factory=dict, description="Tool arguments")
 
 
 @app.get("/healthz")
