@@ -176,9 +176,27 @@ jobs:
       # inside the built container - the Python base image and every wheel in
       # the venv. exit-code 1 means a HIGH or CRITICAL fails the build rather
       # than producing a report nobody opens.
+      # Pinned and checksum-verified, as in security.yml: the action's own
+      # setup runs Trivy's install.sh from its unpinned main branch, which broke
+      # on 2026-11-03 and failed this build. This job runs on an ARM64 runner.
+      - name: Install Trivy (pinned, checksum-verified)
+        env:
+          TRIVY_VERSION: "0.76.1"
+          TRIVY_SHA256: "e174dff2a6dba5e3ae41f8d0537a6324405bd08132497340304c6b20e0f16a1f"
+        run: |
+          set -euo pipefail
+          tarball="trivy_${TRIVY_VERSION}_Linux-ARM64.tar.gz"
+          curl -sSfL -o "/tmp/$tarball" \
+            "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/$tarball"
+          echo "${TRIVY_SHA256}  /tmp/$tarball" | sha256sum -c -
+          mkdir -p "$HOME/.local/bin"
+          tar -xzf "/tmp/$tarball" -C "$HOME/.local/bin" trivy
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
       - name: Scan the image for vulnerabilities
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
+          skip-setup-trivy: true
           image-ref: ${{ steps.ver.outputs.image }}:${{ steps.ver.outputs.version }}
           format: table
           severity: HIGH,CRITICAL
