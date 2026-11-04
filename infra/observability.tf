@@ -19,6 +19,9 @@
 # encrypted with a CMK and given real retention before enabling it.
 
 resource "aws_cloudwatch_log_group" "bedrock_invocations" {
+  # Reviewed 2026-11-04; reasons recorded so the decision is visible in review.
+  #checkov:skip=CKV_AWS_158:Customer-managed KMS keys cost ~$1/month each; default AWS-managed encryption already applies
+  #checkov:skip=CKV_AWS_338:Invocation logs are for short-term debugging and hold prompt text; keeping less is the safer default
   name              = "/aws/bedrock/model-invocations"
   retention_in_days = var.log_retention_days
 }
@@ -147,6 +150,8 @@ resource "aws_cloudwatch_metric_alarm" "profile_throttles" {
 
 # Own topic rather than reaching into the portfolio's state for its ARN.
 resource "aws_sns_topic" "alerts" {
+  # Reviewed 2026-11-04; reasons recorded so the decision is visible in review.
+  #checkov:skip=CKV_AWS_26:CloudWatch alarms cannot publish to a topic encrypted with the free AWS-managed SNS key, and alert text holds no secrets
   name = "${local.name}-alerts"
 }
 

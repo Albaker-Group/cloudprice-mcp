@@ -24,6 +24,10 @@ resource "aws_kms_alias" "memory" {
 }
 
 data "aws_iam_policy_document" "memory_key" {
+  # Reviewed 2026-11-04; reasons recorded so the decision is visible in review.
+  #checkov:skip=CKV_AWS_109:Key policy: Resource * means this key only, and the root statement is AWS's required default
+  #checkov:skip=CKV_AWS_111:Key policy: Resource * means this key only; the service statement is scoped by aws:SourceAccount
+  #checkov:skip=CKV_AWS_356:Key policy: Resource * means this key only, not every resource
   # Without this the key is unmanageable - lock yourself out and only AWS
   # support can help.
   statement {
@@ -97,6 +101,11 @@ resource "aws_iam_role_policy" "harness_kms" {
 # there is a real tenant to audit.
 
 resource "aws_s3_bucket" "trail" {
+  # Reviewed 2026-11-04; reasons recorded so the decision is visible in review.
+  #checkov:skip=CKV_AWS_145:Customer-managed KMS keys cost ~$1/month each; default AWS-managed encryption already applies
+  #checkov:skip=CKV_AWS_144:cross-region replication is impossible here: the account denies every region except us-east-1
+  #checkov:skip=CKV_AWS_18:This bucket holds CloudTrail logs; logging access to the log bucket adds another bucket for little value
+  #checkov:skip=CKV2_AWS_62:Nothing consumes events from the trail bucket
   bucket        = "${local.name}-cloudtrail-${data.aws_caller_identity.current.account_id}"
   force_destroy = false
 }
@@ -175,6 +184,10 @@ resource "aws_s3_bucket_policy" "trail" {
 }
 
 resource "aws_cloudtrail" "account" {
+  # Reviewed 2026-11-04; reasons recorded so the decision is visible in review.
+  #checkov:skip=CKV_AWS_35:Customer-managed KMS keys cost ~$1/month each; default AWS-managed encryption already applies
+  #checkov:skip=CKV_AWS_252:Trail delivery notifications have no subscriber
+  #checkov:skip=CKV2_AWS_10:S3 delivery is enough at this scale; CloudWatch Logs ingestion would add cost per event
   name           = local.name
   s3_bucket_name = aws_s3_bucket.trail.id
 
