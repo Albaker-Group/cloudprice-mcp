@@ -183,6 +183,27 @@ jobs:
             echo "No price changes detected — refresh produced an identical catalog."
           fi
 
+      # Bump the patch version so merged prices become a release: release.yml
+      # publishes (after Ali approves) any version on main that has no tag.
+      # Computed from main every week, so a PR that waits several Sundays is
+      # still one bump, not several.
+      - name: Bump the patch version
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import re, pathlib
+          pp = pathlib.Path("pyproject.toml")
+          cur = re.search(r'^version = "(\d+)\.(\d+)\.(\d+)"', pp.read_text(), re.M)
+          new = f"{cur[1]}.{cur[2]}.{int(cur[3]) + 1}"
+          for path, pat in ((pp, r'^version = "[^"]+"'),
+                            (pathlib.Path("src/cloudprice_mcp/__init__.py"), r'^__version__ = "[^"]+"')):
+              text = path.read_text()
+              key = pat.split(" = ")[0].lstrip("^")
+              path.write_text(re.sub(pat, f'{key} = "{new}"', text, count=1, flags=re.M))
+          print("version ->", new)
+          PY
+
       - name: Open or update PR
         id: pr
         if: steps.changes.outputs.changed == 'true' && inputs.dry_run != true

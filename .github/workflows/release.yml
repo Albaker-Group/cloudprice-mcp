@@ -1,6 +1,14 @@
 name: Release to PyPI
 
-# Triggered by pushing a version tag (e.g., `git tag v0.7.0 && git push --tags`).
+# Two ways in, one gate:
+#   - Push a version tag (e.g. `git tag v0.7.0 && git push --tags`), as before.
+#   - Automatically: every Monday (after Sunday's price refresh) and on manual
+#     dispatch, publish the version in pyproject.toml if it has no tag yet.
+#     The weekly refresh PR bumps the patch version, so merged prices become
+#     a release without anyone having to remember to tag.
+# Either way the publish job waits on the `pypi` environment, which requires
+# Ali's approval: nothing reaches PyPI without a person clicking Approve.
+#
 # Uses PyPI Trusted Publishing (OIDC) -- NO API TOKEN.
 #
 # One-time setup (per project, by repo owner):
@@ -11,12 +19,14 @@ name: Release to PyPI
 #   5. Workflow name: release.yml
 #   6. Environment name: pypi
 # After the first successful publish, PyPI flips the pending publisher to active.
-# After that, every tag push publishes automatically -- no token to rotate, ever.
 
 on:
   push:
     tags:
       - "v*"
+  schedule:
+    - cron: "0 6 * * 1"  # Mondays 06:00 UTC, after Sunday's refresh
+  workflow_dispatch:
 
 # Least privilege at the workflow level; the one job that needs id-token
 # raises it for itself. Granting id-token: write to every job hands the build
@@ -24,11 +34,54 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
+  # Decide whether there is anything to release, and which version. A tag push
+  # always releases that tag; a scheduled or manual run releases the version in
+  # pyproject.toml only if no tag for it exists yet, so re-runs are no-ops.
+  decide:
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.v.outputs.release }}
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Work out the version
+        id: v
+        env:
+          EVENT: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          version=$(python3 -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          if [[ "$EVENT" == "push" ]]; then
+            [[ "$REF_NAME" == "v$version" ]] || {
+              echo "::error::Tag $REF_NAME does not match pyproject version $version"; exit 1; }
+            release=true
+          elif git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+            echo "v$version is already released; nothing to do."
+            release=false
+          else
+            release=true
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "release=$release" >> "$GITHUB_OUTPUT"
+          echo "### v$version: release=$release" >> "$GITHUB_STEP_SUMMARY"
+
   build:
+    needs: decide
+    if: needs.decide.outputs.release == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Set up Python
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
@@ -47,8 +100,10 @@ jobs:
     permissions:
       contents: read
       id-token: write # PyPI Trusted Publishing OIDC — this job only
-    needs: build
+    needs: [decide, build]
     runs-on: ubuntu-latest
+    # Required reviewer on this environment: the run pauses here until Ali
+    # approves it in the Actions tab (GitHub emails him).
     environment:
       name: pypi
       url: https://pypi.org/project/cloudprice-mcp/
@@ -60,3 +115,23 @@ jobs:
           path: dist/
       - name: Publish to PyPI (Trusted Publisher)
         uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+
+  # Tag only after PyPI accepted the upload, so a failed or rejected publish
+  # leaves no tag and the next run tries again. Skipped for tag pushes, which
+  # already have their tag.
+  tag:
+    needs: [decide, publish]
+    if: github.event_name != 'push'
+    permissions:
+      contents: write # push the version tag
+    runs-on: ubuntu-latest
+    steps:
+      # Through the API rather than a checkout + git push: no credentials are
+      # written to disk, and there is nothing else this job needs the repo for.
+      - name: Tag the released commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.decide.outputs.version }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/git/refs" \
+            -f ref="refs/tags/v$VERSION" -f sha="$GITHUB_SHA"
