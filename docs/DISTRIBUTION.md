@@ -7,7 +7,7 @@ for the maintainer — no end-user content.
 
 - **PyPI** — auto-published via GitHub Actions Trusted Publishing on every
   tagged release. https://pypi.org/project/cloudprice-mcp/
-- **Glama** — https://glama.ai/mcp/servers/alialbaker/cloudprice-mcp (score
+- **Glama** — https://glama.ai/mcp/servers/Albaker-Group/cloudprice-mcp (score
   badge in README).
 
 ## To submit (one-time, ~10 min each)
