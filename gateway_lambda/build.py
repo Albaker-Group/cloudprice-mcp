@@ -48,8 +48,12 @@ def python_with_pip() -> str:
     for exe in candidates:
         if not exe:
             continue
-        probe = subprocess.run([exe, "-m", "pip", "--version"],
-                               capture_output=True, text=True)
+        # exe comes from sys.executable or PATH lookup, never from user input.
+        probe = subprocess.run(  # noqa: S603
+            [exe, "-m", "pip", "--version"],
+            capture_output=True,
+            text=True,
+        )
         if probe.returncode == 0:
             return exe
     raise SystemExit(
@@ -60,7 +64,8 @@ def python_with_pip() -> str:
 
 def run(*args: str) -> None:
     print(f"  $ {' '.join(args[:6])}{' ...' if len(args) > 6 else ''}")
-    result = subprocess.run(args, capture_output=True, text=True)
+    # args are this script's own pip command line, not external input.
+    result = subprocess.run(args, capture_output=True, text=True)  # noqa: S603
     if result.returncode != 0:
         # Surface what pip actually said. Swallowing this turns a one-line
         # dependency error into a traceback that explains nothing.
@@ -81,15 +86,35 @@ def main() -> int:
     print("2. Installing cloudprice_mcp (no dependencies)")
     # --no-deps keeps mcp out: it is declared in pyproject for the stdio
     # server, and pulling it here would drag in the whole web stack.
-    run(pip_python, "-m", "pip", "install", "--quiet",
-        "--target", str(BUILD), "--no-deps", str(REPO))
+    run(
+        pip_python,
+        "-m",
+        "pip",
+        "install",
+        "--quiet",
+        "--target",
+        str(BUILD),
+        "--no-deps",
+        str(REPO),
+    )
 
     print(f"3. Installing PyYAML for {LAMBDA_PLATFORM} / py{LAMBDA_PYTHON}")
-    run(pip_python, "-m", "pip", "install", "--quiet",
-        "--target", str(BUILD), "--no-deps",
-        "--platform", LAMBDA_PLATFORM,
-        "--python-version", LAMBDA_PYTHON,
-        "--only-binary=:all:", "PyYAML")
+    run(
+        pip_python,
+        "-m",
+        "pip",
+        "install",
+        "--quiet",
+        "--target",
+        str(BUILD),
+        "--no-deps",
+        "--platform",
+        LAMBDA_PLATFORM,
+        "--python-version",
+        LAMBDA_PYTHON,
+        "--only-binary=:all:",
+        "PyYAML",
+    )
 
     print("4. Adding handler.py at the zip root")
     # Lambda's handler is addressed as "handler.lambda_handler", so the module

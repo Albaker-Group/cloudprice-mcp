@@ -24,6 +24,7 @@ Per-SKU resilience:
     we preserve the caller's entry untouched. Only models we
     successfully refresh appear in the return dict.
 """
+
 from __future__ import annotations
 
 import json
@@ -40,16 +41,16 @@ _TARGET_REGION_CODE = "USE1"  # Bedrock usagetype prefix for us-east-1
 # Bedrock model ARN/usagetype string. Order matters only when one fragment
 # could match a longer one (e.g. claude-3 vs claude-3-5).
 BEDROCK_ID_HINTS: dict[str, str] = {
-    "claude-4-opus":    "claude-opus-4",
-    "claude-4-sonnet":  "claude-sonnet-4",
+    "claude-4-opus": "claude-opus-4",
+    "claude-4-sonnet": "claude-sonnet-4",
     "claude-3-5-haiku": "claude-3-5-haiku",
-    "claude-3-haiku":   "claude-3-haiku",
-    "llama-3.1-405b":   "llama3-1-405b",
-    "llama-3.1-70b":    "llama3-1-70b",
-    "llama-3.1-8b":     "llama3-1-8b",
-    "llama-3.3-70b":    "llama3-3-70b",
-    "mistral-large-2":  "mistral-large-2407",
-    "deepseek-r1":      "deepseek.r1",
+    "claude-3-haiku": "claude-3-haiku",
+    "llama-3.1-405b": "llama3-1-405b",
+    "llama-3.1-70b": "llama3-1-70b",
+    "llama-3.1-8b": "llama3-1-8b",
+    "llama-3.3-70b": "llama3-3-70b",
+    "mistral-large-2": "mistral-large-2407",
+    "deepseek-r1": "deepseek.r1",
 }
 
 
@@ -186,7 +187,8 @@ def _price_per_1k_from_dimension(pd: dict) -> float | None:
 
 
 def _pick_cheapest_for(
-    hint: str, rows: list[dict[str, Any]],
+    hint: str,
+    rows: list[dict[str, Any]],
 ) -> dict[str, float] | None:
     """Find the cheapest input + output prices for any row whose
     model_hint contains `hint`. Returns {input_per_1m_usd, output_per_1m_usd}

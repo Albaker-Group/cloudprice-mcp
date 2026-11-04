@@ -13,10 +13,12 @@ Trust spectrum:
 
 Supports: Claude Desktop, GitHub Copilot Agent Mode (VS Code), Cursor, Windsurf, Cline, Continue.dev, Zed.
 """
+
 from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -57,14 +59,19 @@ def build_cloudprice_args() -> list[str]:
 def kill_cached_subprocesses() -> int:
     """Kill any lingering cloudprice-mcp subprocesses so clients respawn fresh."""
     killed = 0
+    # Executables are resolved to absolute paths (S607) and every argument is a
+    # constant in this file, so there is no untrusted input to inject (S603).
     if sys.platform == "win32":
+        powershell = shutil.which("powershell")
+        if powershell is None:
+            return killed
         try:
             cmd = (
                 'Get-Process | Where-Object { $_.Path -like "*cloudprice-mcp*" } '
                 "| ForEach-Object { Stop-Process -Id $_.Id -Force; 1 }"
             )
-            result = subprocess.run(
-                ["powershell", "-NoProfile", "-Command", cmd],
+            result = subprocess.run(  # noqa: S603 - constant argv, see above
+                [powershell, "-NoProfile", "-Command", cmd],
                 capture_output=True,
                 text=True,
                 timeout=10,
@@ -73,10 +80,13 @@ def kill_cached_subprocesses() -> int:
         except (subprocess.SubprocessError, FileNotFoundError):
             pass
     else:
+        pkill = shutil.which("pkill")
+        if pkill is None:
+            return killed
         for pattern in ("cloudprice-mcp", "cloudprice_mcp"):
             try:
-                result = subprocess.run(
-                    ["pkill", "-f", pattern], capture_output=True, timeout=5
+                result = subprocess.run(  # noqa: S603 - constant argv, see above
+                    [pkill, "-f", pattern], capture_output=True, timeout=5
                 )
                 if result.returncode == 0:
                     killed += 1
@@ -275,33 +285,43 @@ def run_setup(args: argparse.Namespace) -> int:
 
 def add_setup_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
-        "--yes", "-y", action="store_true",
+        "--yes",
+        "-y",
+        action="store_true",
         help="Skip the interactive Y/N confirmation.",
     )
     parser.add_argument(
-        "--force", action="store_true",
+        "--force",
+        action="store_true",
         help="Overwrite existing cloudprice entries without merging — useful for path refresh on upgrade.",
     )
     parser.add_argument(
-        "--dry-run", action="store_true",
+        "--dry-run",
+        action="store_true",
         help="Show what would be written without modifying any files.",
     )
     parser.add_argument(
-        "--print-config", action="store_true",
+        "--print-config",
+        action="store_true",
         help="Print per-client JSON to stdout for users who prefer to paste it manually.",
     )
     parser.add_argument(
-        "--client", action="append", default=None, metavar="NAME",
+        "--client",
+        action="append",
+        default=None,
+        metavar="NAME",
         help=(
             "Configure a specific client (repeatable). "
             f"Known: {', '.join(clients.known_client_names())}."
         ),
     )
     parser.add_argument(
-        "--all", action="store_true",
+        "--all",
+        action="store_true",
         help="Configure all known clients, even ones that don't appear installed.",
     )
     parser.add_argument(
-        "--list-clients", action="store_true",
+        "--list-clients",
+        action="store_true",
         help="Show which clients are known and which appear installed; exit.",
     )

@@ -47,6 +47,7 @@ it would overcharge e2-micro by 5x.
 A side benefit: shared-core shapes now get spot prices too. The old fixed-SKU
 path could not produce them.
 """
+
 from __future__ import annotations
 
 import os
@@ -70,16 +71,28 @@ _REGION_KEY = "us-east1"
 # GCP uses for us-* regions in SKU descriptions).
 _FAMILY_DESCRIPTION_PATTERNS: dict[str, tuple[str, str]] = {
     "n2": ("N2 Instance Core running in Americas", "N2 Instance Ram running in Americas"),
-    "c2": ("Compute optimized Core running in Americas", "Compute optimized Ram running in Americas"),
+    "c2": (
+        "Compute optimized Core running in Americas",
+        "Compute optimized Ram running in Americas",
+    ),
     "e2": ("E2 Instance Core running in Americas", "E2 Instance Ram running in Americas"),
 }
 
 # GCP "Spot Preemptible" SKUs use the same family naming with "Spot Preemptible"
 # prepended. v0.8.1 spot pricing fetcher.
 _FAMILY_SPOT_DESCRIPTION_PATTERNS: dict[str, tuple[str, str]] = {
-    "n2": ("Spot Preemptible N2 Instance Core running in Americas", "Spot Preemptible N2 Instance Ram running in Americas"),
-    "c2": ("Spot Preemptible Compute optimized Core running in Americas", "Spot Preemptible Compute optimized Ram running in Americas"),
-    "e2": ("Spot Preemptible E2 Instance Core running in Americas", "Spot Preemptible E2 Instance Ram running in Americas"),
+    "n2": (
+        "Spot Preemptible N2 Instance Core running in Americas",
+        "Spot Preemptible N2 Instance Ram running in Americas",
+    ),
+    "c2": (
+        "Spot Preemptible Compute optimized Core running in Americas",
+        "Spot Preemptible Compute optimized Ram running in Americas",
+    ),
+    "e2": (
+        "Spot Preemptible E2 Instance Core running in Americas",
+        "Spot Preemptible E2 Instance Ram running in Americas",
+    ),
 }
 
 # Shared-core E2 shapes have no billing line of their own. They bill from the
@@ -162,9 +175,7 @@ def fetch_instance_prices(skus: list[InstanceSku]) -> list[InstanceSku]:
         spot_rates = family_spot_rates.get(family)
         if spot_rates is not None:
             spot_core, spot_ram = spot_rates
-            entry_out["spot_hourly_usd"] = round(
-                billed_cores * spot_core + memory_gb * spot_ram, 6
-            )
+            entry_out["spot_hourly_usd"] = round(billed_cores * spot_core + memory_gb * spot_ram, 6)
 
         refreshed.append(entry_out)  # type: ignore[arg-type]
 

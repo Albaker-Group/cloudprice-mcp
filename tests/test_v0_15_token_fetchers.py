@@ -5,6 +5,7 @@ we inject a fake `boto3` module into sys.modules. The bedrock fetcher uses a
 paginator, so the fake supports `client.get_paginator("get_products").paginate()`
 returning an iterable of pages.
 """
+
 from __future__ import annotations
 
 import json
@@ -20,8 +21,13 @@ from scripts.token_fetchers.base import TokenFetchError
 
 
 def _bedrock_product(
-    *, usagetype: str, model: str, unit: str, price: float,
-    inference_type: str = "On-Demand", region_code: str = "us-east-1",
+    *,
+    usagetype: str,
+    model: str,
+    unit: str,
+    price: float,
+    inference_type: str = "On-Demand",
+    region_code: str = "us-east-1",
 ) -> dict:
     return {
         "product": {
@@ -114,12 +120,14 @@ def test_refreshes_multiple_models_in_one_call(fake_boto3):
         _bedrock_product(
             usagetype="USE1-meta.llama3-1-8b-instruct-v1:0-input-tokens",
             model="meta.llama3-1-8b-instruct-v1:0",
-            unit="1K tokens", price=0.00022,
+            unit="1K tokens",
+            price=0.00022,
         ),
         _bedrock_product(
             usagetype="USE1-meta.llama3-1-8b-instruct-v1:0-output-tokens",
             model="meta.llama3-1-8b-instruct-v1:0",
-            unit="1K tokens", price=0.00022,
+            unit="1K tokens",
+            price=0.00022,
         ),
     ]
     fake_boto3([products])
@@ -127,7 +135,7 @@ def test_refreshes_multiple_models_in_one_call(fake_boto3):
 
     known = {
         "claude-3-haiku": {"provider": "bedrock"},
-        "llama-3.1-8b":   {"provider": "bedrock"},
+        "llama-3.1-8b": {"provider": "bedrock"},
     }
     out = bedrock.fetch_token_prices(known)
     assert out["claude-3-haiku"]["input_per_1m_usd"] == pytest.approx(0.25)
@@ -150,20 +158,26 @@ def test_skips_models_not_in_hints_table(fake_boto3):
 
 def test_skips_batch_inference_skus(fake_boto3):
     """Batch SKUs (cheaper, async) shouldn't be picked up — we want on-demand."""
-    fake_boto3([[
-        _bedrock_product(
-            usagetype="USE1-anthropic.claude-3-haiku-20240307-v1:0-input-tokens-batch",
-            model="anthropic.claude-3-haiku-20240307-v1:0",
-            unit="1K tokens", price=0.000125,
-            inference_type="Batch",
-        ),
-        _bedrock_product(
-            usagetype="USE1-anthropic.claude-3-haiku-20240307-v1:0-output-tokens-batch",
-            model="anthropic.claude-3-haiku-20240307-v1:0",
-            unit="1K tokens", price=0.000625,
-            inference_type="Batch",
-        ),
-    ]])
+    fake_boto3(
+        [
+            [
+                _bedrock_product(
+                    usagetype="USE1-anthropic.claude-3-haiku-20240307-v1:0-input-tokens-batch",
+                    model="anthropic.claude-3-haiku-20240307-v1:0",
+                    unit="1K tokens",
+                    price=0.000125,
+                    inference_type="Batch",
+                ),
+                _bedrock_product(
+                    usagetype="USE1-anthropic.claude-3-haiku-20240307-v1:0-output-tokens-batch",
+                    model="anthropic.claude-3-haiku-20240307-v1:0",
+                    unit="1K tokens",
+                    price=0.000625,
+                    inference_type="Batch",
+                ),
+            ]
+        ]
+    )
     from scripts.token_fetchers import bedrock
 
     out = bedrock.fetch_token_prices({"claude-3-haiku": {"provider": "bedrock"}})
@@ -173,20 +187,26 @@ def test_skips_batch_inference_skus(fake_boto3):
 
 def test_skips_other_regions(fake_boto3):
     """eu-west-1 SKUs should be filtered out — we target us-east-1."""
-    fake_boto3([[
-        _bedrock_product(
-            usagetype="EUW1-anthropic.claude-3-haiku-20240307-v1:0-input-tokens",
-            model="anthropic.claude-3-haiku-20240307-v1:0",
-            unit="1K tokens", price=0.0003,
-            region_code="eu-west-1",
-        ),
-        _bedrock_product(
-            usagetype="EUW1-anthropic.claude-3-haiku-20240307-v1:0-output-tokens",
-            model="anthropic.claude-3-haiku-20240307-v1:0",
-            unit="1K tokens", price=0.0015,
-            region_code="eu-west-1",
-        ),
-    ]])
+    fake_boto3(
+        [
+            [
+                _bedrock_product(
+                    usagetype="EUW1-anthropic.claude-3-haiku-20240307-v1:0-input-tokens",
+                    model="anthropic.claude-3-haiku-20240307-v1:0",
+                    unit="1K tokens",
+                    price=0.0003,
+                    region_code="eu-west-1",
+                ),
+                _bedrock_product(
+                    usagetype="EUW1-anthropic.claude-3-haiku-20240307-v1:0-output-tokens",
+                    model="anthropic.claude-3-haiku-20240307-v1:0",
+                    unit="1K tokens",
+                    price=0.0015,
+                    region_code="eu-west-1",
+                ),
+            ]
+        ]
+    )
     from scripts.token_fetchers import bedrock
 
     out = bedrock.fetch_token_prices({"claude-3-haiku": {"provider": "bedrock"}})
@@ -196,13 +216,18 @@ def test_skips_other_regions(fake_boto3):
 def test_skips_when_only_input_or_only_output_present(fake_boto3):
     """A row with only input (and no output) shouldn't half-refresh — we
     want both directions or skip the model entirely."""
-    fake_boto3([[
-        _bedrock_product(
-            usagetype="USE1-anthropic.claude-3-haiku-20240307-v1:0-input-tokens",
-            model="anthropic.claude-3-haiku-20240307-v1:0",
-            unit="1K tokens", price=0.00025,
-        ),
-    ]])
+    fake_boto3(
+        [
+            [
+                _bedrock_product(
+                    usagetype="USE1-anthropic.claude-3-haiku-20240307-v1:0-input-tokens",
+                    model="anthropic.claude-3-haiku-20240307-v1:0",
+                    unit="1K tokens",
+                    price=0.00025,
+                ),
+            ]
+        ]
+    )
     from scripts.token_fetchers import bedrock
 
     out = bedrock.fetch_token_prices({"claude-3-haiku": {"provider": "bedrock"}})
@@ -215,23 +240,30 @@ def test_skips_when_only_input_or_only_output_present(fake_boto3):
 def test_picks_cheapest_when_multiple_inputs(fake_boto3):
     """If two on-demand inputs exist for the same model (e.g. different
     region aliases), take the cheapest."""
-    fake_boto3([[
-        _bedrock_product(
-            usagetype="USE1-anthropic.claude-3-haiku-20240307-v1:0-input-tokens",
-            model="anthropic.claude-3-haiku-20240307-v1:0",
-            unit="1K tokens", price=0.00050,
-        ),
-        _bedrock_product(
-            usagetype="USE1-anthropic.claude-3-haiku-20240307-v1:0-input-tokens-cheap",
-            model="anthropic.claude-3-haiku-20240307-v1:0",
-            unit="1K tokens", price=0.00025,
-        ),
-        _bedrock_product(
-            usagetype="USE1-anthropic.claude-3-haiku-20240307-v1:0-output-tokens",
-            model="anthropic.claude-3-haiku-20240307-v1:0",
-            unit="1K tokens", price=0.00125,
-        ),
-    ]])
+    fake_boto3(
+        [
+            [
+                _bedrock_product(
+                    usagetype="USE1-anthropic.claude-3-haiku-20240307-v1:0-input-tokens",
+                    model="anthropic.claude-3-haiku-20240307-v1:0",
+                    unit="1K tokens",
+                    price=0.00050,
+                ),
+                _bedrock_product(
+                    usagetype="USE1-anthropic.claude-3-haiku-20240307-v1:0-input-tokens-cheap",
+                    model="anthropic.claude-3-haiku-20240307-v1:0",
+                    unit="1K tokens",
+                    price=0.00025,
+                ),
+                _bedrock_product(
+                    usagetype="USE1-anthropic.claude-3-haiku-20240307-v1:0-output-tokens",
+                    model="anthropic.claude-3-haiku-20240307-v1:0",
+                    unit="1K tokens",
+                    price=0.00125,
+                ),
+            ]
+        ]
+    )
     from scripts.token_fetchers import bedrock
 
     out = bedrock.fetch_token_prices({"claude-3-haiku": {"provider": "bedrock"}})
@@ -240,18 +272,24 @@ def test_picks_cheapest_when_multiple_inputs(fake_boto3):
 
 def test_normalizes_per_token_unit_to_per_1m(fake_boto3):
     """A row priced per single token (rare) should be scaled up correctly."""
-    fake_boto3([[
-        _bedrock_product(
-            usagetype="USE1-anthropic.claude-3-haiku-20240307-v1:0-input-tokens",
-            model="anthropic.claude-3-haiku-20240307-v1:0",
-            unit="tokens", price=0.00000025,  # $0.25 per 1M
-        ),
-        _bedrock_product(
-            usagetype="USE1-anthropic.claude-3-haiku-20240307-v1:0-output-tokens",
-            model="anthropic.claude-3-haiku-20240307-v1:0",
-            unit="tokens", price=0.00000125,
-        ),
-    ]])
+    fake_boto3(
+        [
+            [
+                _bedrock_product(
+                    usagetype="USE1-anthropic.claude-3-haiku-20240307-v1:0-input-tokens",
+                    model="anthropic.claude-3-haiku-20240307-v1:0",
+                    unit="tokens",
+                    price=0.00000025,  # $0.25 per 1M
+                ),
+                _bedrock_product(
+                    usagetype="USE1-anthropic.claude-3-haiku-20240307-v1:0-output-tokens",
+                    model="anthropic.claude-3-haiku-20240307-v1:0",
+                    unit="tokens",
+                    price=0.00000125,
+                ),
+            ]
+        ]
+    )
     from scripts.token_fetchers import bedrock
 
     out = bedrock.fetch_token_prices({"claude-3-haiku": {"provider": "bedrock"}})
@@ -278,34 +316,44 @@ def test_raises_fetch_error_when_pricing_api_throws(fake_boto3, monkeypatch):
 def test_disambiguates_claude_3_haiku_from_3_5_haiku(fake_boto3):
     """The hints table must not let claude-3-haiku match claude-3-5-haiku
     (longer fragment); verify both can refresh independently."""
-    fake_boto3([[
-        _bedrock_product(
-            usagetype="USE1-anthropic.claude-3-haiku-20240307-v1:0-input-tokens",
-            model="anthropic.claude-3-haiku-20240307-v1:0",
-            unit="1K tokens", price=0.00025,
-        ),
-        _bedrock_product(
-            usagetype="USE1-anthropic.claude-3-haiku-20240307-v1:0-output-tokens",
-            model="anthropic.claude-3-haiku-20240307-v1:0",
-            unit="1K tokens", price=0.00125,
-        ),
-        _bedrock_product(
-            usagetype="USE1-anthropic.claude-3-5-haiku-20241022-v1:0-input-tokens",
-            model="anthropic.claude-3-5-haiku-20241022-v1:0",
-            unit="1K tokens", price=0.00080,
-        ),
-        _bedrock_product(
-            usagetype="USE1-anthropic.claude-3-5-haiku-20241022-v1:0-output-tokens",
-            model="anthropic.claude-3-5-haiku-20241022-v1:0",
-            unit="1K tokens", price=0.00400,
-        ),
-    ]])
+    fake_boto3(
+        [
+            [
+                _bedrock_product(
+                    usagetype="USE1-anthropic.claude-3-haiku-20240307-v1:0-input-tokens",
+                    model="anthropic.claude-3-haiku-20240307-v1:0",
+                    unit="1K tokens",
+                    price=0.00025,
+                ),
+                _bedrock_product(
+                    usagetype="USE1-anthropic.claude-3-haiku-20240307-v1:0-output-tokens",
+                    model="anthropic.claude-3-haiku-20240307-v1:0",
+                    unit="1K tokens",
+                    price=0.00125,
+                ),
+                _bedrock_product(
+                    usagetype="USE1-anthropic.claude-3-5-haiku-20241022-v1:0-input-tokens",
+                    model="anthropic.claude-3-5-haiku-20241022-v1:0",
+                    unit="1K tokens",
+                    price=0.00080,
+                ),
+                _bedrock_product(
+                    usagetype="USE1-anthropic.claude-3-5-haiku-20241022-v1:0-output-tokens",
+                    model="anthropic.claude-3-5-haiku-20241022-v1:0",
+                    unit="1K tokens",
+                    price=0.00400,
+                ),
+            ]
+        ]
+    )
     from scripts.token_fetchers import bedrock
 
-    out = bedrock.fetch_token_prices({
-        "claude-3-haiku":   {"provider": "bedrock"},
-        "claude-3-5-haiku": {"provider": "bedrock"},
-    })
+    out = bedrock.fetch_token_prices(
+        {
+            "claude-3-haiku": {"provider": "bedrock"},
+            "claude-3-5-haiku": {"provider": "bedrock"},
+        }
+    )
     assert out["claude-3-haiku"]["input_per_1m_usd"] == pytest.approx(0.25)
     assert out["claude-3-5-haiku"]["input_per_1m_usd"] == pytest.approx(0.80)
     # CRITICAL: 3-haiku must NOT pick up 3-5-haiku's price (would be 0.80 not 0.25)

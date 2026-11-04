@@ -11,6 +11,7 @@ Examples:
     cloudprice-mcp history --since 2026-01-01       # window
     cloudprice-mcp history --format json            # machine-readable
 """
+
 from __future__ import annotations
 
 import argparse
@@ -86,12 +87,18 @@ def _emit_summary(
 ) -> int:
     points = load_history(cloud=cloud, sku=sku, since=since)
     if fmt == "json":
-        print(json.dumps({
-            "snapshots": snapshots,
-            "filters": {"cloud": cloud, "sku": sku, "since": since},
-            "data_points": len(points),
-            "series": [p.to_dict() for p in points],
-        }, indent=2, default=str))
+        print(
+            json.dumps(
+                {
+                    "snapshots": snapshots,
+                    "filters": {"cloud": cloud, "sku": sku, "since": since},
+                    "data_points": len(points),
+                    "series": [p.to_dict() for p in points],
+                },
+                indent=2,
+                default=str,
+            )
+        )
         return 0
 
     # Group into per-(cloud, sku) windows so we can print one-line summaries.
@@ -99,8 +106,7 @@ def _emit_summary(
     for p in points:
         by_key.setdefault((p.cloud, p.sku), []).append(p)
 
-    print(f"Tracked snapshots: {len(snapshots)} "
-          f"({snapshots[0]} -> {snapshots[-1]})")
+    print(f"Tracked snapshots: {len(snapshots)} ({snapshots[0]} -> {snapshots[-1]})")
     if cloud or sku or since:
         filters = []
         if cloud:
@@ -117,7 +123,9 @@ def _emit_summary(
         pts_sorted = sorted(pts, key=lambda p: p.as_of)
         latest = pts_sorted[-1].hourly_usd
         oldest = pts_sorted[0].hourly_usd
-        change_pct = ((latest - oldest) / oldest * 100) if oldest > 0 and len(pts_sorted) > 1 else 0.0
+        change_pct = (
+            ((latest - oldest) / oldest * 100) if oldest > 0 and len(pts_sorted) > 1 else 0.0
+        )
         change_str = f"{change_pct:+.2f}%" if change_pct != 0 else "-"
         print(f"{c:<6} {s:<34} {len(pts):>4} ${latest:>11.5f} {change_str:>10}")
     return 0

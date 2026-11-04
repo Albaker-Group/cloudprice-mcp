@@ -6,6 +6,7 @@ JSON-RPC over HTTP here.
 
 Run:  python gateway_lambda/call_gateway.py
 """
+
 import json
 import sys
 
@@ -23,8 +24,7 @@ creds = session.get_credentials().get_frozen_credentials()
 
 
 def rpc(method, params=None, rpc_id=1):
-    body = json.dumps({"jsonrpc": "2.0", "id": rpc_id, "method": method,
-                       "params": params or {}})
+    body = json.dumps({"jsonrpc": "2.0", "id": rpc_id, "method": method, "params": params or {}})
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json, text/event-stream",

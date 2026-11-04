@@ -12,6 +12,7 @@ Tier 1 (verified, smoke-tested): Claude Desktop, GitHub Copilot
 Tier 2 (documented, format confirmed): Cursor, Windsurf, Cline
 Tier 3 (best-effort, may need manual tweak): Continue, Zed
 """
+
 from __future__ import annotations
 
 import json
@@ -171,7 +172,7 @@ class ClientAdapter:
 
         action = self.plan_action(existing, command, args, force, dry_run)
 
-        if action == ACTION_SKIPPED_IDENTICAL or action == ACTION_WOULD_SKIP_IDENTICAL:
+        if action in (ACTION_SKIPPED_IDENTICAL, ACTION_WOULD_SKIP_IDENTICAL):
             return WriteResult(
                 self.name, self.display_name, self.config_path(), action, existing or {}
             )
@@ -222,10 +223,7 @@ class ClaudeDesktopAdapter(ClientAdapter):
 
     def is_installed(self) -> bool:
         if sys.platform == "win32":
-            for p in self._windows_candidates():
-                if p.parent.exists():
-                    return True
-            return False
+            return any(p.parent.exists() for p in self._windows_candidates())
         return self.config_path().parent.exists()
 
     def restart_instructions(self) -> str:
@@ -330,13 +328,7 @@ class ClineAdapter(ClientAdapter):
     SETTINGS_FILE = "cline_mcp_settings.json"
 
     def config_path(self) -> Path:
-        return (
-            _vscode_user_dir()
-            / "globalStorage"
-            / self.EXT_ID
-            / "settings"
-            / self.SETTINGS_FILE
-        )
+        return _vscode_user_dir() / "globalStorage" / self.EXT_ID / "settings" / self.SETTINGS_FILE
 
     def is_installed(self) -> bool:
         # Cline writes globalStorage only after the extension has run at least once.

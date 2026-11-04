@@ -1,4 +1,5 @@
 """Tests for v0.6 finops/commitment.py — optimize_commitment orchestrator."""
+
 from __future__ import annotations
 
 import pytest
@@ -316,9 +317,7 @@ def test_scenario_filter_returns_only_requested_subset():
         source_cloud="aws",
         compute=[ComputeItem(name="x", vcpus=8, memory_gb=32)],
     )
-    result = optimize_commitment(
-        catalog, inv, scenarios=["none", "3yr_partial_upfront"]
-    )
+    result = optimize_commitment(catalog, inv, scenarios=["none", "3yr_partial_upfront"])
     assert set(result["scenarios"].keys()) == {"none", "3yr_partial_upfront"}
 
 

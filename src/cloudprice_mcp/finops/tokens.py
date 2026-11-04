@@ -24,6 +24,7 @@ Returns per-model, per-provider rows ranked by total monthly cost when
 volumes are provided, or by per-1M output cost otherwise (since output
 tokens dominate most chat/inference workloads).
 """
+
 from __future__ import annotations
 
 import json
@@ -130,8 +131,12 @@ def compare_token_pricing(
 
     return {
         "kind": "token_pricing_comparison",
-        "title": _build_title(model_family, model_id, providers, monthly_input_tokens, monthly_output_tokens),
-        "headline": _build_headline(rows, ranking_field, monthly_input_tokens, monthly_output_tokens),
+        "title": _build_title(
+            model_family, model_id, providers, monthly_input_tokens, monthly_output_tokens
+        ),
+        "headline": _build_headline(
+            rows, ranking_field, monthly_input_tokens, monthly_output_tokens
+        ),
         "as_of": catalog.get("as_of"),
         "filters": {
             "model_family": model_family,
@@ -145,7 +150,9 @@ def compare_token_pricing(
         "recommended": {
             "model_id": recommended["model_id"],
             "provider": recommended["provider"],
-        } if recommended else None,
+        }
+        if recommended
+        else None,
         "matched_models": sorted(matched_models),
         "matched_providers": sorted(seen_providers),
         "honest_gaps": _honest_gaps(),

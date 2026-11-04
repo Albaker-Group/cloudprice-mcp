@@ -43,7 +43,7 @@ def test_compare_object_storage_returns_4_clouds():
     )
     totals = result["totals_by_cloud"]
     assert set(totals.keys()) == {"aws", "azure", "gcp", "oci"}
-    for cloud, total in totals.items():
+    for total in totals.values():
         # 1000 GB hot tier should be > $0 on every paid cloud
         assert total > 0
 
@@ -98,7 +98,6 @@ def test_quantity_multiplies_total():
     )
     for cloud in ("aws", "azure", "gcp", "oci"):
         if one["totals_by_cloud"][cloud] > 0:
-            assert (
-                round(five["totals_by_cloud"][cloud], 2)
-                == round(one["totals_by_cloud"][cloud] * 5, 2)
+            assert round(five["totals_by_cloud"][cloud], 2) == round(
+                one["totals_by_cloud"][cloud] * 5, 2
             )

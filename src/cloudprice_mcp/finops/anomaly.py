@@ -25,6 +25,7 @@ mostly the v0.7.0 -> v0.8.0 corrections we already know about (e.g., OCI
 weeks; by then it auto-surfaces genuinely unusual moves nobody manually
 noticed.
 """
+
 from __future__ import annotations
 
 import statistics
@@ -41,9 +42,9 @@ Method = Literal["percent_change", "z_score", "auto"]
 # sensitivities feed straight into "weekly LinkedIn anomaly post" content.
 _SENSITIVITY_THRESHOLDS: dict[Sensitivity, tuple[float, float]] = {
     # (pct_change_threshold, z_score_threshold)
-    "strict":     (10.0, 2.5),   # only flag dramatic moves
-    "moderate":   (5.0, 2.0),    # default — catches real moves, few false positives
-    "permissive": (2.0, 1.5),    # surface gentle drifts too
+    "strict": (10.0, 2.5),  # only flag dramatic moves
+    "moderate": (5.0, 2.0),  # default — catches real moves, few false positives
+    "permissive": (2.0, 1.5),  # surface gentle drifts too
 }
 
 
@@ -52,8 +53,8 @@ class Anomaly:
     cloud: str
     sku: str
     method: Method
-    severity: float            # absolute % change OR |z-score|
-    change_pct: float          # signed % change earliest -> latest in window
+    severity: float  # absolute % change OR |z-score|
+    change_pct: float  # signed % change earliest -> latest in window
     direction: Literal["up", "down"]
     earliest_as_of: str
     latest_as_of: str
@@ -100,8 +101,9 @@ def detect_price_anomalies(
     """
     snapshots = list_snapshot_dates()
     if not snapshots:
-        return _empty_result(sensitivity, method, since, cloud,
-                             reason="No price snapshots bundled with this build.")
+        return _empty_result(
+            sensitivity, method, since, cloud, reason="No price snapshots bundled with this build."
+        )
 
     # Bucket points by (cloud, sku)
     points = load_history(cloud=cloud, since=since)
@@ -110,8 +112,9 @@ def detect_price_anomalies(
         by_key.setdefault((p.cloud, p.sku), []).append(p)
 
     if not by_key:
-        return _empty_result(sensitivity, method, since, cloud,
-                             reason="No price history matches the filters.")
+        return _empty_result(
+            sensitivity, method, since, cloud, reason="No price history matches the filters."
+        )
 
     pct_threshold, z_threshold = _SENSITIVITY_THRESHOLDS[sensitivity]
 
@@ -126,7 +129,9 @@ def detect_price_anomalies(
     anomalies: list[Anomaly] = []
     for (c, sku), pts in by_key.items():
         anomaly = _classify_sku(
-            cloud=c, sku=sku, pts=pts,
+            cloud=c,
+            sku=sku,
+            pts=pts,
             method=effective_method,
             pct_threshold=pct_threshold,
             z_threshold=z_threshold,
@@ -155,8 +160,13 @@ def detect_price_anomalies(
 
 
 def _classify_sku(
-    *, cloud: str, sku: str, pts: list,
-    method: Method, pct_threshold: float, z_threshold: float,
+    *,
+    cloud: str,
+    sku: str,
+    pts: list,
+    method: Method,
+    pct_threshold: float,
+    z_threshold: float,
 ) -> Anomaly | None:
     """Decide whether a single (cloud, sku) series qualifies as an anomaly.
 
@@ -177,7 +187,8 @@ def _classify_sku(
     change_pct = (latest.hourly_usd - earliest.hourly_usd) / earliest.hourly_usd * 100
     abs_pct = abs(change_pct)
     base_kwargs = {
-        "cloud": cloud, "sku": sku,
+        "cloud": cloud,
+        "sku": sku,
         "change_pct": round(change_pct, 2),
         "direction": "up" if change_pct > 0 else "down",
         "earliest_as_of": earliest.as_of,
@@ -189,7 +200,11 @@ def _classify_sku(
 
     if method == "z_score" and len(pts_sorted) >= 3:
         z_anomaly = _try_zscore_anomaly(
-            pts_sorted, base_kwargs, z_threshold, pct_threshold, abs_pct,
+            pts_sorted,
+            base_kwargs,
+            z_threshold,
+            pct_threshold,
+            abs_pct,
         )
         if z_anomaly is not None:
             return z_anomaly
@@ -202,8 +217,11 @@ def _classify_sku(
 
 
 def _try_zscore_anomaly(
-    pts_sorted: list, base_kwargs: dict, z_threshold: float,
-    pct_threshold: float, abs_pct: float,
+    pts_sorted: list,
+    base_kwargs: dict,
+    z_threshold: float,
+    pct_threshold: float,
+    abs_pct: float,
 ) -> Anomaly | None:
     """Z-score branch of the classifier. Returns Anomaly when |z|>=threshold,
     or when historical stdev is 0 but the latest point moved (sentinel z=999

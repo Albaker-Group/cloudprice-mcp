@@ -20,6 +20,7 @@ are deferred to v0.6.x — the morning's RI break-even queries showed that flat 
 are a useful approximation for most workloads, and per-family precision is best
 delivered after we see what families users actually run.
 """
+
 from __future__ import annotations
 
 import json
@@ -90,15 +91,12 @@ def optimize_commitment(
         dict with `kind=commitment_optimization`, per-scenario breakdown, recommendation.
     """
     if not inventory.compute:
-        raise ValueError(
-            "optimize_commitment: inventory.compute must have at least one item."
-        )
+        raise ValueError("optimize_commitment: inventory.compute must have at least one item.")
 
     target_cloud: Cloud = cloud or inventory.source_cloud or "aws"
     if target_cloud not in CLOUDS:
         raise ValueError(
-            f"optimize_commitment: unknown cloud '{target_cloud}'. "
-            f"Must be one of {CLOUDS}."
+            f"optimize_commitment: unknown cloud '{target_cloud}'. Must be one of {CLOUDS}."
         )
 
     scenarios = list(scenarios) if scenarios is not None else list(ALL_SCENARIOS)
@@ -265,8 +263,7 @@ def _all_free_result(cloud: Cloud, scenarios: list[str]) -> dict:
         "kind": "commitment_optimization",
         "title": f"Commitment Optimization: {cloud.upper()}",
         "headline": (
-            f"Workload fits {cloud.upper()}'s Always Free tier — no commitment "
-            "savings to consider."
+            f"Workload fits {cloud.upper()}'s Always Free tier — no commitment savings to consider."
         ),
         "cloud": cloud,
         "on_demand_monthly_usd": 0.0,
@@ -335,9 +332,7 @@ def _build_reason(recommended: str, per_scenario: dict[str, dict]) -> str:
             f"${savings_usd:,.0f} saved with ${upfront:,.0f} upfront."
         )
     if savings_usd > 0:
-        return (
-            f"${savings_usd:,.0f} saved over 3 years with no upfront cost."
-        )
+        return f"${savings_usd:,.0f} saved over 3 years with no upfront cost."
     return "No commitment scenario produces savings — stay on-demand."
 
 
@@ -348,6 +343,5 @@ def _validate_scenarios(scenarios: list[str]) -> None:
     unknown = [s for s in scenarios if s not in ALL_SCENARIOS]
     if unknown:
         raise ValueError(
-            f"optimize_commitment: unknown scenario(s) {unknown}. "
-            f"Valid: {list(ALL_SCENARIOS)}"
+            f"optimize_commitment: unknown scenario(s) {unknown}. Valid: {list(ALL_SCENARIOS)}"
         )

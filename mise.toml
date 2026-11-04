@@ -1,0 +1,5 @@
+# Pinned toolchain. CI uses the same versions (.github/workflows), so local == CI.
+# Install with `mise install` (https://mise.jdx.dev), or install these versions by hand.
+[tools]
+python = "3.12"
+uv = "0.10.4"

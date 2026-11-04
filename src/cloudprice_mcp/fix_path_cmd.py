@@ -8,6 +8,7 @@ use absolute Python path + `-m` form and don't depend on the shim being on PATH.
 This command exists for users who want the bare `cloudprice-mcp` command to work
 in their shell as well.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -45,7 +46,9 @@ def run_fix_path(args: argparse.Namespace) -> int:
     if args.check:
         if path_fix.is_in_user_path(scripts_dir):
             print("✓ Scripts folder is in your persistent user PATH.")
-            print("  If `cloudprice-mcp` still doesn't resolve in this shell, open a fresh PowerShell window.")
+            print(
+                "  If `cloudprice-mcp` still doesn't resolve in this shell, open a fresh PowerShell window."
+            )
             return 0
         print("⚠ Scripts folder is NOT in your persistent user PATH.")
         print("  Run `cloudprice-mcp fix-path` (without --check) to add it.")
@@ -91,14 +94,18 @@ def run_fix_path(args: argparse.Namespace) -> int:
 
 def add_fix_path_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
-        "--check", action="store_true",
+        "--check",
+        action="store_true",
         help="Inspect-only: report PATH state. Exit 0 if Scripts is on persistent PATH, 1 if not.",
     )
     parser.add_argument(
-        "--remove", action="store_true",
+        "--remove",
+        action="store_true",
         help="Remove the Scripts directory from user PATH (undo a previous fix-path).",
     )
     parser.add_argument(
-        "--yes", "-y", action="store_true",
+        "--yes",
+        "-y",
+        action="store_true",
         help="Skip the confirmation prompt.",
     )

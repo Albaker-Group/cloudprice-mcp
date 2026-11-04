@@ -1,4 +1,5 @@
 """Shared types + errors for per-cloud fetchers."""
+
 from __future__ import annotations
 
 from typing import Protocol, TypedDict
@@ -36,10 +37,6 @@ class CloudFetcher(Protocol):
     cloud_name: str
     region: str
 
-    def fetch_instance_prices(
-        self, skus: list[InstanceSku]
-    ) -> list[InstanceSku]: ...
+    def fetch_instance_prices(self, skus: list[InstanceSku]) -> list[InstanceSku]: ...
 
-    def fetch_storage_prices(
-        self, skus: list[StorageSku]
-    ) -> list[StorageSku]: ...
+    def fetch_storage_prices(self, skus: list[StorageSku]) -> list[StorageSku]: ...

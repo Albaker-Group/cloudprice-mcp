@@ -28,3 +28,7 @@ scripts/cloudprice-mcp-deploy-policy.json
 *_APPLICATION.md
 *_SUBMISSION.md
 LINKEDIN_*.md
+
+# pytest-cov data
+.coverage
+.coverage.*

@@ -16,6 +16,7 @@ This is what a FinOps practitioner hands to a CFO who needs a defensible
 decision artifact. It's not "trust me, the cloud calculator said so." It's
 "here's what we asked, what we got back, the assumptions, and the limits."
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -67,8 +68,11 @@ def generate_decision_report(
             carbon = None
 
     markdown = _render_markdown(
-        migration=migration, carbon=carbon, inventory=inventory,
-        catalog=catalog, requester=requester,
+        migration=migration,
+        carbon=carbon,
+        inventory=inventory,
+        catalog=catalog,
+        requester=requester,
     )
 
     return {
@@ -91,8 +95,12 @@ def generate_decision_report(
 
 
 def _render_markdown(
-    *, migration: dict, carbon: dict | None, inventory: WorkloadInventory,
-    catalog: PriceCatalog, requester: str | None,
+    *,
+    migration: dict,
+    carbon: dict | None,
+    inventory: WorkloadInventory,
+    catalog: PriceCatalog,
+    requester: str | None,
 ) -> str:
     lines: list[str] = []
 
@@ -118,7 +126,8 @@ def _render_markdown(
             payback = targets[rec].get("payback_months")
             sav_str = f"{savings_pct}%" if savings_pct is not None else "an unknown amount"
             pay_str = (
-                f"{payback:.1f} months" if isinstance(payback, (int, float)) and payback >= 0
+                f"{payback:.1f} months"
+                if isinstance(payback, (int, float)) and payback >= 0
                 else "n/a (no exit cost modeled)"
             )
             lines.append(
@@ -127,7 +136,9 @@ def _render_markdown(
                 f"Savings: {sav_str}. Payback: {pay_str}."
             )
         else:
-            lines.append(f"- **Recommendation**: stay on {source.upper()}. Headline: {migration.get('headline')}")
+            lines.append(
+                f"- **Recommendation**: stay on {source.upper()}. Headline: {migration.get('headline')}"
+            )
     else:
         lines.append("- No migration recommendation could be computed for this workload.")
     lines.append("")
@@ -146,10 +157,13 @@ def _render_markdown(
             continue
         savings = t.get("savings_vs_source_pct")
         payback = t.get("payback_months")
-        sav_cell = f"{savings:+d}%" if isinstance(savings, int) else (f"{savings}" if savings is not None else "—")
+        sav_cell = (
+            f"{savings:+d}%"
+            if isinstance(savings, int)
+            else (f"{savings}" if savings is not None else "—")
+        )
         pay_cell = (
-            f"{payback:.1f} mo" if isinstance(payback, (int, float)) and payback >= 0
-            else "n/a"
+            f"{payback:.1f} mo" if isinstance(payback, (int, float)) and payback >= 0 else "n/a"
         )
         marker = " ←" if cloud == rec else ""
         lines.append(
@@ -171,7 +185,9 @@ def _render_markdown(
         if carbon.get("headline"):
             lines.append(f"_{carbon['headline']}_")
             lines.append("")
-        lines.append("| Cloud | Monthly kg CO2e (grid) | Residual (after renewable matching) | Power class |")
+        lines.append(
+            "| Cloud | Monthly kg CO2e (grid) | Residual (after renewable matching) | Power class |"
+        )
         lines.append("|---|---|---|---|")
         for row in carbon["per_cloud"]:
             cloud = row["cloud"]
@@ -210,7 +226,10 @@ def _render_markdown(
 
     # --- Honest gaps (aggregated) ---
     all_gaps: list[str] = []
-    for source_name, gaps in (("migration", migration.get("honest_gaps")), ("carbon", carbon.get("honest_gaps") if carbon else None)):
+    for source_name, gaps in (
+        ("migration", migration.get("honest_gaps")),
+        ("carbon", carbon.get("honest_gaps") if carbon else None),
+    ):
         if not gaps:
             continue
         for g in gaps:
@@ -229,11 +248,15 @@ def _render_markdown(
     lines.append(f"- **Catalog as_of**: {catalog.as_of}")
     if requester:
         lines.append(f"- **Requested by**: {requester}")
-    lines.append("- **Method**: per-cloud monthly + 3-year totals via `assess_migration`. "
-                 "Carbon via `compare_carbon_footprint` when included. List-price catalog; "
-                 "no enterprise / committed-use discounts applied.")
-    lines.append("- **Reproduce**: `pip install \"cloudprice-mcp==" + __version__ + "\"` and pass the "
-                 "Workload analyzed block above as the input to `generate_decision_report`.")
+    lines.append(
+        "- **Method**: per-cloud monthly + 3-year totals via `assess_migration`. "
+        "Carbon via `compare_carbon_footprint` when included. List-price catalog; "
+        "no enterprise / committed-use discounts applied."
+    )
+    lines.append(
+        '- **Reproduce**: `pip install "cloudprice-mcp==' + __version__ + '"` and pass the '
+        "Workload analyzed block above as the input to `generate_decision_report`."
+    )
     lines.append("")
 
     return "\n".join(lines)

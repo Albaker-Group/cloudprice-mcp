@@ -22,6 +22,7 @@ Out of scope:
 - Cloudflare / Fastly / dedicated CDN providers (different category)
 - Per-region pricing (waits for v0.7+ multi-region support)
 """
+
 from __future__ import annotations
 
 from ..compare import CLOUDS, EgressRequest, compare_egress
@@ -46,22 +47,14 @@ def find_egress_arbitrage(
         dict with `kind=egress_arbitrage`, per-target breakdown, recommendation.
     """
     if not inventory.source_cloud:
-        raise ValueError(
-            "find_egress_arbitrage: inventory.source_cloud must be set."
-        )
+        raise ValueError("find_egress_arbitrage: inventory.source_cloud must be set.")
     if not inventory.egress:
-        raise ValueError(
-            "find_egress_arbitrage: inventory.egress must contain at least one item."
-        )
+        raise ValueError("find_egress_arbitrage: inventory.egress must contain at least one item.")
 
     source = inventory.source_cloud
-    target_clouds: list[Cloud] = list(targets) if targets else [
-        c for c in CLOUDS if c != source
-    ]
+    target_clouds: list[Cloud] = list(targets) if targets else [c for c in CLOUDS if c != source]
     if not target_clouds:
-        raise ValueError(
-            "find_egress_arbitrage: no target clouds to evaluate."
-        )
+        raise ValueError("find_egress_arbitrage: no target clouds to evaluate.")
 
     source_monthly = _egress_total_for_cloud(catalog, inventory, source)
     annual_source_usd = source_monthly * 12
@@ -72,11 +65,7 @@ def find_egress_arbitrage(
         target_monthly = _egress_total_for_cloud(catalog, inventory, target)
         monthly_savings = source_monthly - target_monthly
         annual_savings = monthly_savings * 12
-        savings_pct = (
-            round(100 * monthly_savings / source_monthly)
-            if source_monthly > 0
-            else 0
-        )
+        savings_pct = round(100 * monthly_savings / source_monthly) if source_monthly > 0 else 0
         if monthly_savings > 0 and exit_cost > 0:
             payback = round(exit_cost / monthly_savings, 1)
         elif monthly_savings > 0:
@@ -129,9 +118,7 @@ def find_egress_arbitrage(
 # --- Per-cloud egress total ---
 
 
-def _egress_total_for_cloud(
-    catalog: PriceCatalog, inv: WorkloadInventory, cloud: Cloud
-) -> float:
+def _egress_total_for_cloud(catalog: PriceCatalog, inv: WorkloadInventory, cloud: Cloud) -> float:
     """Total monthly egress cost on `cloud` — internet + inter-region combined."""
     total = 0.0
 

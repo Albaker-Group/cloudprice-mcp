@@ -23,7 +23,9 @@ class Instance:
     # doesn't publish a separate spot price or the fetcher hasn't run yet.
     spot_hourly_usd: float | None = None
     # v0.11.0+ optional GPU fields. CPU-only SKUs leave both None/0.
-    gpu_type: str | None = None    # canonical name: "A100" | "H100" | "L4" | "L40S" | "T4" | "A10" | "A10G" | "V100"
+    gpu_type: str | None = (
+        None  # canonical name: "A100" | "H100" | "L4" | "L40S" | "T4" | "A10" | "A10G" | "V100"
+    )
     gpu_count: int = 0
     gpu_memory_gb_each: float | None = None  # differentiates A100 40GB vs 80GB
 
@@ -340,11 +342,7 @@ def load_catalog() -> PriceCatalog:
 def _load_egress_catalog() -> list[EgressPricing]:
     """Load egress pricing data. Optional file — if missing, returns []."""
     try:
-        data_text = (
-            resources.files(DATA_PACKAGE)
-            .joinpath("egress_prices.json")
-            .read_text()
-        )
+        data_text = resources.files(DATA_PACKAGE).joinpath("egress_prices.json").read_text()
     except FileNotFoundError:
         return []
     raw = json.loads(data_text)
@@ -376,9 +374,7 @@ def _load_egress_catalog() -> list[EgressPricing]:
 def _load_postgres_catalog() -> list[PostgresSku]:
     """Load managed-Postgres pricing data. Optional file — if missing, returns []."""
     try:
-        data_text = (
-            resources.files(DATA_PACKAGE).joinpath("postgres_prices.json").read_text()
-        )
+        data_text = resources.files(DATA_PACKAGE).joinpath("postgres_prices.json").read_text()
     except FileNotFoundError:
         return []
 
@@ -410,11 +406,7 @@ def _load_postgres_catalog() -> list[PostgresSku]:
 def _load_object_storage_catalog() -> list[ObjectStorageSku]:
     """Load object storage pricing data. Optional file — if missing, returns []."""
     try:
-        data_text = (
-            resources.files(DATA_PACKAGE)
-            .joinpath("object_storage_prices.json")
-            .read_text()
-        )
+        data_text = resources.files(DATA_PACKAGE).joinpath("object_storage_prices.json").read_text()
     except FileNotFoundError:
         return []
 

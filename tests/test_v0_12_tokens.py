@@ -1,4 +1,5 @@
 """Tests for v0.12.0 compare_token_pricing — cross-provider LLM token pricing."""
+
 from __future__ import annotations
 
 import pytest

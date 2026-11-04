@@ -3,6 +3,7 @@
 
 Now multi-client aware: iterates every adapter and reports per-client status.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -53,6 +54,7 @@ def _check_package_install() -> bool:
 def _check_tool_registration() -> tuple[bool, int]:
     try:
         from .server import list_tools
+
         tools = asyncio.run(list_tools())
         _ok("MCP tools registered", f"{len(tools)} tools")
         return True, len(tools)
@@ -126,9 +128,9 @@ def _extract_command(adapter: clients.ClientAdapter, existing: dict) -> str | No
     if name == "copilot":
         return ((existing.get("servers") or {}).get(clients.ENTRY_NAME) or {}).get("command")
     if name == "zed":
-        return (
-            (existing.get("context_servers") or {}).get(clients.ENTRY_NAME) or {}
-        ).get("command")
+        return ((existing.get("context_servers") or {}).get(clients.ENTRY_NAME) or {}).get(
+            "command"
+        )
     if name == "continue":
         # Per-server file — entry is the whole document.
         return existing.get("command")
@@ -154,7 +156,9 @@ def _check_shell_shim() -> None:
 
     on_current = path_fix.is_on_current_path(scripts_dir)
     if on_current:
-        _ok(f"Scripts dir ({scripts_dir})", "on current shell PATH — bare `cloudprice-mcp` resolves")
+        _ok(
+            f"Scripts dir ({scripts_dir})", "on current shell PATH — bare `cloudprice-mcp` resolves"
+        )
         return
 
     if sys.platform == "win32":

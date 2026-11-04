@@ -1,4 +1,5 @@
 """Tests for v0.6 finops/egress_arbitrage.py — find_egress_arbitrage."""
+
 from __future__ import annotations
 
 import pytest
@@ -156,9 +157,7 @@ def test_payback_calculated_when_exit_cost_present():
     oci = result["targets"]["oci"]
     if oci["monthly_savings_usd"] > 0:
         # exit_cost / monthly_savings = payback months
-        expected = round(
-            result["one_time_exit_cost_usd"] / oci["monthly_savings_usd"], 1
-        )
+        expected = round(result["one_time_exit_cost_usd"] / oci["monthly_savings_usd"], 1)
         assert oci["payback_months"] == expected
 
 

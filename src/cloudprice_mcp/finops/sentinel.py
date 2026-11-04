@@ -34,6 +34,7 @@ bundled price-history dataset — so the report says not just "AWS costs
 went up 3%" but "AWS went up 3% because m5.xlarge price increased 4%
 between {baseline_date} and {today}."
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -58,11 +59,12 @@ class WatchBaseline:
     against a different workload — if the spec changes, the hash changes,
     and we return a fresh baseline rather than a misleading drift report.
     """
-    as_of: str                              # ISO date the baseline was captured
-    catalog_as_of: str                      # cloudprice catalog version at baseline time
-    workload_hash: str                      # deterministic hash of the workload spec
-    per_cloud_monthly_usd: dict[str, float] # cloud -> baseline monthly cost
-    threshold_pct: float = 5.0              # default drift threshold
+
+    as_of: str  # ISO date the baseline was captured
+    catalog_as_of: str  # cloudprice catalog version at baseline time
+    workload_hash: str  # deterministic hash of the workload spec
+    per_cloud_monthly_usd: dict[str, float]  # cloud -> baseline monthly cost
+    threshold_pct: float = 5.0  # default drift threshold
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -145,14 +147,16 @@ def watch_workload(
         old = baseline.per_cloud_monthly_usd.get(cloud, 0.0)
         new = per_cloud_now.get(cloud, 0.0)
         drift_pct = ((new - old) / old * 100) if old > 0 else 0.0
-        per_cloud_drift.append({
-            "cloud": cloud,
-            "baseline_monthly_usd": round(old, 2),
-            "current_monthly_usd": round(new, 2),
-            "drift_monthly_usd": round(new - old, 2),
-            "drift_pct": round(drift_pct, 2),
-            "exceeds_threshold": abs(drift_pct) >= threshold,
-        })
+        per_cloud_drift.append(
+            {
+                "cloud": cloud,
+                "baseline_monthly_usd": round(old, 2),
+                "current_monthly_usd": round(new, 2),
+                "drift_monthly_usd": round(new - old, 2),
+                "drift_pct": round(drift_pct, 2),
+                "exceeds_threshold": abs(drift_pct) >= threshold,
+            }
+        )
         max_abs_drift = max(max_abs_drift, abs(drift_pct))
 
     alert_triggered = max_abs_drift >= threshold
@@ -179,8 +183,7 @@ def watch_workload(
 
 def _per_cloud_costs(catalog: PriceCatalog, inventory: WorkloadInventory) -> dict[str, float]:
     return {
-        cloud: round(_total_monthly_for_cloud(catalog, inventory, cloud), 2)
-        for cloud in ALL_CLOUDS
+        cloud: round(_total_monthly_for_cloud(catalog, inventory, cloud), 2) for cloud in ALL_CLOUDS
     }
 
 
@@ -198,12 +201,10 @@ def _hash_workload(inventory: WorkloadInventory) -> str:
             for s in inventory.storage
         ],
         "egress": [
-            {"gb_per_month": e.gb_per_month, "direction": e.direction}
-            for e in inventory.egress
+            {"gb_per_month": e.gb_per_month, "direction": e.direction} for e in inventory.egress
         ],
         "object_storage": [
-            {"capacity_gb": o.capacity_gb, "tier": o.tier}
-            for o in inventory.object_storage
+            {"capacity_gb": o.capacity_gb, "tier": o.tier} for o in inventory.object_storage
         ],
         "commitment": inventory.commitment,
         "multi_az": inventory.multi_az,
@@ -226,6 +227,7 @@ def _attribute_sku_changes(since: str) -> list[dict[str, Any]]:
     changes: list[dict[str, Any]] = []
     seen_pairs: set[tuple[str, str]] = set()
     from ..history import load_history  # local import — avoid circular
+
     points = load_history(since=since)
     by_key: dict[tuple[str, str], list[Any]] = {}
     for p in points:
@@ -243,15 +245,17 @@ def _attribute_sku_changes(since: str) -> list[dict[str, Any]]:
         if (c, sku) in seen_pairs:
             continue
         seen_pairs.add((c, sku))
-        changes.append({
-            "cloud": c,
-            "sku": sku,
-            "old_hourly_usd": oldest.hourly_usd,
-            "new_hourly_usd": newest.hourly_usd,
-            "drift_pct": round(pct, 2),
-            "since": oldest.as_of,
-            "until": newest.as_of,
-        })
+        changes.append(
+            {
+                "cloud": c,
+                "sku": sku,
+                "old_hourly_usd": oldest.hourly_usd,
+                "new_hourly_usd": newest.hourly_usd,
+                "drift_pct": round(pct, 2),
+                "since": oldest.as_of,
+                "until": newest.as_of,
+            }
+        )
     changes.sort(key=lambda c: abs(c["drift_pct"]), reverse=True)
     return changes[:25]  # top 25 movers
 

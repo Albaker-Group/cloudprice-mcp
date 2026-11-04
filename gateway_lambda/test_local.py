@@ -2,6 +2,7 @@
 
 Run:  python gateway_lambda/test_local.py
 """
+
 import json
 import sys
 from pathlib import Path
@@ -25,9 +26,10 @@ class FakeContext:
 CASES = [
     ("get_aws_price", {"instance_type": "t3.2xlarge"}),
     ("compare_clouds", {"vcpus": 8, "memory_gb": 32}),
-    ("compare_egress", {"transfers": [
-        {"name": "cdn", "gb_per_month": 51200, "direction": "out_to_internet"}
-    ]}),
+    (
+        "compare_egress",
+        {"transfers": [{"name": "cdn", "gb_per_month": 51200, "direction": "out_to_internet"}]},
+    ),
     ("does_not_exist", {}),
 ]
 

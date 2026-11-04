@@ -7,6 +7,7 @@ Two surfaces:
      route queries to litellm-only / openrouter-only / both. Uses a small
      in-memory fixture with rows from both sources.
 """
+
 from __future__ import annotations
 
 import pytest
@@ -22,10 +23,16 @@ def _or_response(*entries: dict) -> dict:
     return {"data": list(entries)}
 
 
-def _or_entry(*, id: str, prompt: str, completion: str,
-              context_length: int | None = 200000,
-              cache_read: str | None = None, cache_write: str | None = None,
-              name: str | None = None) -> dict:
+def _or_entry(
+    *,
+    id: str,
+    prompt: str,
+    completion: str,
+    context_length: int | None = 200000,
+    cache_read: str | None = None,
+    cache_write: str | None = None,
+    name: str | None = None,
+) -> dict:
     pricing = {"prompt": prompt, "completion": completion}
     if cache_read is not None:
         pricing["input_cache_read"] = cache_read
@@ -44,8 +51,9 @@ def _or_entry(*, id: str, prompt: str, completion: str,
 
 
 def test_transform_converts_per_token_strings_to_per_1m_floats():
-    raw = _or_response(_or_entry(id="anthropic/claude-3-haiku",
-                                 prompt="0.00000025", completion="0.00000125"))
+    raw = _or_response(
+        _or_entry(id="anthropic/claude-3-haiku", prompt="0.00000025", completion="0.00000125")
+    )
     rows = _transform(raw)
     assert len(rows) == 1
     assert rows[0]["input_per_1m_usd"] == pytest.approx(0.25)
@@ -56,7 +64,7 @@ def test_transform_converts_per_token_strings_to_per_1m_floats():
 
 def test_transform_drops_free_models_with_zero_pricing():
     raw = _or_response(
-        _or_entry(id="free/model",  prompt="0", completion="0"),
+        _or_entry(id="free/model", prompt="0", completion="0"),
         _or_entry(id="paid/model", prompt="0.00000025", completion="0.00000125"),
     )
     ids = [r["openrouter_id"] for r in _transform(raw)]
@@ -64,23 +72,31 @@ def test_transform_drops_free_models_with_zero_pricing():
 
 
 def test_transform_skips_entries_missing_required_pricing():
-    raw = {"data": [
-        {"id": "x/y", "pricing": {"prompt": None, "completion": None}},
-        {"id": "no-id", "pricing": {"prompt": "0.000001", "completion": "0.000001"}},
-    ]}
+    raw = {
+        "data": [
+            {"id": "x/y", "pricing": {"prompt": None, "completion": None}},
+            {"id": "no-id", "pricing": {"prompt": "0.000001", "completion": "0.000001"}},
+        ]
+    }
     # First entry lacks prices, second lacks id — both skipped.
     # The second one has "no-id" as id actually, let me re-think.
     # Actually we need id absent. Use a model with id missing.
-    raw = {"data": [
-        {"pricing": {"prompt": "0.000001", "completion": "0.000001"}},  # no id
-        {"id": "x/y", "pricing": {"prompt": None, "completion": None}},  # null prices
-    ]}
+    raw = {
+        "data": [
+            {"pricing": {"prompt": "0.000001", "completion": "0.000001"}},  # no id
+            {"id": "x/y", "pricing": {"prompt": None, "completion": None}},  # null prices
+        ]
+    }
     assert _transform(raw) == []
 
 
 def test_transform_handles_non_numeric_pricing_gracefully():
     raw = _or_response(
-        {"id": "broken/model", "pricing": {"prompt": "not-a-number", "completion": "0.000001"}, "architecture": {"modality": "text->text"}},
+        {
+            "id": "broken/model",
+            "pricing": {"prompt": "not-a-number", "completion": "0.000001"},
+            "architecture": {"modality": "text->text"},
+        },
         _or_entry(id="ok/model", prompt="0.000001", completion="0.000002"),
     )
     ids = [r["openrouter_id"] for r in _transform(raw)]
@@ -88,10 +104,15 @@ def test_transform_handles_non_numeric_pricing_gracefully():
 
 
 def test_transform_populates_cache_rates_when_present():
-    raw = _or_response(_or_entry(
-        id="qwen/qwen-max", prompt="0.0000025", completion="0.0000075",
-        cache_read="0.00000025", cache_write="0.000003125",
-    ))
+    raw = _or_response(
+        _or_entry(
+            id="qwen/qwen-max",
+            prompt="0.0000025",
+            completion="0.0000075",
+            cache_read="0.00000025",
+            cache_write="0.000003125",
+        )
+    )
     row = _transform(raw)[0]
     assert row["cache_read_per_1m_usd"] == pytest.approx(0.25)
     assert row["cache_write_per_1m_usd"] == pytest.approx(3.125)
@@ -100,8 +121,13 @@ def test_transform_populates_cache_rates_when_present():
 def test_transform_omits_cache_fields_when_zero_or_missing():
     raw = _or_response(
         _or_entry(id="no-cache/model", prompt="0.000001", completion="0.000002"),
-        _or_entry(id="zero-cache/model", prompt="0.000001", completion="0.000002",
-                  cache_read="0", cache_write="0"),
+        _or_entry(
+            id="zero-cache/model",
+            prompt="0.000001",
+            completion="0.000002",
+            cache_read="0",
+            cache_write="0",
+        ),
     )
     rows = {r["openrouter_id"]: r for r in _transform(raw)}
     assert "cache_read_per_1m_usd" not in rows["no-cache/model"]
@@ -109,10 +135,14 @@ def test_transform_omits_cache_fields_when_zero_or_missing():
 
 
 def test_transform_carries_context_window_and_max_output():
-    raw = _or_response(_or_entry(
-        id="model/big", prompt="0.000001", completion="0.000002",
-        context_length=1_000_000,
-    ))
+    raw = _or_response(
+        _or_entry(
+            id="model/big",
+            prompt="0.000001",
+            completion="0.000002",
+            context_length=1_000_000,
+        )
+    )
     row = _transform(raw)[0]
     assert row["context_window_tokens"] == 1_000_000
     assert row["max_output_tokens"] == 4096
@@ -134,18 +164,33 @@ def _install_two_source_fixture(monkeypatch):
         "models": [
             # Same canonical model, two sources, different prices —
             # the cross-source comparison scenario.
-            {"model_id": "claude-3-haiku-20240307", "source": "litellm",
-             "provider": "anthropic", "mode": "chat",
-             "input_per_1m_usd": 0.25, "output_per_1m_usd": 1.25,
-             "context_window_tokens": 200000},
-            {"model_id": "anthropic/claude-3-haiku", "source": "openrouter",
-             "provider": "openrouter", "mode": "chat",
-             "input_per_1m_usd": 0.30, "output_per_1m_usd": 1.50,
-             "context_window_tokens": 200000},
-            {"model_id": "groq/llama-3.1-70b", "source": "litellm",
-             "provider": "groq", "mode": "chat",
-             "input_per_1m_usd": 0.59, "output_per_1m_usd": 0.79,
-             "context_window_tokens": 32768},
+            {
+                "model_id": "claude-3-haiku-20240307",
+                "source": "litellm",
+                "provider": "anthropic",
+                "mode": "chat",
+                "input_per_1m_usd": 0.25,
+                "output_per_1m_usd": 1.25,
+                "context_window_tokens": 200000,
+            },
+            {
+                "model_id": "anthropic/claude-3-haiku",
+                "source": "openrouter",
+                "provider": "openrouter",
+                "mode": "chat",
+                "input_per_1m_usd": 0.30,
+                "output_per_1m_usd": 1.50,
+                "context_window_tokens": 200000,
+            },
+            {
+                "model_id": "groq/llama-3.1-70b",
+                "source": "litellm",
+                "provider": "groq",
+                "mode": "chat",
+                "input_per_1m_usd": 0.59,
+                "output_per_1m_usd": 0.79,
+                "context_window_tokens": 32768,
+            },
         ],
     }
     monkeypatch.setattr(extended_tokens, "_cache", catalog)

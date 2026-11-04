@@ -24,6 +24,7 @@ OUT = Path(__file__).resolve().parent / "tool-schema.json"
 # CreateGatewayTarget fail with "does not match expected format".
 ALLOWED = {"type", "description", "properties", "required", "items"}
 
+
 # Dropped keywords still carry meaning the model should see, so fold them
 # into the description rather than discarding them.
 def _fold(node: dict) -> str:
@@ -71,8 +72,9 @@ def sanitize(node):
             out["properties"] = {name: sanitize(sub) for name, sub in value.items()}
         elif key == "items":
             # A schema, or a list of schemas.
-            out["items"] = ([sanitize(v) for v in value]
-                            if isinstance(value, list) else sanitize(value))
+            out["items"] = (
+                [sanitize(v) for v in value] if isinstance(value, list) else sanitize(value)
+            )
         elif key == "required" and isinstance(value, list):
             out["required"] = list(value)
         elif key == "type":
@@ -123,7 +125,7 @@ def main() -> int:
                 for sub in value.values():
                     scan(sub)
             elif key == "items":
-                for sub in (value if isinstance(value, list) else [value]):
+                for sub in value if isinstance(value, list) else [value]:
                     scan(sub)
             elif key not in ALLOWED:
                 found.add(key)
@@ -134,7 +136,8 @@ def main() -> int:
 
     # A tool that declares required args but no properties cannot be called.
     broken = [
-        t["name"] for t in schema
+        t["name"]
+        for t in schema
         if t["inputSchema"].get("required") and not t["inputSchema"].get("properties")
     ]
     print(f"  tools with required args but no properties: {broken or 'none'}")

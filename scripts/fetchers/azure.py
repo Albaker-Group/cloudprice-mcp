@@ -11,6 +11,7 @@ Linux on-demand pricing only. Spot, low-priority, reserved, and Windows variants
 are filtered out client-side because Azure's `meterName` distinguishes them
 inconsistently (sometimes via meterName, sometimes via productName).
 """
+
 from __future__ import annotations
 
 import time
@@ -97,31 +98,33 @@ def _lookup_one(
             break
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 429 and attempt < _RETRY_MAX_ATTEMPTS - 1:
-                time.sleep(_RETRY_INITIAL_BACKOFF_SECONDS * (2 ** attempt))
+                time.sleep(_RETRY_INITIAL_BACKOFF_SECONDS * (2**attempt))
                 continue
             raise FetchError(f"Azure Retail Prices API error for {arm_sku_name}: {e}") from e
         except httpx.HTTPError as e:
             raise FetchError(f"Azure Retail Prices API error for {arm_sku_name}: {e}") from e
-    assert resp is not None
+    if resp is None:  # unreachable: every loop path returns, continues or raises
+        raise FetchError(f"Azure Retail Prices API gave no response for {arm_sku_name}")
 
     items = resp.json().get("Items", [])
 
-    def is_windows(i): return "Windows" in (i.get("productName") or "")
-    def meter(i): return i.get("meterName") or ""
+    def is_windows(i):
+        return "Windows" in (i.get("productName") or "")
+
+    def meter(i):
+        return i.get("meterName") or ""
 
     if spot:
         matches = [
-            i for i in items
-            if "Spot" in meter(i)
-            and "Low Priority" not in meter(i)
-            and not is_windows(i)
+            i
+            for i in items
+            if "Spot" in meter(i) and "Low Priority" not in meter(i) and not is_windows(i)
         ]
     else:
         matches = [
-            i for i in items
-            if "Spot" not in meter(i)
-            and "Low Priority" not in meter(i)
-            and not is_windows(i)
+            i
+            for i in items
+            if "Spot" not in meter(i) and "Low Priority" not in meter(i) and not is_windows(i)
         ]
 
     if not matches:

@@ -6,6 +6,7 @@ mcp 2.x) went green while server.py failed at import with
 "'Server' object has no attribute 'list_tools'" - every new install would
 have been broken. This test is the one that catches it.
 """
+
 from __future__ import annotations
 
 import sys

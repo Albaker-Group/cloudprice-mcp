@@ -1,4 +1,5 @@
 """Tests for v0.6 finops/tco.py — compare_total_cost_of_ownership."""
+
 from __future__ import annotations
 
 import pytest
@@ -32,9 +33,7 @@ def test_empty_inventory_rejected():
 
 def test_zero_horizon_rejected():
     catalog = load_catalog()
-    inv = WorkloadInventory(
-        compute=[ComputeItem(name="x", vcpus=8, memory_gb=32)]
-    )
+    inv = WorkloadInventory(compute=[ComputeItem(name="x", vcpus=8, memory_gb=32)])
     with pytest.raises(ValueError, match="horizon_years must be >= 1"):
         compare_total_cost_of_ownership(catalog, inv, horizon_years=0)
 
@@ -44,9 +43,7 @@ def test_zero_horizon_rejected():
 
 def test_result_has_canonical_shape():
     catalog = load_catalog()
-    inv = WorkloadInventory(
-        compute=[ComputeItem(name="x", vcpus=8, memory_gb=32, quantity=4)]
-    )
+    inv = WorkloadInventory(compute=[ComputeItem(name="x", vcpus=8, memory_gb=32, quantity=4)])
     result = compare_total_cost_of_ownership(catalog, inv)
     assert result["kind"] == "total_cost_of_ownership"
     assert result["horizon_years"] == DEFAULT_HORIZON_YEARS
@@ -60,9 +57,7 @@ def test_result_has_canonical_shape():
 
 def test_default_horizon_is_3_years():
     catalog = load_catalog()
-    inv = WorkloadInventory(
-        compute=[ComputeItem(name="x", vcpus=8, memory_gb=32)]
-    )
+    inv = WorkloadInventory(compute=[ComputeItem(name="x", vcpus=8, memory_gb=32)])
     result = compare_total_cost_of_ownership(catalog, inv)
     for years in result["per_cloud_per_year"].values():
         assert len(years) == 3
@@ -70,9 +65,7 @@ def test_default_horizon_is_3_years():
 
 def test_custom_horizon_respected():
     catalog = load_catalog()
-    inv = WorkloadInventory(
-        compute=[ComputeItem(name="x", vcpus=8, memory_gb=32)]
-    )
+    inv = WorkloadInventory(compute=[ComputeItem(name="x", vcpus=8, memory_gb=32)])
     result = compare_total_cost_of_ownership(catalog, inv, horizon_years=5)
     assert result["horizon_years"] == 5
     for years in result["per_cloud_per_year"].values():
@@ -82,18 +75,14 @@ def test_custom_horizon_respected():
 
 def test_default_targets_includes_all_4_clouds():
     catalog = load_catalog()
-    inv = WorkloadInventory(
-        compute=[ComputeItem(name="x", vcpus=8, memory_gb=32)]
-    )
+    inv = WorkloadInventory(compute=[ComputeItem(name="x", vcpus=8, memory_gb=32)])
     result = compare_total_cost_of_ownership(catalog, inv)
     assert set(result["per_cloud_per_year"].keys()) == {"aws", "azure", "gcp", "oci"}
 
 
 def test_explicit_targets_respected():
     catalog = load_catalog()
-    inv = WorkloadInventory(
-        compute=[ComputeItem(name="x", vcpus=8, memory_gb=32)]
-    )
+    inv = WorkloadInventory(compute=[ComputeItem(name="x", vcpus=8, memory_gb=32)])
     result = compare_total_cost_of_ownership(catalog, inv, targets=["aws", "oci"])
     assert set(result["per_cloud_per_year"].keys()) == {"aws", "oci"}
 
@@ -103,9 +92,7 @@ def test_explicit_targets_respected():
 
 def test_zero_growth_means_flat_year_over_year():
     catalog = load_catalog()
-    inv = WorkloadInventory(
-        compute=[ComputeItem(name="x", vcpus=8, memory_gb=32, quantity=4)]
-    )
+    inv = WorkloadInventory(compute=[ComputeItem(name="x", vcpus=8, memory_gb=32, quantity=4)])
     result = compare_total_cost_of_ownership(catalog, inv)
     for years in result["per_cloud_per_year"].values():
         # All years should have the same total when growth is 0
@@ -115,11 +102,10 @@ def test_zero_growth_means_flat_year_over_year():
 
 def test_compute_growth_increases_year_over_year():
     catalog = load_catalog()
-    inv = WorkloadInventory(
-        compute=[ComputeItem(name="x", vcpus=16, memory_gb=64, quantity=2)]
-    )
+    inv = WorkloadInventory(compute=[ComputeItem(name="x", vcpus=16, memory_gb=64, quantity=2)])
     result = compare_total_cost_of_ownership(
-        catalog, inv,
+        catalog,
+        inv,
         growth=GrowthAssumptions(compute_pct_yoy=0.50),  # +50% YoY
     )
     for cloud, years in result["per_cloud_per_year"].items():
@@ -132,11 +118,10 @@ def test_compute_growth_increases_year_over_year():
 def test_year_2_compute_is_1_plus_rate_times_year_1():
     """Year 2 = year 1 × (1 + rate). Compute it explicitly for one cloud."""
     catalog = load_catalog()
-    inv = WorkloadInventory(
-        compute=[ComputeItem(name="x", vcpus=16, memory_gb=64, quantity=2)]
-    )
+    inv = WorkloadInventory(compute=[ComputeItem(name="x", vcpus=16, memory_gb=64, quantity=2)])
     result = compare_total_cost_of_ownership(
-        catalog, inv,
+        catalog,
+        inv,
         growth=GrowthAssumptions(compute_pct_yoy=0.20),  # +20%
     )
     # Pick a cloud with non-zero year 1 cost
@@ -157,7 +142,8 @@ def test_egress_growth_only_affects_egress_section():
         egress=[EgressItem(name="cdn", gb_per_month=10_000)],
     )
     result = compare_total_cost_of_ownership(
-        catalog, inv,
+        catalog,
+        inv,
         growth=GrowthAssumptions(egress_pct_yoy=0.30),  # +30% on egress only
     )
     for cloud, years in result["per_cloud_per_year"].items():
@@ -173,9 +159,7 @@ def test_egress_growth_only_affects_egress_section():
 
 def test_cumulative_tco_equals_sum_of_yearly_totals():
     catalog = load_catalog()
-    inv = WorkloadInventory(
-        compute=[ComputeItem(name="x", vcpus=16, memory_gb=64, quantity=2)]
-    )
+    inv = WorkloadInventory(compute=[ComputeItem(name="x", vcpus=16, memory_gb=64, quantity=2)])
     result = compare_total_cost_of_ownership(catalog, inv)
     for cloud in result["per_cloud_per_year"]:
         years = result["per_cloud_per_year"][cloud]
@@ -185,9 +169,7 @@ def test_cumulative_tco_equals_sum_of_yearly_totals():
 
 def test_ranking_orders_by_cumulative_tco_ascending():
     catalog = load_catalog()
-    inv = WorkloadInventory(
-        compute=[ComputeItem(name="x", vcpus=16, memory_gb=64, quantity=2)]
-    )
+    inv = WorkloadInventory(compute=[ComputeItem(name="x", vcpus=16, memory_gb=64, quantity=2)])
     result = compare_total_cost_of_ownership(catalog, inv)
     cumul = result["cumulative_tco_usd"]
     ranking = result["ranking_by_tco"]
@@ -197,9 +179,7 @@ def test_ranking_orders_by_cumulative_tco_ascending():
 
 def test_recommended_is_first_in_ranking():
     catalog = load_catalog()
-    inv = WorkloadInventory(
-        compute=[ComputeItem(name="x", vcpus=8, memory_gb=32)]
-    )
+    inv = WorkloadInventory(compute=[ComputeItem(name="x", vcpus=8, memory_gb=32)])
     result = compare_total_cost_of_ownership(catalog, inv)
     if result["ranking_by_tco"]:
         assert result["recommended"] == result["ranking_by_tco"][0]
@@ -221,9 +201,7 @@ def test_sensitivity_identifies_dominant_variable_when_egress_heavy():
 
 def test_sensitivity_provides_rationale_text():
     catalog = load_catalog()
-    inv = WorkloadInventory(
-        compute=[ComputeItem(name="x", vcpus=8, memory_gb=32)]
-    )
+    inv = WorkloadInventory(compute=[ComputeItem(name="x", vcpus=8, memory_gb=32)])
     result = compare_total_cost_of_ownership(catalog, inv)
     assert "rationale" in result["sensitivity"]
     assert len(result["sensitivity"]["rationale"]) > 0
@@ -257,9 +235,7 @@ def test_per_year_record_includes_section_breakdown():
 
 def test_honest_gaps_disclosed():
     catalog = load_catalog()
-    inv = WorkloadInventory(
-        compute=[ComputeItem(name="x", vcpus=8, memory_gb=32)]
-    )
+    inv = WorkloadInventory(compute=[ComputeItem(name="x", vcpus=8, memory_gb=32)])
     result = compare_total_cost_of_ownership(catalog, inv)
     gaps = " ".join(result["honest_gaps"]).lower()
     assert "linear" in gaps or "yoy" in gaps

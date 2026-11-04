@@ -114,6 +114,7 @@ class StorageRequest:
 
 # --- single-spec matching (used by v0.1 + v0.2 bulk) ---
 
+
 def _spec_distance(want_vcpus: int, want_memory_gb: float, candidate: Instance) -> float:
     vcpu_gap = candidate.vcpus - want_vcpus
     mem_gap = candidate.memory_gb - want_memory_gb
@@ -128,10 +129,7 @@ def best_match(
     vcpus: int,
     memory_gb: float,
 ) -> Match | None:
-    eligible = [
-        c for c in catalog.by_cloud(cloud)
-        if c.vcpus >= vcpus and c.memory_gb >= memory_gb
-    ]
+    eligible = [c for c in catalog.by_cloud(cloud) if c.vcpus >= vcpus and c.memory_gb >= memory_gb]
     candidates = eligible if eligible else list(catalog.by_cloud(cloud))
     if not candidates:
         return None
@@ -157,6 +155,7 @@ def compare_all_clouds(
 
 
 # --- v0.2 bulk + storage compare ---
+
 
 def _compute_row_cost(
     catalog: PriceCatalog,
@@ -222,7 +221,8 @@ def _storage_row_cost(
             req.snapshot_count,
             req.snapshot_incremental_factor,
         )
-        if req.snapshot_count > 0 else 0.0
+        if req.snapshot_count > 0
+        else 0.0
     )
     return {
         "cloud": cloud,
@@ -244,9 +244,7 @@ def _summarize(per_cloud_totals: dict[Cloud, float]) -> dict[str, Any]:
     priciest = max(per_cloud_totals, key=lambda c: per_cloud_totals[c])
     spread = round(per_cloud_totals[priciest] - per_cloud_totals[cheapest], 2)
     pct = (
-        round(spread / per_cloud_totals[priciest] * 100, 1)
-        if per_cloud_totals[priciest] > 0
-        else 0
+        round(spread / per_cloud_totals[priciest] * 100, 1) if per_cloud_totals[priciest] > 0 else 0
     )
     return {
         "totals_by_cloud": {c: round(v, 2) for c, v in per_cloud_totals.items()},
@@ -313,8 +311,7 @@ def _build_commitment_section(
         storage_result["totals_by_cloud"] if storage_result else dict.fromkeys(CLOUDS, 0.0)
     )
     committed: dict[Cloud, float] = {
-        c: compute_totals.get(c, 0) * (1 - discount) + storage_totals.get(c, 0)
-        for c in CLOUDS
+        c: compute_totals.get(c, 0) * (1 - discount) + storage_totals.get(c, 0) for c in CLOUDS
     }
     on_demand_priciest = max(combined.values())
     committed_cheapest = min(committed.values())
@@ -368,8 +365,7 @@ def best_postgres_match(
     catalog: PriceCatalog, cloud: Cloud, vcpus: int, memory_gb: float
 ) -> PostgresSku | None:
     eligible = [
-        p for p in catalog.postgres_by_cloud(cloud)
-        if p.vcpus >= vcpus and p.memory_gb >= memory_gb
+        p for p in catalog.postgres_by_cloud(cloud) if p.vcpus >= vcpus and p.memory_gb >= memory_gb
     ]
     candidates = eligible if eligible else list(catalog.postgres_by_cloud(cloud))
     if not candidates:
@@ -402,9 +398,7 @@ def _postgres_row_cost(
     }
 
 
-def compare_postgres(
-    catalog: PriceCatalog, requests: list[PostgresRequest]
-) -> dict[str, Any]:
+def compare_postgres(catalog: PriceCatalog, requests: list[PostgresRequest]) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
     totals: dict[Cloud, float] = dict.fromkeys(CLOUDS, 0.0)
     for req in requests:
@@ -442,15 +436,14 @@ def _best_object_storage_sku(
     """Pick the cheapest SKU on this cloud that matches tier AND can serve capacity.
     Always-Free SKUs (with capacity_gb_limit) only qualify if capacity_gb is within limit."""
     candidates = [
-        sku for sku in catalog.object_storage_by_cloud(cloud)
+        sku
+        for sku in catalog.object_storage_by_cloud(cloud)
         if sku.tier == tier
         and (sku.capacity_gb_limit is None or capacity_gb <= sku.capacity_gb_limit)
     ]
     if not candidates:
         # Fall back to any tier match without the limit constraint
-        candidates = [
-            sku for sku in catalog.object_storage_by_cloud(cloud) if sku.tier == tier
-        ]
+        candidates = [sku for sku in catalog.object_storage_by_cloud(cloud) if sku.tier == tier]
     if not candidates:
         return None
     return min(candidates, key=lambda s: s.price_per_gb_month_usd)
@@ -507,9 +500,7 @@ class EgressRequest:
         }
 
 
-def compare_egress(
-    catalog: PriceCatalog, requests: list[EgressRequest]
-) -> dict[str, Any]:
+def compare_egress(catalog: PriceCatalog, requests: list[EgressRequest]) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
     totals: dict[Cloud, float] = dict.fromkeys(CLOUDS, 0.0)
     for req in requests:

@@ -1,4 +1,5 @@
 """Tests for v0.5 compare_egress feature."""
+
 from __future__ import annotations
 
 from cloudprice_mcp.compare import (
@@ -14,6 +15,7 @@ def setup_function():
 
 
 # --- Pricing data loaded ---
+
 
 def test_egress_data_loaded_for_all_4_clouds():
     catalog = load_catalog()
@@ -47,6 +49,7 @@ def test_gcp_has_no_flat_free_tier():
 
 
 # --- Cost calculation ---
+
 
 def test_cost_zero_when_within_free_tier():
     sku = EgressPricing(
@@ -101,6 +104,7 @@ def test_unbounded_final_tier_handles_huge_volume():
 
 # --- Realistic comparisons ---
 
+
 def test_compare_egress_at_1tb_aws_azure_close_oci_free():
     catalog = load_catalog()
     result = compare_egress(catalog, [EgressRequest(name="x", gb_per_month=1024)])
@@ -132,6 +136,7 @@ def test_compare_egress_at_50tb_oci_dominates():
 
 
 # --- Inter-region transfer ---
+
 
 def test_inter_region_transfer_priced_per_cloud():
     catalog = load_catalog()

@@ -17,6 +17,7 @@ Design choice — generic over specific:
   and can produce a tool-appropriate table. Adding a new tool = add a new render
   function + register it in RENDERERS_BY_KIND.
 """
+
 from __future__ import annotations
 
 import io
@@ -93,7 +94,12 @@ def _generic_markdown(result: dict) -> str:
         buf.write("\n")
 
     # Top-level summary fields
-    for key in ("source_monthly_usd", "one_time_exit_cost_usd", "recommended", "recommendation_reason"):
+    for key in (
+        "source_monthly_usd",
+        "one_time_exit_cost_usd",
+        "recommended",
+        "recommendation_reason",
+    ):
         if key in result:
             label = key.replace("_", " ").title()
             value = result[key]

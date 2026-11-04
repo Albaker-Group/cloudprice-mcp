@@ -15,4 +15,5 @@ Provider coverage as of v0.15.0:
     machine-readable pricing API; would require scraping. Vertex / Azure
     OpenAI route through their existing cloud pricing APIs.
 """
+
 from __future__ import annotations

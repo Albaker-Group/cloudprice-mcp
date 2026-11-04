@@ -1,4 +1,5 @@
 """Tests for v0.6 finops/migration.py — assess_migration orchestrator."""
+
 from __future__ import annotations
 
 import pytest
@@ -22,9 +23,7 @@ def setup_function():
 
 
 def test_assess_migration_requires_source_cloud():
-    inv = WorkloadInventory(
-        compute=[ComputeItem(name="x", vcpus=2, memory_gb=4)]
-    )
+    inv = WorkloadInventory(compute=[ComputeItem(name="x", vcpus=2, memory_gb=4)])
     catalog = load_catalog()
     with pytest.raises(ValueError, match="source_cloud must be set"):
         assess_migration(catalog, inv)
@@ -109,9 +108,7 @@ def test_target_cost_includes_object_storage_when_specified():
     augmented = WorkloadInventory(
         source_cloud="aws",
         compute=[ComputeItem(name="x", vcpus=2, memory_gb=4)],
-        object_storage=[
-            ObjectStorageItem(name="media", capacity_gb=10000, tier="hot")
-        ],
+        object_storage=[ObjectStorageItem(name="media", capacity_gb=10000, tier="hot")],
     )
     base_result = assess_migration(catalog, base)
     aug_result = assess_migration(catalog, augmented)
@@ -140,10 +137,7 @@ def test_target_cost_includes_internet_egress():
     # Source should now be more expensive (AWS internet egress at 50TB)
     assert egress_result["source_monthly_usd"] > base_result["source_monthly_usd"]
     # OCI should still be cheaper than AWS for egress (the 12× moat)
-    assert (
-        egress_result["targets"]["oci"]["monthly_usd"]
-        < egress_result["source_monthly_usd"]
-    )
+    assert egress_result["targets"]["oci"]["monthly_usd"] < egress_result["source_monthly_usd"]
 
 
 def test_target_cost_includes_inter_region_egress():
@@ -151,13 +145,11 @@ def test_target_cost_includes_inter_region_egress():
     inv = WorkloadInventory(
         source_cloud="aws",
         compute=[ComputeItem(name="x", vcpus=2, memory_gb=4)],
-        egress=[EgressItem(
-            name="repl", gb_per_month=10_000, direction="inter_region"
-        )],
+        egress=[EgressItem(name="repl", gb_per_month=10_000, direction="inter_region")],
     )
     result = assess_migration(catalog, inv)
     # Each target should have a non-zero monthly that includes inter-region
-    for cloud, t in result["targets"].items():
+    for t in result["targets"].values():
         # 10 TB inter-region at $0.0085-$0.02 per GB → at least $85
         assert t["monthly_usd"] > 80
 

@@ -27,6 +27,7 @@ Honest gaps (always disclosed in the result):
   - Embodied carbon (manufacturing the server) is NOT included
   - GPU / network / storage power NOT included in this v1
 """
+
 from __future__ import annotations
 
 import json
@@ -84,34 +85,41 @@ def compare_carbon_footprint(
     per_cloud: list[dict[str, Any]] = []
     for match in matches:
         inst = match.instance
-        per_instance = _per_instance_carbon(inst.cloud, inst.sku, inst.vcpus, inst.memory_gb, inst.region, factors)
+        per_instance = _per_instance_carbon(
+            inst.cloud, inst.sku, inst.vcpus, inst.memory_gb, inst.region, factors
+        )
         # Scale fleet
         fleet_monthly_kwh = per_instance["monthly_kwh"] * quantity
         fleet_monthly_gCO2e_grid = per_instance["monthly_gCO2e_grid"] * quantity
         fleet_monthly_gCO2e_residual = per_instance["monthly_gCO2e_residual"] * quantity
         fleet_monthly_usd = inst.monthly_usd * quantity
 
-        per_cloud.append({
-            "cloud": inst.cloud,
-            "region": inst.region,
-            "sku": inst.sku,
-            "vcpus_per_instance": inst.vcpus,
-            "memory_gb_per_instance": inst.memory_gb,
-            "quantity": quantity,
-            "power_class": per_instance["power_class"],
-            "instance_watts": round(per_instance["instance_watts"], 2),
-            "facility_watts_per_instance": round(per_instance["facility_watts"], 2),
-            "pue": per_instance["pue"],
-            "grid_intensity_g_per_kwh": per_instance["grid_intensity_g_per_kwh"],
-            "renewable_match_pct": per_instance["renewable_match_pct"],
-            "monthly_kwh": round(fleet_monthly_kwh, 2),
-            "monthly_kg_CO2e_grid": round(fleet_monthly_gCO2e_grid / 1000, 3),
-            "monthly_kg_CO2e_residual": round(fleet_monthly_gCO2e_residual / 1000, 3),
-            "monthly_usd": round(fleet_monthly_usd, 2),
-            "kg_CO2e_per_dollar": round(
-                (fleet_monthly_gCO2e_residual / 1000) / fleet_monthly_usd, 4,
-            ) if fleet_monthly_usd > 0 else None,
-        })
+        per_cloud.append(
+            {
+                "cloud": inst.cloud,
+                "region": inst.region,
+                "sku": inst.sku,
+                "vcpus_per_instance": inst.vcpus,
+                "memory_gb_per_instance": inst.memory_gb,
+                "quantity": quantity,
+                "power_class": per_instance["power_class"],
+                "instance_watts": round(per_instance["instance_watts"], 2),
+                "facility_watts_per_instance": round(per_instance["facility_watts"], 2),
+                "pue": per_instance["pue"],
+                "grid_intensity_g_per_kwh": per_instance["grid_intensity_g_per_kwh"],
+                "renewable_match_pct": per_instance["renewable_match_pct"],
+                "monthly_kwh": round(fleet_monthly_kwh, 2),
+                "monthly_kg_CO2e_grid": round(fleet_monthly_gCO2e_grid / 1000, 3),
+                "monthly_kg_CO2e_residual": round(fleet_monthly_gCO2e_residual / 1000, 3),
+                "monthly_usd": round(fleet_monthly_usd, 2),
+                "kg_CO2e_per_dollar": round(
+                    (fleet_monthly_gCO2e_residual / 1000) / fleet_monthly_usd,
+                    4,
+                )
+                if fleet_monthly_usd > 0
+                else None,
+            }
+        )
 
     # Rank by residual (market-based) carbon — that's what gets cited externally.
     per_cloud.sort(key=lambda row: row["monthly_kg_CO2e_residual"])
@@ -186,7 +194,11 @@ def _build_headline(per_cloud: list[dict], recommended: str | None) -> str:
     runner_up = per_cloud[1]
     diff = runner_up["monthly_kg_CO2e_residual"] - best["monthly_kg_CO2e_residual"]
     if best["monthly_kg_CO2e_residual"] > 0:
-        pct = diff / best["monthly_kg_CO2e_residual"] * 100 if best["monthly_kg_CO2e_residual"] > 0 else 0
+        pct = (
+            diff / best["monthly_kg_CO2e_residual"] * 100
+            if best["monthly_kg_CO2e_residual"] > 0
+            else 0
+        )
         return (
             f"{best['cloud'].upper()} is lowest carbon at {best['monthly_kg_CO2e_residual']} kg CO2e/mo "
             f"({pct:.0f}% less than the runner-up {runner_up['cloud'].upper()})."

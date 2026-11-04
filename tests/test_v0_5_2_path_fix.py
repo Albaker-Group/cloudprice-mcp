@@ -3,6 +3,7 @@
 Strategy: tests run on all platforms but mock winreg / sys.platform to exercise
 both Windows and non-Windows behavior.
 """
+
 from __future__ import annotations
 
 import argparse

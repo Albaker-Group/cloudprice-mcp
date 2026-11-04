@@ -22,6 +22,7 @@ Why we ingest it alongside LiteLLM:
 Run:
     python scripts/refresh_openrouter_catalog.py [--dry-run]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -51,7 +52,7 @@ def main(argv: list[str] | None = None) -> int:
         "source": "openrouter",
         "source_url": args.source_url,
         "license": "OpenRouter public catalog (no redistribution restriction noted, "
-                   "but cite the source).",
+        "but cite the source).",
         "currency": "USD",
         "schema_version": 1,
         "notes": (
@@ -66,8 +67,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.dry_run:
         print(f"=== DRY RUN — {len(rows)} models would be written ===")
         for r in rows[:5]:
-            print(f"  {r['openrouter_id']:50s} in=${r['input_per_1m_usd']:.4f} "
-                  f"out=${r['output_per_1m_usd']:.4f} ctx={r.get('context_window_tokens', '?')}")
+            print(
+                f"  {r['openrouter_id']:50s} in=${r['input_per_1m_usd']:.4f} "
+                f"out=${r['output_per_1m_usd']:.4f} ctx={r.get('context_window_tokens', '?')}"
+            )
         return 0
 
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)

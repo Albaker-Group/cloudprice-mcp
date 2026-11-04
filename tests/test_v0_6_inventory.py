@@ -1,4 +1,5 @@
 """Tests for v0.6 inventory parser (YAML → WorkloadInventory)."""
+
 from __future__ import annotations
 
 import textwrap
@@ -123,9 +124,7 @@ def test_to_dict_round_trips():
 
 def test_parse_yaml_file(tmp_path: Path):
     p = tmp_path / "inv.yaml"
-    p.write_text(
-        "compute:\n  - {name: api, vcpus: 2, memory_gb: 4}\n", encoding="utf-8"
-    )
+    p.write_text("compute:\n  - {name: api, vcpus: 2, memory_gb: 4}\n", encoding="utf-8")
     inv = parse_yaml_file(p)
     assert len(inv.compute) == 1
     assert inv.compute[0].vcpus == 2
@@ -181,23 +180,17 @@ def test_negative_memory_rejected():
 
 def test_invalid_disk_type_rejected():
     with pytest.raises(InventoryError, match="disk_type"):
-        parse_dict(
-            {"storage": [{"name": "x", "capacity_gb": 100, "disk_type": "tape"}]}
-        )
+        parse_dict({"storage": [{"name": "x", "capacity_gb": 100, "disk_type": "tape"}]})
 
 
 def test_invalid_object_tier_rejected():
     with pytest.raises(InventoryError, match="tier"):
-        parse_dict(
-            {"object_storage": [{"name": "x", "capacity_gb": 100, "tier": "warm"}]}
-        )
+        parse_dict({"object_storage": [{"name": "x", "capacity_gb": 100, "tier": "warm"}]})
 
 
 def test_invalid_egress_direction_rejected():
     with pytest.raises(InventoryError, match="direction"):
-        parse_dict(
-            {"egress": [{"name": "x", "gb_per_month": 100, "direction": "outbound"}]}
-        )
+        parse_dict({"egress": [{"name": "x", "gb_per_month": 100, "direction": "outbound"}]})
 
 
 def test_snapshot_incremental_factor_out_of_range_rejected():
@@ -268,9 +261,7 @@ def test_egress_direction_defaults_to_internet():
 
 
 def test_database_engine_defaults_to_postgres():
-    inv = parse_dict(
-        {"databases": [{"name": "x", "vcpus": 1, "memory_gb": 1}]}
-    )
+    inv = parse_dict({"databases": [{"name": "x", "vcpus": 1, "memory_gb": 1}]})
     assert inv.databases[0].engine == "postgres"
 
 
