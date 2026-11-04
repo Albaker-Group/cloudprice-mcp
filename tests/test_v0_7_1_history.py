@@ -124,7 +124,8 @@ def synthetic_snapshots(monkeypatch, tmp_path):
         def joinpath(self, name: str):
             return self.root / name
 
-    fake_resources_files = lambda _pkg: _FakeFiles(snap_dir)
+    def fake_resources_files(_pkg):
+        return _FakeFiles(snap_dir)
     monkeypatch.setattr(
         history, "resources", type("R", (), {"files": staticmethod(fake_resources_files)})
     )

@@ -103,7 +103,8 @@ def _lookup_one(
             raise FetchError(f"Azure Retail Prices API error for {arm_sku_name}: {e}") from e
         except httpx.HTTPError as e:
             raise FetchError(f"Azure Retail Prices API error for {arm_sku_name}: {e}") from e
-    assert resp is not None
+    if resp is None:  # unreachable: every loop path returns, continues or raises
+        raise FetchError(f"Azure Retail Prices API gave no response for {arm_sku_name}")
 
     items = resp.json().get("Items", [])
 

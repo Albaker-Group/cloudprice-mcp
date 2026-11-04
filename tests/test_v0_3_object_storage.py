@@ -43,7 +43,7 @@ def test_compare_object_storage_returns_4_clouds():
     )
     totals = result["totals_by_cloud"]
     assert set(totals.keys()) == {"aws", "azure", "gcp", "oci"}
-    for cloud, total in totals.items():
+    for total in totals.values():
         # 1000 GB hot tier should be > $0 on every paid cloud
         assert total > 0
 

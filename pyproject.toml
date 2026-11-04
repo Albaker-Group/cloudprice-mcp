@@ -51,6 +51,9 @@ line-length = 100
 target-version = "py310"
 
 [tool.ruff.lint]
+# Same baseline as CaptainGenie: pycodestyle, pyflakes, isort, bugbear,
+# pyupgrade, Bandit security rules (S), simplify.
+select = ["E", "F", "I", "B", "UP", "S", "SIM"]
 # CI runs ruff as a gate, so the rule set has to reflect decisions actually
 # made in this codebase rather than every default preference. Each of these is
 # ignored deliberately; none is ignored because it was inconvenient.
@@ -70,7 +73,16 @@ ignore = [
   # Style preferences that do not change behaviour and are not worth churning
   # working code over.
   "ISC004", "PERF102", "SIM102", "PIE810", "UP031",
+  # ruff format owns line length. What it leaves long are string literals
+  # (tool descriptions the model reads), and splitting those mid-sentence
+  # makes them harder to review, not easier.
+  "E501",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# pytest is built on assert. S101 guards production code that might run under
+# python -O, which never applies to the test suite.
+"tests/**" = ["S101"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

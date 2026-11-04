@@ -223,11 +223,7 @@ def _build_sensitivity(
 
     # Bump each growth rate up by 10 percentage points and measure impact
     impacts: list[tuple[str, float]] = []
-    for name, base_rate in [
-        ("compute_pct_yoy", growth.compute_pct_yoy),
-        ("storage_pct_yoy", growth.storage_pct_yoy),
-        ("egress_pct_yoy", growth.egress_pct_yoy),
-    ]:
+    for name in ("compute_pct_yoy", "storage_pct_yoy", "egress_pct_yoy"):
         bumped_growth = GrowthAssumptions(
             compute_pct_yoy=growth.compute_pct_yoy + (0.10 if name == "compute_pct_yoy" else 0),
             storage_pct_yoy=growth.storage_pct_yoy + (0.10 if name == "storage_pct_yoy" else 0),

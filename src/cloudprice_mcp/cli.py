@@ -11,6 +11,7 @@ Subcommands:
 from __future__ import annotations
 
 import argparse
+import contextlib
 import sys
 
 from . import __version__
@@ -72,10 +73,8 @@ def _build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     # Force UTF-8 stdout/stderr on Windows so emoji-laden output doesn't crash on cp1252.
     for stream in (sys.stdout, sys.stderr):
-        try:
+        with contextlib.suppress(AttributeError, ValueError):
             stream.reconfigure(encoding="utf-8", errors="backslashreplace")
-        except (AttributeError, ValueError):
-            pass
 
     parser = _build_parser()
     args = parser.parse_args(argv)
