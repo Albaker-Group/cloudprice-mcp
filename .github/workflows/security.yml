@@ -109,10 +109,18 @@ jobs:
         run: |
           set -euo pipefail
           pip install --quiet "checkov==3.3.16"
-          # Never fails the build: findings are advisory here and surface as
-          # code scanning alerts. Trivy and gitleaks decide pass or fail.
-          checkov --directory . --framework terraform             --output cli --output sarif --output-file-path console,.             --soft-fail --quiet || true
-          ls -la results.sarif 2>/dev/null || echo "no SARIF produced"
+          # Findings are advisory (--soft-fail): they surface as code scanning
+          # alerts, and Trivy and gitleaks decide pass or fail.
+          #
+          # SARIF only, then renamed. From 2026-09-06 to 2026-11-04 this ran
+          # `--output cli --output sarif --output-file-path console,.`, which
+          # crashes (checkov opens "." as a file) - and a trailing `|| true`
+          # swallowed the crash, so no report was uploaded for two months and
+          # the code scanning alerts froze. No `|| true` now: --soft-fail
+          # already returns 0 for findings, so only a real crash fails.
+          checkov --directory . --framework terraform --output sarif --output-file-path . --soft-fail --quiet
+          mv results_sarif.sarif results.sarif
+          python3 -c "import json; r = json.load(open('results.sarif'))['runs'][0]['results']; s = sum(1 for x in r if x.get('suppressions')); print(f'Checkov: {len(r) - s} open, {s} suppressed with a recorded reason')"
 
       # tfsec is deprecated - its engine now lives in Trivy, so `trivy config`
       # is the current way to get that ruleset.
