@@ -981,6 +981,43 @@ async def list_tools() -> list[Tool]:
                         "items": {"type": "string"},
                         "description": "Model IDs to price the same run on. Default: popular current Claude, GPT, Gemini and DeepSeek models.",
                     },
+                    "hosting": {
+                        "type": "object",
+                        "description": "Add hosting to the token cost: prices the run on AgentCore Runtime (+ Gateway, Memory) and on Lambda, and returns full per-run and monthly totals. AgentCore bills CPU only while active; Lambda bills the whole run.",
+                        "properties": {
+                            "run_seconds": {
+                                "type": "number",
+                                "exclusiveMinimum": 0,
+                                "description": "Wall-clock seconds per run, including waiting on the model.",
+                            },
+                            "vcpu": {"type": "number", "exclusiveMinimum": 0, "default": 1},
+                            "memory_gb": {"type": "number", "exclusiveMinimum": 0, "default": 2},
+                            "active_cpu_share": {
+                                "type": "number",
+                                "exclusiveMinimum": 0,
+                                "maximum": 1,
+                                "default": 0.2,
+                                "description": "Share of the run the CPU is busy; the rest is I/O wait.",
+                            },
+                            "tool_calls_per_run": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "description": "Gateway tool invocations per run. Default: steps - 1.",
+                            },
+                            "memory_retrievals_per_run": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "default": 0,
+                            },
+                            "memory_events_per_run": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "default": 0,
+                            },
+                        },
+                        "required": ["run_seconds"],
+                        "additionalProperties": False,
+                    },
                 },
                 "required": ["model"],
                 "additionalProperties": False,

@@ -276,6 +276,7 @@ Estimate what one run of an AI agent costs, and a month of runs. Models what per
 | `tool_result_tokens_per_step` |  |
 | `runs_per_month` |  |
 | `compare_models` |  |
+| `hosting` |  |
 
 ## llm_price_changes
 

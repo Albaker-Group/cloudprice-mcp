@@ -1,0 +1,29 @@
+{
+  "as_of": "2026-11-04",
+  "region": "us-east-1",
+  "currency": "USD",
+  "notes": "Hand-entered from the AWS pricing pages on the as_of date; not part of the weekly refresh. Check the sources before relying on a figure.",
+  "sources": {
+    "agentcore": "https://aws.amazon.com/bedrock/agentcore/pricing/",
+    "lambda": "https://aws.amazon.com/lambda/pricing/"
+  },
+  "agentcore_runtime": {
+    "vcpu_hour": 0.1276,
+    "gb_hour": 0.0169,
+    "notes": "Runtime v2 consumption pricing. CPU is billed only while active (it scales to zero during I/O wait, e.g. waiting on the model); memory is billed for the session. Per-second billing, 1-second minimum, 128 MB memory minimum."
+  },
+  "agentcore_gateway": {
+    "per_1k_invocations": 0.005
+  },
+  "agentcore_memory": {
+    "long_term_per_1k_retrievals": 0.5,
+    "short_term_per_gb_ingested": 1.0,
+    "short_term_event_billed_kb_min": 12
+  },
+  "lambda": {
+    "x86_gb_second": 0.0000166667,
+    "per_1m_requests": 0.2,
+    "free_tier_monthly": {"requests": 1000000, "gb_seconds": 400000},
+    "notes": "x86 on-demand. Billed for the full duration of the invocation, including time spent waiting on the model or tools."
+  }
+}
