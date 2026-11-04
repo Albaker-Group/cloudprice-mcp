@@ -99,6 +99,10 @@ resource "aws_lambda_function" "gateway_target" {
   memory_size = var.memory_mb
   timeout     = var.timeout_seconds
 
+  # A ceiling on cost and blast radius: past this, callers get throttled
+  # instead of the account's other functions being starved.
+  reserved_concurrent_executions = var.reserved_concurrency
+
   depends_on = [
     aws_iam_role_policy_attachment.logs,
     aws_cloudwatch_log_group.lambda,
