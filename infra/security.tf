@@ -147,6 +147,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "trail" {
     noncurrent_version_expiration {
       noncurrent_days = 30
     }
+    # A failed upload leaves invisible parts that are billed until removed.
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
   }
 }
 

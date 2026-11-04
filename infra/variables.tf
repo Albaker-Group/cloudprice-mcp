@@ -10,6 +10,17 @@ variable "memory_mb" {
   default     = 512
 }
 
+variable "reserved_concurrency" {
+  description = "Most copies of the Lambda that can run at once. Each call takes well under a second, so 10 serves hundreds of calls per second."
+  type        = number
+  default     = 10
+
+  validation {
+    condition     = var.reserved_concurrency >= 1 && var.reserved_concurrency <= 100
+    error_message = "reserved_concurrency must be between 1 and 100; 0 would disable the function."
+  }
+}
+
 variable "timeout_seconds" {
   description = "Lambda timeout. Tools are pure computation over local JSON; anything slow is a bug, not load."
   type        = number

@@ -48,6 +48,27 @@ resource "aws_s3_bucket_versioning" "artifacts" {
   }
 }
 
+# Every deploy writes a new tool-schema.json version. Keep the last few for
+# rollback, drop older ones, and never expire the current object.
+resource "aws_s3_bucket_lifecycle_configuration" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+  rule {
+    id     = "prune-old-versions"
+    status = "Enabled"
+    filter {}
+    noncurrent_version_expiration {
+      noncurrent_days           = 30
+      newer_noncurrent_versions = 3
+    }
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
+
+  # The lifecycle rule needs versioning in place first.
+  depends_on = [aws_s3_bucket_versioning.artifacts]
+}
+
 resource "aws_s3_object" "tool_schema" {
   bucket = aws_s3_bucket.artifacts.id
   key    = "tool-schema.json"
