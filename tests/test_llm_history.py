@@ -81,3 +81,27 @@ def test_price_history_flags_the_oci_placeholder_correction():
     r = dispatch.call("get_price_history", {"cloud": "oci", "sku": "VM.Standard.E5.Flex.1OCPU"})
     assert r["data_corrections"][0]["superseded_before"] == "2026-05-04"
     assert all(p["as_of"] >= "2026-05-04" for p in r["series"])
+
+
+def test_llm_price_changes_defaults_to_latest_week():
+    r = dispatch.call("llm_price_changes", {})
+    dates = llm_history.list_dates()
+    assert (r["from"], r["to"]) == (dates[-2], dates[-1])
+    assert r["headline"].startswith(f"LLM pricing {dates[-2]} -> {dates[-1]}")
+    assert set(r["sources"]) == {"litellm", "openrouter"}
+
+
+def test_llm_price_changes_filters_and_limits():
+    r = dispatch.call(
+        "llm_price_changes",
+        {"since": "2026-10-04", "until": "2026-11-01", "source": "litellm", "limit": 2},
+    )
+    assert set(r["sources"]) == {"litellm"}
+    block = r["sources"]["litellm"]
+    assert len(block["added"]) <= 2
+    assert block["counts"]["added"] >= len(block["added"])
+
+
+def test_llm_price_changes_rejects_dates_before_the_archive():
+    r = dispatch.call("llm_price_changes", {"since": "2025-01-01"})
+    assert "archive starts" in r["error"]
