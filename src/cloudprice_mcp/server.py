@@ -846,6 +846,84 @@ async def list_tools() -> list[Tool]:
         ),
         # --- v0.18.0 FOCUS 1.3 export ---
         Tool(
+            name="estimate_agent_cost",
+            description=(
+                "Estimate what one run of an AI agent costs, and a month of runs. "
+                "Models what per-call math misses: each agent step re-sends the whole "
+                "conversation (system prompt, tool definitions, earlier outputs and tool "
+                "results), so input tokens grow every step. Returns cost per run and per "
+                "month, the per-step token breakdown, how much of the input is context "
+                "growth, what prompt caching saves, and the same run priced on other "
+                "current models (Claude, GPT, Gemini, DeepSeek by default). Use for: "
+                "'what will my agent cost at 50k runs a month', 'is Sonnet or Haiku "
+                "cheaper for this agent', 'how much does caching save', 'budget for an "
+                "AgentCore / LangGraph / Agents SDK agent'. Defaults describe a typical "
+                "8-step tool-using agent; pass measured token counts for a real figure."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "model": {
+                        "type": "string",
+                        "description": "Model ID as in the LLM catalogue, e.g. 'claude-sonnet-5-5', 'gpt-5-mini', 'gemini/gemini-2.5-flash'. Find IDs with lookup_extended_model_pricing.",
+                    },
+                    "provider": {
+                        "type": "string",
+                        "description": "Host to price on, e.g. 'anthropic', 'bedrock', 'vertex'. Default: the model's first-party provider.",
+                    },
+                    "steps": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "default": 8,
+                        "description": "LLM calls per run, including the final answer.",
+                    },
+                    "system_prompt_tokens": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "default": 2000,
+                        "description": "Tokens in the system prompt.",
+                    },
+                    "tool_definition_tokens": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "default": 3000,
+                        "description": "Tokens in the tool/function definitions sent with every call.",
+                    },
+                    "user_input_tokens": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "default": 500,
+                        "description": "Tokens in the user's request.",
+                    },
+                    "output_tokens_per_step": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "default": 400,
+                        "description": "Average model output tokens per step.",
+                    },
+                    "tool_result_tokens_per_step": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "default": 1500,
+                        "description": "Average tokens a tool returns per step.",
+                    },
+                    "runs_per_month": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "default": 10000,
+                        "description": "Agent runs per month.",
+                    },
+                    "compare_models": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Model IDs to price the same run on. Default: popular current Claude, GPT, Gemini and DeepSeek models.",
+                    },
+                },
+                "required": ["model"],
+                "additionalProperties": False,
+            },
+        ),
+        Tool(
             name="llm_price_changes",
             description=(
                 "What changed in LLM token pricing between two weeks: models that "
