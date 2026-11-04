@@ -1128,6 +1128,60 @@ async def list_tools() -> list[Tool]:
             },
         ),
         Tool(
+            name="review_agentcore",
+            description=(
+                "Well-Architected review of an Amazon Bedrock AgentCore deployment, run "
+                "locally on `terraform show -json` output (a saved plan or state; nothing "
+                "is sent anywhere, no AWS credentials). Coded rules check every Runtime, "
+                "Harness and Gateway and the IAM, logs and alarms around them: public "
+                "network, unauthenticated or debug gateways, InvokeModel on every model, "
+                "secrets in environment variables, idle and lifetime settings, harness "
+                "caps, log retention, alarms and cost tags. Each finding has severity, "
+                "pillar, resource address, a Terraform fix and the AWS doc it rests on. "
+                "Given a FOCUS bill (and a tag such as agent=genie) it adds what the agent "
+                "costs by component and the prompt-caching and over-list-price savings. "
+                "Use for: 'review our AgentCore setup', 'is this agent production-ready', "
+                "'what does this agent cost and what should we fix'."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "plan_path": {
+                        "type": "string",
+                        "description": "Local path to `terraform show -json` output (.json).",
+                    },
+                    "bill_path": {
+                        "type": "string",
+                        "description": "Optional local FOCUS export (.csv or .csv.gz).",
+                    },
+                    "tag": {
+                        "type": "string",
+                        "description": "Optional key=value tag that marks this agent's "
+                        "lines in the bill, e.g. agent=genie.",
+                    },
+                    "skips": {
+                        "type": "array",
+                        "description": "Findings accepted on purpose, reported as skipped.",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "rule": {"type": "string"},
+                                "resource": {
+                                    "type": "string",
+                                    "description": "Resource address; omit for every resource.",
+                                },
+                                "reason": {"type": "string"},
+                            },
+                            "required": ["rule", "reason"],
+                            "additionalProperties": False,
+                        },
+                    },
+                },
+                "required": ["plan_path"],
+                "additionalProperties": False,
+            },
+        ),
+        Tool(
             name="compare_llm_vs_selfhost",
             description=(
                 "Pay per token or rent GPUs and serve the model yourself? Prices a "

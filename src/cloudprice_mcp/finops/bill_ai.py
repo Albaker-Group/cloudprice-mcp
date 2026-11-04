@@ -227,6 +227,21 @@ def analyze_ai_spend(
     if not 1 <= top_n <= 50:
         raise BillError("top_n must be between 1 and 50")
     rows, warnings = _load(file_path)
+    return ai_spend_from_rows(
+        rows, warnings, Path(file_path).name, top_n, models=models, archive=archive
+    )
+
+
+def ai_spend_from_rows(
+    rows: list[dict[str, str]],
+    warnings: list[str],
+    file_name: str,
+    top_n: int = 10,
+    *,
+    models: list[dict[str, Any]] | None = None,
+    archive: list[tuple[str, dict[str, list[Any]]]] | None = None,
+) -> dict[str, Any]:
+    """analyze_ai_spend on rows already read, e.g. narrowed to one agent's tag."""
     if models is None:
         catalogue = _load_catalog()
         models = [m for m in catalogue["models"] if m.get("source") == "litellm"]
@@ -284,7 +299,7 @@ def analyze_ai_spend(
 
     result = {
         "kind": "ai_spend",
-        "file": Path(file_path).name,
+        "file": file_name,
         "period": period,
         "totals": {
             "ai_cost": round(ai_cost, 2),
