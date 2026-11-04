@@ -103,6 +103,16 @@ jobs:
           python scripts/refresh_openrouter_catalog.py || \
             echo "OpenRouter catalog refresh failed — see logs."
 
+      - name: Archive this week's LLM prices (v0.19.0+)
+        # The two catalogs above are overwritten every week; this keeps a
+        # compact dated copy (data/llm_prices/<date>.json.gz, ~30 KB) so LLM
+        # price history - new models, price cuts - is never thrown away.
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          pip install -e . --no-deps --quiet
+          python scripts/snapshot_llm_prices.py
+
       - name: Build PR body file
         # Writes /tmp/pr_body.md combining the standard PR template + the refresh
         # summary. Bypasses the GITHUB_OUTPUT heredoc entirely (which kept tripping
@@ -155,13 +165,13 @@ jobs:
           else
             git worktree add --quiet --orphan -b price-archive /tmp/archive
           fi
-          for d in prices token_prices; do
+          for d in prices token_prices llm_prices; do
             src="src/cloudprice_mcp/data/$d"
             mkdir -p "/tmp/archive/$d" "$src"
             # Archive -> this run: restore weeks that never reached main.
-            cp -n /tmp/archive/"$d"/????-??-??.json "$src"/ 2>/dev/null || true
+            cp -n /tmp/archive/"$d"/????-??-??.json* "$src"/ 2>/dev/null || true
             # This run -> archive: add this week's snapshot.
-            cp -n "$src"/????-??-??.json "/tmp/archive/$d/" 2>/dev/null || true
+            cp -n "$src"/????-??-??.json* "/tmp/archive/$d/" 2>/dev/null || true
           done
           git -C /tmp/archive add -A
           if git -C /tmp/archive diff --cached --quiet; then

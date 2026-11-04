@@ -1,0 +1,10 @@
+{
+  "notes": "Known data errors in the dated price snapshots. Points a correction supersedes are left out of every history, drift and anomaly result, so a fix to our own data is never reported as a provider's price change. Add an entry whenever a snapshot is found to be wrong; never edit a published snapshot.",
+  "corrections": [
+    {
+      "cloud": "oci",
+      "superseded_before": "2026-05-04",
+      "reason": "The first hand-curated catalogue (2026-04-26) carried placeholder OCI prices, about 3.7x too high. They were replaced with verified Oracle API rates on 2026-05-04 (commit 10b955e). The apparent -72.8% OCI drop between 2026-04-26 and 2026-05-12 is that fix, not an Oracle price cut."
+    }
+  ]
+}

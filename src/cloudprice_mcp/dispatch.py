@@ -288,7 +288,7 @@ def _handle_find_egress_arbitrage(catalog, args):
 
 # Tool name → handler dispatch table. Adding a new tool = add one entry.
 def _handle_get_price_history(catalog, args):
-    from .history import history_window
+    from .history import corrections, history_window
 
     cloud = args.get("cloud")
     sku = args.get("sku")
@@ -301,7 +301,11 @@ def _handle_get_price_history(catalog, args):
         if since:
             msg += f" since {since}"
         return _err(msg)
-    return _ok(window.to_dict())
+    result = window.to_dict()
+    fixes = [c for c in corrections() if c["cloud"] == cloud]
+    if fixes:
+        result["data_corrections"] = fixes
+    return _ok(result)
 
 
 def _handle_compare_spot(catalog, args):

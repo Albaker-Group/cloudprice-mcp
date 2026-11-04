@@ -19,7 +19,9 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from datetime import date
+from functools import cache
 from importlib import resources
+from pathlib import Path
 
 from .pricing import Cloud
 
@@ -122,6 +124,23 @@ def load_snapshot(as_of: str) -> dict:
     )
 
 
+_CORRECTIONS = Path(__file__).resolve().parent / "data" / "history_corrections.json"
+
+
+@cache
+def corrections() -> tuple[dict, ...]:
+    """Known errors in our own snapshots (data/history_corrections.json).
+
+    Read by path rather than through `resources`, which tests redirect to a
+    folder of synthetic snapshots.
+    """
+    return tuple(json.loads(_CORRECTIONS.read_text(encoding="utf-8"))["corrections"])
+
+
+def _superseded(cloud: str, snap_date: str) -> bool:
+    return any(c["cloud"] == cloud and snap_date < c["superseded_before"] for c in corrections())
+
+
 def load_history(
     *,
     cloud: Cloud | None = None,
@@ -129,6 +148,9 @@ def load_history(
     since: str | None = None,
 ) -> list[PricePoint]:
     """Flat list of every observation, oldest-first. Filters are AND-composed.
+
+    Points superseded by a known correction (see corrections()) are left out,
+    so a fix to our own data never shows up as a provider price change.
 
     Args:
         cloud: restrict to one of "aws" | "azure" | "gcp" | "oci"
@@ -142,6 +164,8 @@ def load_history(
         catalog = load_snapshot(snap_date)
         for c in ("aws", "azure", "gcp", "oci"):
             if cloud is not None and c != cloud:
+                continue
+            if _superseded(c, snap_date):
                 continue
             block = catalog.get(c)
             if not isinstance(block, dict):
