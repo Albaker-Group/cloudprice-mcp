@@ -148,8 +148,8 @@ def test_per_cloud_drift_breakdown():
 
 
 def test_drift_report_includes_sku_attribution():
-    """The bundled history dataset has 2 dated snapshots — sku_attribution
-    should surface the OCI -72.78% correction even on a fresh baseline."""
+    """sku_attribution walks the bundled history; the 2026-04-26 OCI
+    placeholder prices are a recorded correction, so they must not appear."""
     from cloudprice_mcp.pricing import load_catalog
 
     cat = load_catalog()
@@ -164,9 +164,8 @@ def test_drift_report_includes_sku_attribution():
     )
     drift = watch_workload(cat, inv, baseline=baseline.to_dict())
     skus = drift["sku_attribution"]
-    # OCI E5.Flex SKUs should be in the top movers
-    oci_e5 = [s for s in skus if s["cloud"] == "oci" and "E5.Flex" in s["sku"]]
-    assert len(oci_e5) > 0
+    assert isinstance(skus, list)
+    assert not [s for s in skus if s["cloud"] == "oci" and "E5.Flex" in s["sku"]]
 
 
 # --- Mode 3: workload spec change ---

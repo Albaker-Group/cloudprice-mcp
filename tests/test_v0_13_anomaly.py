@@ -22,17 +22,12 @@ def test_returns_anomaly_detection_kind():
     assert "thresholds" in r
 
 
-def test_bundled_history_detects_oci_corrections():
-    """OCI E5.Flex and A2.Flex shapes dropped 72.78% between 2026-04-26
-    (hand-curated) and 2026-05-12 (first auto-refresh). Default moderate
-    sensitivity should flag all 9 of them."""
-    r = detect_price_anomalies(sensitivity="moderate")
-    oci_anomalies = [a for a in r["anomalies"] if a["cloud"] == "oci"]
-    assert len(oci_anomalies) >= 9  # 5 E5 sizes + 4 A2 sizes
-    # All should be ~73% drops
-    for a in oci_anomalies:
-        assert -75 <= a["change_pct"] <= -70
-        assert a["direction"] == "down"
+def test_bundled_history_excludes_known_corrections():
+    """2026-04-26 carried placeholder OCI prices, replaced with verified rates
+    on 2026-05-04. That fix showed up as nine -72.8% "anomalies"; it is now a
+    recorded correction and must never be reported as a price move."""
+    r = detect_price_anomalies(sensitivity="permissive")
+    assert not [a for a in r["anomalies"] if a["cloud"] == "oci" and a["change_pct"] < -70]
 
 
 def test_strict_sensitivity_returns_fewer_anomalies_than_permissive():
