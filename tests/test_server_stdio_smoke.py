@@ -15,13 +15,17 @@ import pytest
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
+from cloudprice_mcp import __version__
+
 SERVER = StdioServerParameters(command=sys.executable, args=["-m", "cloudprice_mcp.server"])
 
 
 @pytest.mark.asyncio
 async def test_server_starts_lists_tools_and_answers():
     async with stdio_client(SERVER) as (read, write), ClientSession(read, write) as session:
-        await session.initialize()
+        init = await session.initialize()
+        assert init.serverInfo.version == __version__
+        assert "pricing" in (init.instructions or "")
 
         names = {t.name for t in (await session.list_tools()).tools}
         assert {"compare_clouds", "get_price_history", "optimize_commitment"} <= names
