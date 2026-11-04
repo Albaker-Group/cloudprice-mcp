@@ -135,3 +135,92 @@ def _is_iso_date(s: str) -> bool:
         return True
     except ValueError:
         return False
+
+
+def price_changes(
+    *,
+    since: str | None = None,
+    until: str | None = None,
+    source: str | None = None,
+    provider: str | None = None,
+    query: str | None = None,
+    limit: int = 25,
+) -> dict[str, Any]:
+    """What changed in LLM pricing between two archived weeks.
+
+    `until` defaults to the latest week; `since` to the week before it. Each
+    picks the latest archived week on or before that date. `provider` and
+    `query` are case-insensitive substrings of the provider and model ID.
+    """
+    dates = list_dates()
+    if len(dates) < 2:
+        raise ValueError("the archive needs at least two weeks to compare")
+    to = _on_or_before(dates, until) if until else dates[-1]
+    frm = _on_or_before(dates, since) if since else dates[dates.index(to) - 1]
+    if frm is None or to is None:
+        raise ValueError(f"no archived week on or before that date; archive starts {dates[0]}")
+    if frm >= to:
+        raise ValueError(f"'since' ({frm}) must fall before 'until' ({to})")
+
+    d = diff(load(frm), load(to))
+    p = (provider or "").lower()
+    q = (query or "").lower()
+
+    def keep(row: dict[str, Any]) -> bool:
+        return p in row["provider"].lower() and q in row["model_id"].lower()
+
+    sources: dict[str, Any] = {}
+    for name, block in d["sources"].items():
+        if source and name != source:
+            continue
+        lists = {k: [r for r in block[k] if keep(r)] for k in ("added", "removed", "price_changes")}
+        sources[name] = {
+            "counts": {k: len(v) for k, v in lists.items()},
+            "price_changes": lists["price_changes"][:limit],
+            "added": lists["added"][:limit],
+            "removed": lists["removed"][:limit],
+        }
+
+    return {
+        "kind": "llm_price_changes",
+        "from": frm,
+        "to": to,
+        "archive": {"first_week": dates[0], "latest_week": dates[-1], "weeks": len(dates)},
+        "headline": _headline(frm, to, sources),
+        "sources": sources,
+        "honest_gaps": [
+            "LiteLLM rows are community-maintained: a 'price change' can be a "
+            "correction of their data rather than a provider repricing. Check the "
+            "provider's pricing page before acting on one.",
+            "OpenRouter prices are its routed rate, including its margin, not the "
+            "provider's direct price.",
+            "Alias IDs ('...-latest', '~...') are repointed to newer models, so their "
+            "'price change' is usually a different model, not a repricing.",
+            "Weekly granularity: a price that changed and changed back within a "
+            "week is not seen. The archive starts 2026-05-23, with a gap until "
+            "2026-09-06.",
+        ],
+    }
+
+
+def _on_or_before(dates: list[str], day: str) -> str | None:
+    earlier = [d for d in dates if d <= day]
+    return earlier[-1] if earlier else None
+
+
+def _headline(frm: str, to: str, sources: dict[str, Any]) -> str:
+    parts = []
+    for name, block in sources.items():
+        c = block["counts"]
+        parts.append(
+            f"{name}: {c['price_changes']} repriced, {c['added']} added, {c['removed']} removed"
+        )
+    top = next(
+        (b["price_changes"][0] for b in sources.values() if b["price_changes"]),
+        None,
+    )
+    line = f"LLM pricing {frm} -> {to}. " + "; ".join(parts) + "."
+    if top:
+        move = max(top["change_pct"].values(), key=abs)
+        line += f" Biggest move: {top['model_id']} ({move:+.0f}%)."
+    return line
