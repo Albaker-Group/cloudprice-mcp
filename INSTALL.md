@@ -543,7 +543,7 @@ The setup command uses `sys.executable` (the venv's python), so the config it wr
 If you cloned the repo and want to test changes (`pip install -e .`):
 
 ```bash
-git clone https://github.com/alialbaker/cloudprice-mcp.git
+git clone https://github.com/Albaker-Group/cloudprice-mcp.git
 cd cloudprice-mcp
 python -m venv .venv
 
@@ -561,4 +561,4 @@ The setup command will detect the venv's Python and use the right absolute path.
 
 ### Anything else
 
-Run `cloudprice-mcp doctor` and paste the output in a [GitHub issue](https://github.com/alialbaker/cloudprice-mcp/issues).
+Run `cloudprice-mcp doctor` and paste the output in a [GitHub issue](https://github.com/Albaker-Group/cloudprice-mcp/issues).

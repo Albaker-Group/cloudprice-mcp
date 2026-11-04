@@ -1,11 +1,11 @@
 # cloudprice-mcp
 
-<!-- mcp-name: io.github.alialbaker/cloudprice-mcp -->
+<!-- mcp-name: io.github.Albaker-Group/cloudprice-mcp -->
 
 [![PyPI version](https://img.shields.io/pypi/v/cloudprice-mcp.svg)](https://pypi.org/project/cloudprice-mcp/)
 [![Python versions](https://img.shields.io/pypi/pyversions/cloudprice-mcp.svg)](https://pypi.org/project/cloudprice-mcp/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![alialbaker/cloudprice-mcp MCP server](https://glama.ai/mcp/servers/alialbaker/cloudprice-mcp/badges/score.svg)](https://glama.ai/mcp/servers/alialbaker/cloudprice-mcp)
+[![Albaker-Group/cloudprice-mcp MCP server](https://glama.ai/mcp/servers/Albaker-Group/cloudprice-mcp/badges/score.svg)](https://glama.ai/mcp/servers/Albaker-Group/cloudprice-mcp)
 
 **The FinOps MCP server.** Gives Claude, GitHub Copilot, Cursor, Windsurf, Cline, Continue, Zed — or any MCP-compatible AI — structured pricing data and analysis primitives across **AWS, Azure, GCP, and OCI**. AI clients use cloudprice-mcp to compute Reserved Instance break-even, multi-cloud workload TCO, exit-cost migration analyses, snapshot cost modeling, and egress arbitrage — the kind of FinOps decisions that normally live in three browser tabs and a half-built spreadsheet.
 

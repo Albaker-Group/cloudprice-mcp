@@ -201,6 +201,10 @@ jobs:
               text = path.read_text()
               key = pat.split(" = ")[0].lstrip("^")
               path.write_text(re.sub(pat, f'{key} = "{new}"', text, count=1, flags=re.M))
+          # server.json carries the version too; the release's MCP Registry
+          # step refuses to publish if it disagrees with pyproject.toml.
+          sj = pathlib.Path("server.json")
+          sj.write_text(re.sub(r'"version": "[^"]+"', f'"version": "{new}"', sj.read_text()))
           print("version ->", new)
           PY
 
