@@ -50,7 +50,7 @@ pip install cloudprice-mcp
 cloudprice-mcp setup
 ```
 
-Restart the client and the **32 tools** appear. Problems? `cloudprice-mcp doctor`
+Restart the client and the **34 tools** appear. Problems? `cloudprice-mcp doctor`
 says what is wrong; [INSTALL.md](INSTALL.md) has per-client steps for Windows,
 macOS and Linux. Python 3.10+.
 
@@ -96,12 +96,16 @@ macOS and Linux. Python 3.10+.
 > how much of our spend is missing a `team` tag?"* → `find_commitment_gaps`,
 > `detect_bill_anomalies`, `analyze_cost_allocation`
 
+> *"What will this month's bill be, and what's our cost per customer? We had
+> 41,000 customers in September and 44,500 in October."* → `forecast_spend`,
+> `calculate_unit_cost`
+
 Every answer carries the catalogue date and an `honest_gaps` list of what the
 tool does not model, so the AI can tell you where the number stops being exact.
 
 ## Tools
 
-**32 tools**, grouped by job. Full descriptions and arguments:
+**34 tools**, grouped by job. Full descriptions and arguments:
 **[docs/TOOLS.md](docs/TOOLS.md)** (generated from the server, so it is always
 current).
 
@@ -113,7 +117,7 @@ current).
 | Spot, GPU, carbon | `compare_spot`, `compare_gpu_workload`, `compare_carbon_footprint` |
 | Price history | `get_price_history`, `list_tracked_skus`, `detect_price_anomalies`, `watch_workload` |
 | AI / LLM costs | `estimate_agent_cost`, `compare_llm_vs_selfhost`, `compare_token_pricing`, `lookup_extended_model_pricing`, `llm_price_changes` |
-| Your actual bill (local only) | `analyze_bill`, `find_commitment_gaps`, `detect_bill_anomalies`, `analyze_cost_allocation` |
+| Your actual bill (local only) | `analyze_bill`, `find_commitment_gaps`, `detect_bill_anomalies`, `analyze_cost_allocation`, `forecast_spend`, `calculate_unit_cost` |
 | Export | `export_focus` |
 
 ### FinOps Framework coverage
@@ -134,7 +138,8 @@ list prices and the weekly price archive.
 | Architecting for cloud | `find_egress_arbitrage`, `assess_migration` |
 | Benchmarking | `compare_clouds`, `compare_token_pricing`, `llm_price_changes` |
 | Cloud sustainability | `compare_carbon_footprint` |
-| Forecasting, unit economics | Planned next |
+| Forecasting | `forecast_spend` |
+| Unit economics | `calculate_unit_cost` |
 
 ### Example: `compare_workload` input
 

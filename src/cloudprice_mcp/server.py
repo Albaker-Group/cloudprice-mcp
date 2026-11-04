@@ -989,6 +989,82 @@ async def list_tools() -> list[Tool]:
             },
         ),
         Tool(
+            name="forecast_spend",
+            description=(
+                "FinOps forecasting on the user's actual bill (a local FOCUS 1.x CSV "
+                "export; nothing is sent anywhere). Projects month-end spend and the "
+                "next months from the trend in recurring spend, each with a 95% range, "
+                "and lists the services whose spend is growing fastest. Daily exports "
+                "(28+ days) give a daily trend and a month-end estimate. Use for: "
+                "'what will this month's bill be', 'where is spend heading next "
+                "quarter', 'what is driving growth'."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "Local path to a FOCUS export, .csv or .csv.gz.",
+                    },
+                    "horizon_months": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 12,
+                        "default": 3,
+                    },
+                },
+                "required": ["file_path"],
+                "additionalProperties": False,
+            },
+        ),
+        Tool(
+            name="calculate_unit_cost",
+            description=(
+                "FinOps unit economics on the user's actual bill (a local FOCUS 1.x CSV "
+                "export; nothing is sent anywhere). Divides monthly recurring spend by "
+                "business volumes the user supplies (customers, requests, orders) to "
+                "give cost per unit by month, and whether spend is growing faster or "
+                "slower than the business. Optionally scoped to one product or team by "
+                "tag. Use for: 'cost per customer', 'are we scaling efficiently'. Ask "
+                "the user for the monthly volumes."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "Local path to a FOCUS export, .csv or .csv.gz.",
+                    },
+                    "units": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "month": {"type": "string", "description": "YYYY-MM"},
+                                "units": {"type": "number", "exclusiveMinimum": 0},
+                            },
+                            "required": ["month", "units"],
+                        },
+                        "description": "Business volume per month, e.g. "
+                        "[{'month': '2026-10', 'units': 120000}].",
+                    },
+                    "unit_name": {
+                        "type": "string",
+                        "default": "unit",
+                        "description": "What a unit is, e.g. 'customer' or 'request'.",
+                    },
+                    "tag_key": {
+                        "type": "string",
+                        "description": "Scope cost to rows with this tag (with tag_value).",
+                    },
+                    "tag_value": {"type": "string"},
+                },
+                "required": ["file_path", "units"],
+                "additionalProperties": False,
+            },
+        ),
+        Tool(
             name="compare_llm_vs_selfhost",
             description=(
                 "Pay per token or rent GPUs and serve the model yourself? Prices a "

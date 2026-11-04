@@ -478,6 +478,41 @@ def _handle_analyze_cost_allocation(catalog, args):
         return _err(f"analyze_cost_allocation: {e}")
 
 
+def _handle_forecast_spend(catalog, args):
+    from .finops.bill_planning import forecast_spend
+    from .finops.focus_ingest import BillError
+
+    if not args.get("file_path"):
+        return _err("forecast_spend: file_path is required")
+    try:
+        return _ok(
+            forecast_spend(args["file_path"], horizon_months=int(args.get("horizon_months", 3)))
+        )
+    except BillError as e:
+        return _err(f"forecast_spend: {e}")
+
+
+def _handle_calculate_unit_cost(catalog, args):
+    from .finops.bill_planning import calculate_unit_cost
+    from .finops.focus_ingest import BillError
+
+    missing = [k for k in ("file_path", "units") if not args.get(k)]
+    if missing:
+        return _err(f"calculate_unit_cost: required: {', '.join(missing)}")
+    try:
+        return _ok(
+            calculate_unit_cost(
+                args["file_path"],
+                args["units"],
+                unit_name=args.get("unit_name", "unit"),
+                tag_key=args.get("tag_key"),
+                tag_value=args.get("tag_value"),
+            )
+        )
+    except BillError as e:
+        return _err(f"calculate_unit_cost: {e}")
+
+
 def _handle_compare_llm_vs_selfhost(catalog, args):
     from .finops.selfhost import compare_llm_vs_selfhost
 
@@ -678,6 +713,8 @@ _TOOL_HANDLERS = {
     "find_commitment_gaps": _handle_find_commitment_gaps,
     "detect_bill_anomalies": _handle_detect_bill_anomalies,
     "analyze_cost_allocation": _handle_analyze_cost_allocation,
+    "forecast_spend": _handle_forecast_spend,
+    "calculate_unit_cost": _handle_calculate_unit_cost,
     "export_focus": _handle_export_focus,
     # v0.13.0 anomaly detection
     "detect_price_anomalies": _handle_detect_price_anomalies,
@@ -690,7 +727,14 @@ _TOOL_HANDLERS = {
 # machine (the stdio server); never on a hosted front end, where "read this
 # path" would read the server's disk. Refused unless the caller opts in.
 LOCAL_ONLY_TOOLS = frozenset(
-    {"analyze_bill", "find_commitment_gaps", "detect_bill_anomalies", "analyze_cost_allocation"}
+    {
+        "analyze_bill",
+        "find_commitment_gaps",
+        "detect_bill_anomalies",
+        "analyze_cost_allocation",
+        "forecast_spend",
+        "calculate_unit_cost",
+    }
 )
 
 
