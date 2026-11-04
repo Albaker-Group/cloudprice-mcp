@@ -50,7 +50,7 @@ pip install cloudprice-mcp
 cloudprice-mcp setup
 ```
 
-Restart the client and the **36 tools** appear. Problems? `cloudprice-mcp doctor`
+Restart the client and the **37 tools** appear. Problems? `cloudprice-mcp doctor`
 says what is wrong; [INSTALL.md](INSTALL.md) has per-client steps for Windows,
 macOS and Linux. Python 3.10+.
 
@@ -107,12 +107,16 @@ macOS and Linux. Python 3.10+.
 > *"What are we spending on Bedrock and Azure OpenAI, are we paying list
 > price, and would prompt caching help?"* → `analyze_ai_spend`
 
+> *"Review our AgentCore deployment: is it secure, what does the agent cost,
+> and what should we fix first?"* → `review_agentcore` on
+> `terraform show -json` output, plus the bill
+
 Every answer carries the catalogue date and an `honest_gaps` list of what the
 tool does not model, so the AI can tell you where the number stops being exact.
 
 ## Tools
 
-**36 tools**, grouped by job. Full descriptions and arguments:
+**37 tools**, grouped by job. Full descriptions and arguments:
 **[docs/TOOLS.md](docs/TOOLS.md)** (generated from the server, so it is always
 current).
 
@@ -125,6 +129,7 @@ current).
 | Price history | `get_price_history`, `list_tracked_skus`, `detect_price_anomalies`, `watch_workload` |
 | AI / LLM costs | `estimate_agent_cost`, `compare_llm_vs_selfhost`, `compare_token_pricing`, `lookup_extended_model_pricing`, `llm_price_changes` |
 | Your actual bill (local only) | `analyze_bill`, `find_commitment_gaps`, `detect_bill_anomalies`, `analyze_cost_allocation`, `forecast_spend`, `calculate_unit_cost`, `reprice_bill`, `analyze_ai_spend` |
+| Review a deployment (local only) | `review_agentcore` |
 | Export | `export_focus` |
 
 ### FinOps Framework coverage
@@ -142,12 +147,12 @@ list prices and the weekly price archive.
 | Rate optimization | `find_commitment_gaps` (your spend), `optimize_commitment`, `compare_spot` |
 | Workload optimization | `compare_compute_inventory`, `compare_gpu_workload`, `compare_llm_vs_selfhost` |
 | Planning & estimating | `compare_workload`, `compare_total_cost_of_ownership`, `assess_migration`, `estimate_agent_cost` |
-| Architecting for cloud | `reprice_bill` (your spend), `find_egress_arbitrage`, `assess_migration` |
+| Architecting for cloud | `reprice_bill` (your spend), `review_agentcore` (your config), `find_egress_arbitrage`, `assess_migration` |
 | Benchmarking | `reprice_bill` (your spend), `compare_clouds`, `compare_token_pricing`, `llm_price_changes` |
 | Cloud sustainability | `compare_carbon_footprint` |
 | Forecasting | `forecast_spend` |
 | Unit economics | `calculate_unit_cost` |
-| FinOps for AI | `analyze_ai_spend` (your spend), `estimate_agent_cost`, `compare_token_pricing`, `llm_price_changes` |
+| FinOps for AI | `analyze_ai_spend` (your spend), `review_agentcore` (your agent), `estimate_agent_cost`, `compare_token_pricing`, `llm_price_changes` |
 
 ### Example: `compare_workload` input
 

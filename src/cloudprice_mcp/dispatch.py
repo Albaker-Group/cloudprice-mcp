@@ -537,6 +537,24 @@ def _handle_analyze_ai_spend(catalog, args):
         return _err(f"analyze_ai_spend: {e}")
 
 
+def _handle_review_agentcore(catalog, args):
+    from .finops.agentcore_review import PlanError, review_agentcore
+
+    if not args.get("plan_path"):
+        return _err("review_agentcore: plan_path is required")
+    try:
+        return _ok(
+            review_agentcore(
+                args["plan_path"],
+                bill_path=args.get("bill_path"),
+                tag=args.get("tag"),
+                skips=args.get("skips"),
+            )
+        )
+    except PlanError as e:
+        return _err(f"review_agentcore: {e}")
+
+
 def _handle_compare_llm_vs_selfhost(catalog, args):
     from .finops.selfhost import compare_llm_vs_selfhost
 
@@ -741,6 +759,7 @@ _TOOL_HANDLERS = {
     "calculate_unit_cost": _handle_calculate_unit_cost,
     "reprice_bill": _handle_reprice_bill,
     "analyze_ai_spend": _handle_analyze_ai_spend,
+    "review_agentcore": _handle_review_agentcore,
     "export_focus": _handle_export_focus,
     # v0.13.0 anomaly detection
     "detect_price_anomalies": _handle_detect_price_anomalies,
@@ -762,6 +781,7 @@ LOCAL_ONLY_TOOLS = frozenset(
         "calculate_unit_cost",
         "reprice_bill",
         "analyze_ai_spend",
+        "review_agentcore",
     }
 )
 

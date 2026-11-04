@@ -12,6 +12,11 @@
     "gb_hour": 0.0169,
     "notes": "Runtime v2 consumption pricing. CPU is billed only while active (it scales to zero during I/O wait, e.g. waiting on the model); memory is billed for the session. Per-second billing, 1-second minimum, 128 MB memory minimum."
   },
+  "agentcore_runtime_v1": {
+    "vcpu_hour": 0.0895,
+    "gb_hour": 0.00945,
+    "notes": "Runtime v1, the default when platform_version is not set. Memory is billed for the whole session, idle time included, until the idle timeout ends it; v2 reclaims idle memory after 120 seconds."
+  },
   "agentcore_gateway": {
     "per_1k_invocations": 0.005
   },
