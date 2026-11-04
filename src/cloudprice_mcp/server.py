@@ -10,7 +10,21 @@ from . import __version__, dispatch
 from .finops.commitment import ALL_SCENARIOS
 from .pricing import HOURS_PER_MONTH
 
-server: Server = Server("cloudprice-mcp")
+# version: without it the SDK reports its own version (e.g. "1.30.0") as the
+# server's. instructions: clients pass this to the model, so it knows when to
+# reach for these tools before it has read 25 descriptions.
+server: Server = Server(
+    "cloudprice-mcp",
+    version=__version__,
+    instructions=(
+        "Cloud and LLM pricing for AWS, Azure, GCP and OCI from a weekly-refreshed "
+        "public catalogue; no cloud account needed. Use these tools for any question "
+        "about what compute, storage, egress, GPUs, databases or LLM tokens cost, "
+        "which provider is cheapest, commitment (RI / Savings Plan) break-even, "
+        "migration or 3-year TCO, carbon, or how prices changed over time. Quote the "
+        "catalogue date and the honest_gaps each result returns."
+    ),
+)
 
 
 # --- v0.6 FinOps inventory schema (shared across all 4 FinOps tools) ---
@@ -436,7 +450,8 @@ async def list_tools() -> list[Tool]:
                 "per cloud at that tier. OCI offers 20 GB Always Free in the 'hot' "
                 "tier — surfaced when capacity fits. NOTE: egress, request, and "
                 "retrieval costs are not modeled (often the actual hidden killer). "
-                "v0.3 preview — placeholder pricing, verify before relying on numbers."
+                "Prices are hand-entered list prices (as of 2026-05-04), not part of the "
+                "weekly refresh — verify against the provider's page before deciding."
             ),
             inputSchema={
                 "type": "object",
@@ -456,9 +471,9 @@ async def list_tools() -> list[Tool]:
                 "Compare managed PostgreSQL pricing across AWS RDS, Azure Database for "
                 "PostgreSQL, GCP Cloud SQL, and OCI Database with PostgreSQL. Each "
                 "request specifies vCPUs, memory, and storage_gb; the tool picks the "
-                "cheapest matching SKU per cloud and totals compute + storage. v0.3 "
-                "preview — pricing is bundled placeholder data; verify against current "
-                "cloud pricing pages before relying on numbers."
+                "cheapest matching SKU per cloud and totals compute + storage. "
+                "Prices are hand-entered estimates (as of 2026-05-04), not part of the "
+                "weekly refresh — verify against the provider's page before deciding."
             ),
             inputSchema={
                 "type": "object",
@@ -1091,7 +1106,6 @@ async def _run() -> None:
 
 def main() -> None:
     """Console entry point. Runs the MCP server over stdio."""
-    _ = __version__
     asyncio.run(_run())
 
 

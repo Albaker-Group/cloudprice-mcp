@@ -7,153 +7,115 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Albaker-Group/cloudprice-mcp MCP server](https://glama.ai/mcp/servers/Albaker-Group/cloudprice-mcp/badges/score.svg)](https://glama.ai/mcp/servers/Albaker-Group/cloudprice-mcp)
 
-**The FinOps MCP server.** Gives Claude, GitHub Copilot, Cursor, Windsurf, Cline, Continue, Zed — or any MCP-compatible AI — structured pricing data and analysis primitives across **AWS, Azure, GCP, and OCI**. AI clients use cloudprice-mcp to compute Reserved Instance break-even, multi-cloud workload TCO, exit-cost migration analyses, snapshot cost modeling, and egress arbitrage — the kind of FinOps decisions that normally live in three browser tabs and a half-built spreadsheet.
+**Ask your AI assistant what the cloud will cost — and get real list prices back.**
 
-**25 tools** covering compute, block storage, object storage, managed Postgres, **egress** (internet + inter-region with OCI's 10 TB free tier surfaced explicitly), Multi-AZ workloads, snapshots with realistic incremental modeling, Reserved Instance / Savings Plan discounts, FinOps decision suite (migration, commitment, TCO, egress arbitrage), **multi-cloud spot pricing** with eviction tradeoffs, **multi-cloud price history** (the only public weekly-refreshed dataset of its kind), a **stateless cost drift sentinel** for scheduled agents, **multi-cloud carbon footprint** ($ AND kg CO2e on the same query), **multi-cloud GPU pricing** (T4 / A10 / L4 / L40S / V100 / A100 / H100 across all 4 clouds), **cross-provider LLM token pricing** (Claude / GPT / Gemini / Llama / Mistral / DeepSeek across Anthropic / OpenAI / Bedrock / Vertex / Azure OpenAI), **statistical price-anomaly detection** over the weekly snapshot archive (z-score + percent-change, auto-selected by dataset density), and **CFO-grade FinOps decision report generation** (markdown reports with executive summary, cost table, carbon, audit trail, honest gaps). OCI Always Free tier (4 OCPU compute, 20 GB object storage, 10 TB egress) surfaced as $0 line items where it applies.
+cloudprice-mcp gives Claude, Cursor, GitHub Copilot and any other MCP client
+pricing and FinOps tools across **AWS, Azure, GCP and OCI**, plus LLM token
+prices for ~2,300 model/provider combinations. No cloud account, no API keys:
+it works from a catalogue refreshed every week from the providers' public
+pricing APIs.
 
-**One-line install configures every AI client you have:** `pip install cloudprice-mcp && cloudprice-mcp setup` — auto-detects Claude Desktop, GitHub Copilot Agent Mode, Cursor, Windsurf, Cline, Continue.dev, and Zed, then asks Y/N before writing each config.
+- **Four clouds in one answer**, including OCI and its 10 TB free egress — which
+  most tools leave out.
+- **Cloud and AI costs side by side**: price a VM, a GPU and the LLM calls
+  running on it in the same conversation.
+- **Price history**: every weekly catalogue is archived, so you can ask what
+  changed, not just what it costs today.
+- **Decisions, not just lookups**: RI / Savings Plan break-even, 3-year TCO,
+  migration payback, egress arbitrage, carbon (kg CO2e), FOCUS 1.3 export.
 
 ![demo](demo.gif)
 
-## What does FinOps look like with cloudprice-mcp?
+## Quick start
 
-Real questions teams actually ask. Paste any of these into Claude / Copilot / Cursor with cloudprice-mcp loaded:
+Add this to your MCP client's config (Claude Desktop, Cursor, VS Code, …).
+[`uvx`](https://docs.astral.sh/uv/) downloads and runs it — nothing to install
+first:
 
-> ***"I have 6× t3.2xlarge running on AWS. Compare the 3-year total cost on-demand vs 1-year Savings Plan vs 3-year RI partial upfront. What's the break-even month?"***
-> → AI calls `compare_workload`, pulls list-price baseline, layers AWS's published RI rates, returns dollar break-even. ~7-month payback typical.
+```json
+{
+  "mcpServers": {
+    "cloudprice": { "command": "uvx", "args": ["cloudprice-mcp"] }
+  }
+}
+```
 
-> ***"I'm thinking about offloading 5 TB of cold-tier object storage from AWS S3 to a cheaper provider. Compare archive-tier cost across all 4 clouds, factor in AWS exit egress, and tell me the payback period."***
-> → AI calls `compare_object_storage` + `compare_egress`, computes one-time exit cost vs ongoing savings. Often surfaces "don't move — AWS Glacier Deep Archive is already tied for cheapest".
+Claude Code: `claude mcp add cloudprice -- uvx cloudprice-mcp`
 
-> ***"At 50 TB/month internet egress, where am I cheapest? Show the 3-year savings of moving."***
-> → `compare_egress` → OCI ~$340/mo, AWS/Azure/GCP ~$4,000/mo. The 12× difference is OCI's 10 TB free tier — a real moat for content/CDN workloads.
-
-> ***"Size a 3-tier SaaS workload: 8 web (4/16), 12 app (8/32), 4 DB (16/64), 5 TB shared SSD, 50 TB HDD bulk, 10 TB/month egress. Compare full-stack monthly cost across all 4 clouds with multi-AZ and 1-year commitment."***
-> → AI chains `compare_workload` + `compare_egress`, applies multi-AZ multiplier (×2 compute) + commitment discount.
-
-What you get back: dollar numbers traceable to a public catalog, AI-explained tradeoffs, payback periods, and the kind of "don't do that" recommendation that kills bad migrations before they happen. **No console-clicking. No tab-switching between three pricing calculators. No FinOps spreadsheet that goes stale the moment a new SKU drops.**
-
----
-
-## Install
-
-**Recommended (auto-config):**
+Or install with pip and let it configure every client it finds (asks before
+writing each one):
 
 ```bash
 pip install cloudprice-mcp
-cloudprice-mcp setup     # auto-configures every detected MCP client, asks Y/N before writing
+cloudprice-mcp setup
 ```
 
-Then fully restart whichever clients were configured. **10 tools appear** in each. Done.
+Restart the client and the **25 tools** appear. Problems? `cloudprice-mcp doctor`
+says what is wrong; [INSTALL.md](INSTALL.md) has per-client steps for Windows,
+macOS and Linux. Python 3.10+.
 
-**Trust spectrum:**
+## Things to ask
 
-| Command | When to use |
+> *"I run 6× t3.2xlarge on AWS. On-demand vs 1-year Savings Plan vs 3-year RI —
+> what's the break-even month?"* → `optimize_commitment`
+
+> *"At 50 TB/month internet egress, which cloud is cheapest, and what would
+> moving save over 3 years?"* → `compare_egress`, `find_egress_arbitrage`
+> (OCI ≈ $340/mo vs ≈ $4,000/mo on the hyperscalers)
+
+> *"Size this 3-tier app on all four clouds: 8 web (4 vCPU/16 GB), 12 app
+> (8/32), 4 DB (16/64), 5 TB SSD, 10 TB/month egress, multi-AZ."* →
+> `compare_workload`, `compare_total_cost_of_ownership`
+
+> *"Cheapest way to run 50M input / 10M output tokens a month — and is Claude
+> Sonnet the same price on Bedrock and Vertex?"* → `compare_token_pricing`
+
+> *"Which H100 instance is cheapest per GPU-hour across the four clouds?"* →
+> `compare_gpu_workload`
+
+> *"How has OCI E5.Flex pricing moved since April?"* → `get_price_history`
+
+Every answer carries the catalogue date and an `honest_gaps` list of what the
+tool does not model, so the AI can tell you where the number stops being exact.
+
+## Tools
+
+**25 tools**, grouped by job. Full descriptions and arguments:
+**[docs/TOOLS.md](docs/TOOLS.md)** (generated from the server, so it is always
+current).
+
+| Job | Tools |
 |---|---|
-| `cloudprice-mcp setup` | Default — detects every installed client, shows the plan, asks Y/N once |
-| `cloudprice-mcp setup --yes` | Skip prompt (CI / scripts) |
-| `cloudprice-mcp setup --client copilot` | Configure a specific client (repeatable: `--client copilot --client cursor`) |
-| `cloudprice-mcp setup --all` | Configure every known client even if not detected |
-| `cloudprice-mcp setup --force` | Refresh existing entries — useful after upgrade or moving Python |
-| `cloudprice-mcp setup --dry-run` | Show per-client diffs without writing |
-| `cloudprice-mcp setup --print-config` | Emit per-client JSON to stdout for manual paste |
-| `cloudprice-mcp setup --list-clients` | Detection table — which clients are known + installed on this system |
-| Manual edit | Don't trust running new tools — see [INSTALL.md](INSTALL.md) per-client sections |
+| Look up one price | `get_aws_price`, `get_azure_price`, `get_gcp_price`, `compare_clouds` |
+| Price a workload | `compare_compute_inventory`, `compare_storage_inventory`, `compare_workload`, `compare_object_storage`, `compare_postgres_database`, `compare_egress` |
+| FinOps decisions | `assess_migration`, `optimize_commitment`, `compare_total_cost_of_ownership`, `find_egress_arbitrage`, `generate_decision_report` |
+| Spot, GPU, carbon | `compare_spot`, `compare_gpu_workload`, `compare_carbon_footprint` |
+| Price history | `get_price_history`, `list_tracked_skus`, `detect_price_anomalies`, `watch_workload` |
+| LLM token pricing | `compare_token_pricing`, `lookup_extended_model_pricing` |
+| Export | `export_focus` |
 
-If something doesn't work, run:
-
-```bash
-cloudprice-mcp doctor
-```
-
-It tells you exactly what's broken (Python version, install path, config location, tool registration, command path validity).
-
-Python 3.10+ required.
-
-For step-by-step manual install (Windows / macOS / Linux), see **[INSTALL.md](INSTALL.md)**.
-
-## Tools exposed
-
-### Single-spec lookups (v0.1)
-
-| Tool | What it does |
-|---|---|
-| `get_aws_price` | Look up an EC2 instance type → vCPUs, memory, hourly + monthly USD (us-east-1) |
-| `get_azure_price` | Look up an Azure VM size → vCPUs, memory, hourly + monthly USD (eastus) |
-| `get_gcp_price` | Look up a GCP Compute Engine machine type → vCPUs, memory, hourly + monthly USD (us-east1) |
-| `compare_clouds` | Given a target spec (vCPUs + GB), return the cheapest matching SKU across **AWS / Azure / GCP / OCI**, sorted by monthly cost, with savings summary |
-
-### Bulk + workload compare (v0.2)
-
-| Tool | What it does |
-|---|---|
-| `compare_compute_inventory` | Bulk-compare a list of compute workloads (each with vCPUs / memory / quantity / hours / optional OS disk) across all 4 clouds. Returns per-row matches, per-cloud totals, cheapest cloud. |
-| `compare_storage_inventory` | Bulk-compare a list of block-storage volumes (each with capacity / disk type / quantity) across all 4 clouds. |
-| `compare_workload` | Combined compute + block storage in one call. Mirrors a two-sheet sizing workbook (compute BoM + storage BoM). Optional `commitment` overlay applies 1-year (30%) or 3-year (50%) compute discount. |
-
-### Object storage + managed Postgres (v0.3)
-
-| Tool | What it does |
-|---|---|
-| `compare_object_storage` | Bulk-compare object-storage buckets across **AWS S3 / Azure Blob / GCP Cloud Storage / OCI Object Storage**. Each row specifies capacity_gb + tier (`hot` / `cool` / `archive`). **OCI Always Free 20 GB tier surfaced explicitly** — capacity ≤ 20 GB on OCI hot tier returns $0/mo. |
-| `compare_postgres_database` | Bulk-compare managed PostgreSQL pricing across **AWS RDS / Azure Database for PostgreSQL / GCP Cloud SQL / OCI Database with PostgreSQL**. Each row specifies vCPUs / memory / storage_gb. Storage cost is calculated separately from compute. |
-
-### FinOps decision suite (v0.6, NEW)
-
-Four named tools that turn cross-cloud pricing into FinOps decisions in one call instead of letting the AI chain three+ tools. All four consume a structured workload inventory (compute / storage / object_storage / databases / egress) plus tool-specific options.
-
-| Tool | What it does |
-|---|---|
-| `assess_migration` | "Should I move?" — projects per-target cloud cost, savings %, **one-time exit egress cost**, payback months. Returns a ranked recommendation by 3-year TCO with triggered caveats (e.g., "OCI A1.Flex is ARM — verify your AMIs"). |
-| `optimize_commitment` | "When does my RI / SP / CUD pay back?" — six commitment scenarios (`none` / `1yr_no_upfront` / `1yr_all_upfront` / `3yr_no_upfront` / `3yr_partial_upfront` / `3yr_all_upfront`) with per-scenario monthly cost, upfront, 3-year total, savings %, payback months. Recommends the lowest 3-year TCO option. |
-| `compare_total_cost_of_ownership` | "What's my 3-year cost across clouds?" — multi-year projection with linear YoY growth assumptions for compute / storage / egress. Returns cumulative TCO per cloud, year-by-year breakdown, sensitivity analysis on the dominant variable. The kind of number that goes into board decks. |
-| `find_egress_arbitrage` | "Where do I save on data transfer?" — specialized assess_migration scoped to egress only. Surfaces the OCI 12× moat: at 50 TB/month internet egress, OCI is ~$340 vs $4,000+ on the hyperscalers. |
-
-All four tools accept a `WorkloadInventory` shape that mirrors a 4-section sizing sheet (compute / storage / object_storage / databases / egress) plus optional `commitment`, `multi_az`, and `one_time.data_to_migrate_gb` fields. Output includes `honest_gaps` — explicit list of what each tool does NOT model — to prevent over-trust.
-
-### Egress + Multi-AZ + better snapshots (v0.5, NEW)
-
-| Tool / Feature | What it does |
-|---|---|
-| `compare_egress` | Compare data-transfer costs across all 4 clouds. Two directions: `out_to_internet` (tiered pricing with free-tier credits — AWS/Azure 100 GB, **OCI 10 TB**) and `inter_region` (cross-region within the same cloud). At 50 TB/month internet egress, **OCI is ~12× cheaper than the hyperscalers** — a real moat for content/CDN workloads. |
-| `compare_workload` `multi_az: true` | New flag doubles compute totals on every cloud to model Multi-AZ / HA deployments (sync replicas across two zones). Storage stays at 1× because object/block storage is usually cross-AZ at base price. |
-| `snapshot_incremental_factor` | New per-row field on storage and OS-disk snapshots. Default `1.0` keeps the v0.2 upper-bound estimate. Set to `0.3` for typical real-world incremental dedup, or `0.0` to exclude snapshots from the total. |
-
-### Example: compare_workload input shape
+### Example: `compare_workload` input
 
 ```json
 {
   "compute": [
-    { "name": "web", "tier": "Web", "vcpus": 4, "memory_gb": 16, "quantity": 8,  "os_disk_gb": 100, "os_disk_type": "ssd" },
-    { "name": "app", "tier": "App", "vcpus": 8, "memory_gb": 32, "quantity": 12, "os_disk_gb": 200, "os_disk_type": "ssd" },
-    { "name": "db",  "tier": "DB",  "vcpus": 16, "memory_gb": 64, "quantity": 4, "os_disk_gb": 500, "os_disk_type": "ssd" }
+    { "name": "web", "vcpus": 4,  "memory_gb": 16, "quantity": 8,  "os_disk_gb": 100, "os_disk_type": "ssd" },
+    { "name": "app", "vcpus": 8,  "memory_gb": 32, "quantity": 12, "os_disk_gb": 200, "os_disk_type": "ssd" },
+    { "name": "db",  "vcpus": 16, "memory_gb": 64, "quantity": 4,  "os_disk_gb": 500, "os_disk_type": "ssd" }
   ],
   "storage": [
-    { "name": "shared-fast", "tier": "DB",  "capacity_gb": 5000,  "disk_type": "ssd" },
-    { "name": "shared-bulk", "tier": "App", "capacity_gb": 50000, "disk_type": "hdd" }
-  ]
+    { "name": "shared-fast", "capacity_gb": 5000,  "disk_type": "ssd" },
+    { "name": "shared-bulk", "capacity_gb": 50000, "disk_type": "hdd" }
+  ],
+  "commitment": "1yr_no_upfront",
+  "multi_az": true
 }
 ```
 
-### Snapshots (v0.2.1)
-
-`snapshot_count` on storage rows and `os_disk_snapshot_count` on compute rows **are now priced**. Snapshot rates per cloud per disk type are bundled (~$0.05/GB-mo for AWS/Azure, ~$0.026/GB-mo for GCP).
-
-**Caveat — upper-bound estimate:** snapshots are priced as `snapshot_per_gb_month × full_capacity × quantity × snapshot_count`. Real-world snapshots are **incremental** (only changed blocks), so actual cost is typically 20-50% of this model's number. If snapshots dominate your total, ask the cloud's calculator for a tighter estimate.
-
-`iops` and `throughput_mbs` on storage rows are still accepted as metadata only — not used for SKU matching in this release.
-
-### Reserved Instance / Savings Plan estimator (v0.2.1)
-
-`compare_workload` accepts an optional `commitment` parameter:
-
-| Value | Compute discount | Use case |
-|---|---|---|
-| `none` (default) | 0% | On-demand only |
-| `1yr_no_upfront` | 30% | 1-year AWS Savings Plan / Azure RI / GCP CUD (no upfront) |
-| `3yr_partial_upfront` | 50% | 3-year, partial upfront — typical "we know our baseline" deals |
-
-Storage and snapshots are not discounted (most clouds don't offer meaningful storage commitments). Discount tiers are conservative averages — your actual rate depends on instance family, payment option, and region.
+**Modelling notes.** Commitments apply a conservative compute discount (1-year
+≈ 30%, 3-year ≈ 50%); storage is not discounted. Snapshots are priced as full
+copies by default — set `snapshot_incremental_factor` (e.g. `0.3`) for
+real-world incremental snapshots. `multi_az` doubles compute, not storage.
 
 ## Pricing data
 
@@ -163,7 +125,7 @@ Prices are bundled as a curated dataset of common SKUs across **4 clouds**:
 - **Object storage** (Hot / Cool / Archive tiers per cloud, including OCI Always Free 20 GB)
 - **Managed PostgreSQL** (RDS / Azure DB / Cloud SQL / OCI Database with PostgreSQL)
 
-### Auto-refreshed weekly (v0.7+)
+### Auto-refreshed weekly
 
 The bundled catalog is refreshed every Sunday by a GitHub Action that hits each cloud's public pricing API:
 
@@ -178,7 +140,7 @@ Each refresh writes a **dated snapshot** to `src/cloudprice_mcp/data/prices/YYYY
 
 Every tool result includes the catalog's `as_of` field so you know exactly which prices were used.
 
-### Public price history dataset (v0.7.1+)
+### Public price history dataset
 
 cloudprice-mcp is the only FinOps tool we know of that **preserves every weekly snapshot**. You can query *"what did m5.xlarge cost in May?"* — neither AWS Calculator nor GCP Estimator can answer that because their pages always show today.
 
@@ -211,7 +173,7 @@ Real questions this unlocks:
 > *"Show me every multi-cloud price mover since January."*
 > → AI calls `list_tracked_skus(since="2026-01-01")`, returns every SKU + its latest price + change.
 
-### Cross-provider LLM token pricing (v0.12.0+)
+### Cross-provider LLM token pricing
 
 Token costs are the fastest-growing FinOps line item in 2026 — and **nobody compares them cross-provider openly**. The same model is often available on multiple providers at different prices (Claude on Anthropic / Bedrock / Vertex; GPT on OpenAI / Azure OpenAI; Llama on Bedrock).
 
@@ -251,7 +213,7 @@ Real questions this unlocks:
 > *"Should I use Anthropic API or Bedrock for Claude?"*
 > → `compare_token_pricing(model_id="claude-4-sonnet")` shows price parity on per-token rates, but Anthropic API exposes a 10x cheaper cache_read rate that Bedrock doesn't publish. For caching-heavy workloads, Anthropic wins.
 
-### Multi-cloud GPU pricing (v0.11.0+)
+### Multi-cloud GPU pricing
 
 The fastest-growing cloud cost category — and nobody compares it cross-cloud openly.
 
@@ -276,7 +238,7 @@ Covers NVIDIA T4, A10, A10G, L4, L40S, V100, A100, H100 across all 4 clouds. Ret
 
 The OCI H100 finding is real: at 8x H100 it's ~19% cheaper than AWS/Azure for identical hardware.
 
-### Cost Drift Sentinel (v0.9.0+)
+### Cost Drift Sentinel
 
 The shift from query tool to **agent capability**. Most FinOps tools answer *"what does this cost?"* — this one answers *"is this still what it cost when I signed off on it?"*
 
@@ -304,7 +266,7 @@ Key properties:
 
 **Plug-and-play GitHub Action template** at [`examples/cloudprice-watch.yml`](examples/cloudprice-watch.yml) — drop it in any IaC repo with a `workload.json`, get auto-opened GitHub issues when costs drift. Baseline is committed to your repo so the history is auditable.
 
-### Carbon-aware FinOps (v0.10.0+) — kg CO2e per workload, alongside USD
+### Carbon-aware FinOps — kg CO2e per workload, alongside USD
 
 The only FinOps MCP tool that returns **both cost AND carbon footprint** on the same query. AWS / Azure / GCP each publish their own customer dashboards (Customer Carbon Footprint Tool, Emissions Impact Dashboard, Carbon Footprint) — but none compare across providers. cloudprice does.
 
@@ -360,8 +322,9 @@ These are tracked roadmap items. **Use cloudprice-mcp for the on-demand list-pri
 ```bash
 git clone https://github.com/Albaker-Group/cloudprice-mcp.git
 cd cloudprice-mcp
-pip install -e ".[dev]"
-pytest
+uv sync                     # Python + dev tools at the versions in uv.lock (see mise.toml)
+uv run pytest               # CI also runs: ruff check, ruff format --check, coverage floor
+uv run python scripts/gen_tools_md.py   # after changing a tool's description
 ```
 
 To point Claude Desktop at your dev copy, swap the `command` in the config:
