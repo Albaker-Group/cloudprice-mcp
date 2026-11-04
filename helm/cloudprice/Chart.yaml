@@ -2,7 +2,8 @@ apiVersion: v2
 name: cloudprice
 description: cloudprice-mcp over HTTP — multi-cloud price comparison tools
 type: application
-# Chart version. Bump on chart changes.
+# Chart version. Bump on ANY chart change: CI never overwrites a published
+# version, so an unbumped change is simply not published.
 version: 0.2.0
 # The app this deploys. Overridden per-release by --set image.tag, so this is
 # only the default; the image tag is what actually decides what runs.

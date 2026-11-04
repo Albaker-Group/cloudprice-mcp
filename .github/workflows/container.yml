@@ -227,12 +227,21 @@ jobs:
 
           CHART_REPO=$(echo "oci://ghcr.io/${GITHUB_REPOSITORY}/charts" | tr '[:upper:]' '[:lower:]')
 
-          # Keep the chart's appVersion honest: it should name the image tag
-          # this run actually built, not whatever happens to be committed.
-          helm package helm/cloudprice             --app-version "${APP_VERSION}"             --destination /tmp/chart
-
           helm registry login ghcr.io             --username "${GHCR_USER}"             --password-stdin <<<"${GHCR_TOKEN}"
 
+          # A published chart version is never overwritten. Every run used to
+          # re-push cloudprice:0.2.0 with a new appVersion, so "0.2.0" meant
+          # different bytes from week to week and an old chart could not be
+          # rolled back to. Terraform pins the chart by version (and the image
+          # by digest), so the version has to keep meaning one thing.
           CHART_VER=$(grep -m1 '^version:' helm/cloudprice/Chart.yaml | awk '{print $2}')
+          if helm show chart "${CHART_REPO}/cloudprice" --version "${CHART_VER}" >/dev/null 2>&1; then
+            echo "::notice::cloudprice chart ${CHART_VER} is already published; not overwriting it. Bump version in helm/cloudprice/Chart.yaml to publish chart changes."
+            exit 0
+          fi
+
+          # appVersion records the app release this chart was first published
+          # with. It is only a default: Terraform sets image.tag and image.digest.
+          helm package helm/cloudprice             --app-version "${APP_VERSION}"             --destination /tmp/chart
           helm push "/tmp/chart/cloudprice-${CHART_VER}.tgz" "${CHART_REPO}"
           echo "Pushed ${CHART_REPO}/cloudprice:${CHART_VER} (appVersion ${APP_VERSION})"
