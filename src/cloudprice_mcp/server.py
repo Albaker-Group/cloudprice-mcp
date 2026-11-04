@@ -846,6 +846,47 @@ async def list_tools() -> list[Tool]:
         ),
         # --- v0.18.0 FOCUS 1.3 export ---
         Tool(
+            name="llm_price_changes",
+            description=(
+                "What changed in LLM token pricing between two weeks: models that "
+                "were repriced (with old and new $/1M input and output, and % move), "
+                "models added, and models removed, across ~3,600 model/provider rows "
+                "from LiteLLM (direct provider prices) and OpenRouter (routed prices). "
+                "Backed by a weekly archive kept since 2026-05-23. Use for: 'what got "
+                "cheaper this week', 'did Anthropic or Bedrock change prices since "
+                "October', 'new models on Groq this month', 'has Mistral Large's "
+                "price moved'. Defaults to the latest week vs the week before."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "since": {
+                        "type": "string",
+                        "description": "ISO date. Compare from the latest archived week on or before this date. Default: the week before 'until'.",
+                    },
+                    "until": {
+                        "type": "string",
+                        "description": "ISO date. Compare to the latest archived week on or before this date. Default: the latest week.",
+                    },
+                    "source": {
+                        "type": "string",
+                        "enum": ["litellm", "openrouter"],
+                        "description": "Restrict to one upstream. Default: both.",
+                    },
+                    "provider": {
+                        "type": "string",
+                        "description": "Case-insensitive substring of the provider, e.g. 'bedrock', 'anthropic', 'groq'.",
+                    },
+                    "query": {
+                        "type": "string",
+                        "description": "Case-insensitive substring of the model ID, e.g. 'claude', 'llama-3.3'.",
+                    },
+                    "limit": {"type": "integer", "minimum": 1, "default": 25},
+                },
+                "additionalProperties": False,
+            },
+        ),
+        Tool(
             name="export_focus",
             description=(
                 "Emit FOCUS 1.3-shaped rows from any pricing query, ready to "

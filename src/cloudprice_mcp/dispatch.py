@@ -410,6 +410,23 @@ def _handle_lookup_extended_model_pricing(catalog, args):
     return _ok(result)
 
 
+def _handle_llm_price_changes(catalog, args):
+    from .llm_history import price_changes
+
+    try:
+        result = price_changes(
+            since=args.get("since"),
+            until=args.get("until"),
+            source=args.get("source"),
+            provider=args.get("provider"),
+            query=args.get("query"),
+            limit=int(args.get("limit", 25)),
+        )
+    except ValueError as e:
+        return _err(f"llm_price_changes: {e}")
+    return _ok(result)
+
+
 def _handle_compare_gpu_workload(catalog, args):
     gpu_type = args.get("gpu_type", "")
     gpu_count = int(args.get("gpu_count", 1))
@@ -532,6 +549,7 @@ _TOOL_HANDLERS = {
     # v0.12.0 LLM token pricing
     "compare_token_pricing": _handle_compare_token_pricing,
     "lookup_extended_model_pricing": _handle_lookup_extended_model_pricing,
+    "llm_price_changes": _handle_llm_price_changes,
     "export_focus": _handle_export_focus,
     # v0.13.0 anomaly detection
     "detect_price_anomalies": _handle_detect_price_anomalies,
