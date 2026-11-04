@@ -73,6 +73,33 @@ def _num(value: str | None) -> float | None:
         return None
 
 
+def row_cost(r: dict[str, str]) -> float | None:
+    """EffectiveCost, else BilledCost, else ListCost; None when none is readable."""
+    for c in ("EffectiveCost", "BilledCost", "ListCost"):
+        v = _num(r.get(c))
+        if v is not None:
+            return v
+    return None
+
+
+def usage_kind(r: dict[str, str]) -> str | None:
+    """How a Usage row was paid for; None for purchases, tax, credits and the like.
+
+    'unused_commitment' is a commitment's idle hours: money spent, nothing run.
+    'spot' is FOCUS PricingCategory 'Dynamic'. Spot is already cheap and cannot
+    be committed, so it is kept apart from on-demand.
+    """
+    if (r.get("ChargeCategory") or "Usage") != "Usage":
+        return None
+    if r.get("CommitmentDiscountStatus") == "Unused":
+        return "unused_commitment"
+    if r.get("CommitmentDiscountId"):
+        return "committed"
+    if r.get("PricingCategory") == "Dynamic":
+        return "spot"
+    return "on_demand"
+
+
 def analyze_bill(file_path: str, group_by: str = "ServiceName", top_n: int = 10) -> dict[str, Any]:
     if group_by not in _GROUPS:
         raise BillError(f"group_by must be one of {', '.join(_GROUPS)}")
@@ -97,10 +124,7 @@ def analyze_bill(file_path: str, group_by: str = "ServiceName", top_n: int = 10)
             if v is not None:
                 totals[c] += v
                 seen[c] = True
-        cost = next(
-            (costs[c] for c in ("EffectiveCost", "BilledCost", "ListCost") if costs[c] is not None),
-            None,
-        )
+        cost = row_cost(r)
         if cost is None:
             bad_rows += 1
             continue
@@ -109,12 +133,12 @@ def analyze_bill(file_path: str, group_by: str = "ServiceName", top_n: int = 10)
         months[(r.get("ChargePeriodStart") or "")[:7] or "(no date)"][key] += cost
         if r.get("BillingCurrency"):
             currencies.add(r["BillingCurrency"])
-        if r.get("ChargeCategory", "Usage") == "Usage":
-            if r.get("CommitmentDiscountId"):
-                has_commitments = True
-                covered += cost
-            else:
-                on_demand += cost
+        kind = usage_kind(r)
+        if kind == "committed":
+            has_commitments = True
+            covered += cost
+        elif kind in ("on_demand", "spot"):
+            on_demand += cost
 
     if bad_rows:
         warnings.append(f"{bad_rows} rows had no readable cost and were skipped")
