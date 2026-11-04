@@ -58,10 +58,10 @@ updates:
       # Longer than for packages. A compromised action executes inside CI with
       # access to secrets, so waiting for the ecosystem to notice is worth more
       # here than being current by a few days.
+      # Only default-days is valid for github-actions: Dependabot rejected the
+      # semver-*-days keys here ("not supported for the package ecosystem
+      # 'github-actions'"), which failed its config check on every PR.
       default-days: 14
-      semver-major-days: 30
-      semver-minor-days: 14
-      semver-patch-days: 14
     groups:
       actions:
         patterns: ["*"]
