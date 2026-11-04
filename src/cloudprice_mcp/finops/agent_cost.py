@@ -21,7 +21,9 @@ previous request sent and writes only what is new since (O + R).
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
+from importlib import resources
 from typing import Any
 
 from .extended_tokens import _load_catalog
@@ -69,6 +71,7 @@ def estimate_agent_cost(
     runs_per_month: int = 10_000,
     provider: str | None = None,
     compare_models: list[str] | None = None,
+    hosting: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     shape = AgentShape(
         steps=steps,
@@ -120,6 +123,9 @@ def estimate_agent_cost(
         )
 
     best = run["best_per_run_usd"]
+    hosted = _hosting(hosting, shape, best) if hosting else None
+    if hosted:
+        warnings.extend(hosted.pop("warnings"))
     return {
         "kind": "agent_cost_estimate",
         "catalog_as_of": catalog["as_of"],
@@ -160,6 +166,7 @@ def estimate_agent_cost(
             for k, t in enumerate(inputs)
         ],
         "alternatives": alternatives,
+        "hosting": hosted,
         "warnings": warnings,
         "honest_gaps": [
             "Token counts are your estimates; measure a real run (most SDKs return "
@@ -167,7 +174,9 @@ def estimate_agent_cost(
             "Caching assumes each step reuses the previous request's prefix within the "
             "cache lifetime (minutes) and that the provider caches automatically or you "
             "set cache breakpoints. Step 1 is priced as a cache write every run.",
-            "Not included: hosting (Lambda, containers, AgentCore Runtime), vector "
+            "Hosting is only included when `hosting` is passed (AgentCore Runtime, "
+            "Gateway and Memory, and Lambda x86, us-east-1 list prices, no free tier). "
+            "Not included: containers on ECS/EKS, vector "
             "search, tool API fees, retries, or reasoning/thinking tokens that some "
             "models bill as output.",
             "Prices are list prices from LiteLLM's community-maintained catalogue; "
@@ -242,3 +251,98 @@ def _headline(row: dict[str, Any], s: AgentShape, run: dict[str, Any], growth: f
     if run["cached"] is not None and run["uncached"]:
         line += f" Prompt caching cuts the run cost by {1 - run['cached'] / run['uncached']:.0%}."
     return line
+
+
+def _hosting_prices() -> dict[str, Any]:
+    raw = resources.files("cloudprice_mcp.data").joinpath("agent_hosting_prices.json")
+    return json.loads(raw.read_text(encoding="utf-8"))
+
+
+def _hosting(h: dict[str, Any], s: AgentShape, token_usd: float) -> dict[str, Any]:
+    """Price the same run on AgentCore Runtime and on Lambda, plus Gateway and
+    Memory, and add the token cost for a full per-run and monthly figure.
+
+    The difference that matters: an agent spends most of a run waiting on the
+    model. AgentCore bills CPU only while active (memory for the whole run);
+    Lambda bills memory-seconds for the whole run, waiting included.
+    """
+    seconds = float(h.get("run_seconds", 0))
+    if seconds <= 0:
+        raise ValueError("hosting.run_seconds (wall-clock seconds per run) is required")
+    vcpu = float(h.get("vcpu", 1))
+    memory_gb = float(h.get("memory_gb", 2))
+    active = float(h.get("active_cpu_share", 0.2))
+    if not 0 < active <= 1 or vcpu <= 0 or memory_gb <= 0:
+        raise ValueError("hosting: vcpu and memory_gb must be positive, active_cpu_share in (0, 1]")
+    tool_calls = int(h.get("tool_calls_per_run", s.steps - 1))
+    retrievals = int(h.get("memory_retrievals_per_run", 0))
+    events = int(h.get("memory_events_per_run", 0))
+
+    p = _hosting_prices()
+    rt, gw, mem, lam = (
+        p["agentcore_runtime"],
+        p["agentcore_gateway"],
+        p["agentcore_memory"],
+        p["lambda"],
+    )
+    hours = seconds / 3600
+    runtime = (
+        vcpu * hours * active * rt["vcpu_hour"] + max(memory_gb, 0.125) * hours * rt["gb_hour"]
+    )
+    gateway = tool_calls * gw["per_1k_invocations"] / 1000
+    memory = (
+        retrievals * mem["long_term_per_1k_retrievals"] / 1000
+        + events * mem["short_term_event_billed_kb_min"] / 1e6 * mem["short_term_per_gb_ingested"]
+    )
+    agentcore = runtime + gateway + memory
+    lambda_run = memory_gb * seconds * lam["x86_gb_second"] + lam["per_1m_requests"] / 1e6
+
+    def total(hosting_usd: float) -> dict[str, float]:
+        per_run = token_usd + hosting_usd
+        return {
+            "hosting_per_run_usd": round(hosting_usd, 6),
+            "total_per_run_usd": round(per_run, 6),
+            "total_monthly_usd": round(per_run * s.runs_per_month, 2),
+            "hosting_share_of_total": round(hosting_usd / per_run, 3) if per_run else 0.0,
+        }
+
+    warnings = []
+    if seconds > 900:
+        warnings.append(
+            f"A {seconds:.0f}-second run exceeds Lambda's 15-minute limit; Lambda "
+            "cannot host it as one invocation."
+        )
+    return {
+        "prices_as_of": p["as_of"],
+        "assumptions": {
+            "run_seconds": seconds,
+            "vcpu": vcpu,
+            "memory_gb": memory_gb,
+            "active_cpu_share": active,
+            "tool_calls_per_run": tool_calls,
+            "memory_retrievals_per_run": retrievals,
+            "memory_events_per_run": events,
+        },
+        "agentcore": {
+            "runtime_usd": round(runtime, 6),
+            "gateway_usd": round(gateway, 6),
+            "memory_usd": round(memory, 6),
+            **total(agentcore),
+        },
+        "lambda": {
+            "note": "Compute only; a Gateway or memory store would be extra.",
+            **total(lambda_run),
+        },
+        # Compute against compute: Lambda here has no Gateway or memory store.
+        "cheaper_compute": "agentcore_runtime" if runtime < lambda_run else "lambda",
+        "explanation": (
+            f"Compute only: AgentCore Runtime ${runtime:.6f} vs Lambda "
+            f"${lambda_run:.6f} per run. AgentCore bills CPU for {active:.0%} of the "
+            "run (the rest is waiting on the model or tools) and memory for all of it; "
+            f"Lambda bills {memory_gb:g} GB for every one of the {seconds:g} seconds. "
+            f"Hosting is {total(agentcore)['hosting_share_of_total']:.0%} of the total "
+            "on AgentCore: the model tokens dominate."
+        ),
+        "sources": p["sources"],
+        "warnings": warnings,
+    }

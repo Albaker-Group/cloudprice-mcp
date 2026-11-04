@@ -79,7 +79,8 @@ macOS and Linux. Python 3.10+.
 
 > *"My support agent averages 8 steps with a 2k system prompt and 3k of tool
 > definitions. What does 50,000 runs a month cost on Sonnet vs Haiku, and how
-> much does prompt caching save?"* → `estimate_agent_cost`
+> much does prompt caching save — and hosted on AgentCore or Lambda?"* →
+> `estimate_agent_cost` (tokens + AgentCore Runtime/Gateway/Memory vs Lambda)
 
 > *"What changed in LLM pricing this week — anything cheaper on Bedrock or
 > Groq?"* → `llm_price_changes` (weekly archive of ~3,600 model/provider prices)

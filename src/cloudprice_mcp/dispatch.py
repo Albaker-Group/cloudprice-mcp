@@ -456,6 +456,7 @@ def _handle_estimate_agent_cost(catalog, args):
             model=args["model"],
             provider=args.get("provider"),
             compare_models=args.get("compare_models"),
+            hosting=args.get("hosting"),
             **{k: int(args[k]) for k in known if k in args},
         )
     except ValueError as e:
