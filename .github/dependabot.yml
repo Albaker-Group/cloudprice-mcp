@@ -29,6 +29,11 @@ updates:
       semver-major-days: 30
       semver-minor-days: 14
       semver-patch-days: 7
+    # mcp 2.x removed Server.list_tools, which server.py is built on (#36 would
+    # have broken every install). Lift this when the 2.x migration lands.
+    ignore:
+      - dependency-name: "mcp"
+        update-types: ["version-update:semver-major"]
     groups:
       # One PR for routine bumps instead of five separate ones. Majors stay
       # separate so they get read properly.
