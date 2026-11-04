@@ -1096,6 +1096,38 @@ async def list_tools() -> list[Tool]:
             },
         ),
         Tool(
+            name="analyze_ai_spend",
+            description=(
+                "FinOps for AI on the user's actual bill (a local FOCUS 1.x CSV export; "
+                "nothing is sent anywhere). Finds the generative-AI lines (Amazon "
+                "Bedrock, Azure OpenAI / AI Foundry, Vertex AI, OCI Generative AI) and "
+                "gives spend per model split into input, output, cache-read and "
+                "cache-write tokens; what was paid against list price; the same model's "
+                "cost on other providers for the same tokens; how much input comes from "
+                "prompt cache and what more would save; and list price changes for "
+                "those models from the weekly LLM price archive. Use for: 'what is our "
+                "LLM spend', 'are we overpaying for this model', 'would caching help'."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "Local path to a FOCUS export, .csv or .csv.gz.",
+                    },
+                    "top_n": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 50,
+                        "default": 10,
+                        "description": "How many models to return, largest spend first.",
+                    },
+                },
+                "required": ["file_path"],
+                "additionalProperties": False,
+            },
+        ),
+        Tool(
             name="compare_llm_vs_selfhost",
             description=(
                 "Pay per token or rent GPUs and serve the model yourself? Prices a "

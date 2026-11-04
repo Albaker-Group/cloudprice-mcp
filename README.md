@@ -50,7 +50,7 @@ pip install cloudprice-mcp
 cloudprice-mcp setup
 ```
 
-Restart the client and the **35 tools** appear. Problems? `cloudprice-mcp doctor`
+Restart the client and the **36 tools** appear. Problems? `cloudprice-mcp doctor`
 says what is wrong; [INSTALL.md](INSTALL.md) has per-client steps for Windows,
 macOS and Linux. Python 3.10+.
 
@@ -104,12 +104,15 @@ macOS and Linux. Python 3.10+.
 > `reprice_bill`: the vCPU and memory you actually used, priced on all four
 > clouds, next to what you paid
 
+> *"What are we spending on Bedrock and Azure OpenAI, are we paying list
+> price, and would prompt caching help?"* → `analyze_ai_spend`
+
 Every answer carries the catalogue date and an `honest_gaps` list of what the
 tool does not model, so the AI can tell you where the number stops being exact.
 
 ## Tools
 
-**35 tools**, grouped by job. Full descriptions and arguments:
+**36 tools**, grouped by job. Full descriptions and arguments:
 **[docs/TOOLS.md](docs/TOOLS.md)** (generated from the server, so it is always
 current).
 
@@ -121,7 +124,7 @@ current).
 | Spot, GPU, carbon | `compare_spot`, `compare_gpu_workload`, `compare_carbon_footprint` |
 | Price history | `get_price_history`, `list_tracked_skus`, `detect_price_anomalies`, `watch_workload` |
 | AI / LLM costs | `estimate_agent_cost`, `compare_llm_vs_selfhost`, `compare_token_pricing`, `lookup_extended_model_pricing`, `llm_price_changes` |
-| Your actual bill (local only) | `analyze_bill`, `find_commitment_gaps`, `detect_bill_anomalies`, `analyze_cost_allocation`, `forecast_spend`, `calculate_unit_cost`, `reprice_bill` |
+| Your actual bill (local only) | `analyze_bill`, `find_commitment_gaps`, `detect_bill_anomalies`, `analyze_cost_allocation`, `forecast_spend`, `calculate_unit_cost`, `reprice_bill`, `analyze_ai_spend` |
 | Export | `export_focus` |
 
 ### FinOps Framework coverage
@@ -144,6 +147,7 @@ list prices and the weekly price archive.
 | Cloud sustainability | `compare_carbon_footprint` |
 | Forecasting | `forecast_spend` |
 | Unit economics | `calculate_unit_cost` |
+| FinOps for AI | `analyze_ai_spend` (your spend), `estimate_agent_cost`, `compare_token_pricing`, `llm_price_changes` |
 
 ### Example: `compare_workload` input
 
