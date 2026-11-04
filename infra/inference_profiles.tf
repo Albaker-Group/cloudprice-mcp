@@ -47,7 +47,7 @@ locals {
   #
   # Note the "us." prefix is required. The bare foundation-model id is rejected -
   # this model can only be called through an inference profile.
-  recommender_source  = "arn:aws:bedrock:${var.region}:${data.aws_caller_identity.current.account_id}:inference-profile/us.anthropic.claude-haiku-4-5-20251001-v1:0"
+  recommender_source = "arn:aws:bedrock:${var.region}:${data.aws_caller_identity.current.account_id}:inference-profile/us.anthropic.claude-haiku-4-5-20251001-v1:0"
 }
 
 # The reasoning role: plans, decides which tools to call, reads results.
