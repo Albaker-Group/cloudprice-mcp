@@ -73,7 +73,7 @@ jobs:
       # zizmor is static analysis for the workflows themselves: template
       # injection, credential leaks, over-broad permissions, unpinned actions.
       # The CI config is part of the attack surface, not just the app.
-      - uses: zizmorcore/zizmor-action@70fb788f84895a7701f5643d103d587e460b5c99 # v0.6.3
+      - uses: zizmorcore/zizmor-action@53290badfa369cb0bf7ad16342cb62c2fa47ac7b # v0.8.0
         with:
           # Uploads SARIF to GitHub code scanning, which is what puts findings
           # inline on the diff instead of leaving them as run annotations.
@@ -116,9 +116,30 @@ jobs:
 
       # tfsec is deprecated - its engine now lives in Trivy, so `trivy config`
       # is the current way to get that ruleset.
+      # Install Trivy ourselves: a pinned release checked against a SHA-256 held
+      # here, not fetched alongside it. The action's own setup runs
+      # contrib/install.sh from Trivy's *unpinned main branch*. That broke on
+      # 2026-11-03 (exit 6 after upstream commit 75c4dc0) and failed every scan,
+      # and it is unreviewed third-party code in CI either way.
+      # To upgrade: change both values; the hash is in the release's checksums.txt.
+      - name: Install Trivy (pinned, checksum-verified)
+        env:
+          TRIVY_VERSION: "0.76.1"
+          TRIVY_SHA256: "c7cbe3137fb8a48a17574bede3dd6beb16742d1e9772929940fc90082c39d9c0"
+        run: |
+          set -euo pipefail
+          tarball="trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          curl -sSfL -o "/tmp/$tarball" \
+            "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/$tarball"
+          echo "${TRIVY_SHA256}  /tmp/$tarball" | sha256sum -c -
+          mkdir -p "$HOME/.local/bin"
+          tar -xzf "/tmp/$tarball" -C "$HOME/.local/bin" trivy
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
       - name: Trivy config scan
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
+          skip-setup-trivy: true
           scan-type: config
           scan-ref: .
           severity: HIGH,CRITICAL
@@ -127,6 +148,7 @@ jobs:
       - name: Trivy dependency scan
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
+          skip-setup-trivy: true
           scan-type: fs
           scan-ref: .
           scanners: vuln,secret
