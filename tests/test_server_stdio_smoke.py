@@ -19,14 +19,13 @@ SERVER = StdioServerParameters(command=sys.executable, args=["-m", "cloudprice_m
 
 @pytest.mark.asyncio
 async def test_server_starts_lists_tools_and_answers():
-    async with stdio_client(SERVER) as (read, write):
-        async with ClientSession(read, write) as session:
-            await session.initialize()
+    async with stdio_client(SERVER) as (read, write), ClientSession(read, write) as session:
+        await session.initialize()
 
-            names = {t.name for t in (await session.list_tools()).tools}
-            assert {"compare_clouds", "get_price_history", "optimize_commitment"} <= names
-            assert len(names) >= 25
+        names = {t.name for t in (await session.list_tools()).tools}
+        assert {"compare_clouds", "get_price_history", "optimize_commitment"} <= names
+        assert len(names) >= 25
 
-            result = await session.call_tool("get_aws_price", {"instance_type": "t3.medium"})
-            assert not result.isError
-            assert "t3.medium" in result.content[0].text
+        result = await session.call_tool("get_aws_price", {"instance_type": "t3.medium"})
+        assert not result.isError
+        assert "t3.medium" in result.content[0].text
