@@ -13,6 +13,7 @@ per cloud, computes savings vs the on-demand baseline, and surfaces an
 eviction-class label so FinOps practitioners understand what they're trading
 off for the discount.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -80,22 +81,28 @@ def compare_spot(
             continue
 
         spot_monthly = round(inst.spot_hourly_usd * HOURS_PER_MONTH, 2)
-        savings_pct = round((1 - inst.spot_hourly_usd / inst.hourly_usd) * 100, 1) if inst.hourly_usd > 0 else 0.0
+        savings_pct = (
+            round((1 - inst.spot_hourly_usd / inst.hourly_usd) * 100, 1)
+            if inst.hourly_usd > 0
+            else 0.0
+        )
         savings_usd_per_month = round(inst.monthly_usd - spot_monthly, 2)
-        per_cloud.append({
-            "cloud": cloud,
-            "sku": inst.sku,
-            "region": inst.region,
-            "vcpus": inst.vcpus,
-            "memory_gb": inst.memory_gb,
-            "ondemand_hourly_usd": inst.hourly_usd,
-            "ondemand_monthly_usd": inst.monthly_usd,
-            "spot_hourly_usd": inst.spot_hourly_usd,
-            "spot_monthly_usd": spot_monthly,
-            "savings_pct": savings_pct,
-            "monthly_savings_usd": savings_usd_per_month,
-            "eviction": _EVICTION_CLASS[cloud],
-        })
+        per_cloud.append(
+            {
+                "cloud": cloud,
+                "sku": inst.sku,
+                "region": inst.region,
+                "vcpus": inst.vcpus,
+                "memory_gb": inst.memory_gb,
+                "ondemand_hourly_usd": inst.hourly_usd,
+                "ondemand_monthly_usd": inst.monthly_usd,
+                "spot_hourly_usd": inst.spot_hourly_usd,
+                "spot_monthly_usd": spot_monthly,
+                "savings_pct": savings_pct,
+                "monthly_savings_usd": savings_usd_per_month,
+                "eviction": _EVICTION_CLASS[cloud],
+            }
+        )
 
     # Rank cheapest spot first, falling back to on-demand for clouds without spot data.
     def sort_key(row: dict) -> tuple[int, float]:

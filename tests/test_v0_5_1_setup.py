@@ -1,4 +1,5 @@
 """Tests for v0.5.1 setup orchestrator (CLI flags + select_targets)."""
+
 from __future__ import annotations
 
 import argparse
@@ -83,6 +84,7 @@ def test_print_config_emits_per_client_json(capsys):
     out = capsys.readouterr().out
     # Output is a JSON dict keyed by client name
     import json
+
     parsed = json.loads(out)
     assert "copilot" in parsed
     assert "config" in parsed["copilot"]
@@ -94,6 +96,7 @@ def test_print_config_emits_per_client_json(capsys):
 def test_print_config_no_targets_returns_error(capsys):
     """No --client and detection returns nothing → error exit."""
     import cloudprice_mcp.clients as _clients
+
     # Make detection return empty
     args = _ns(print_config=True)
     # Patch detect_installed temporarily
@@ -135,13 +138,16 @@ def test_detect_python_command_returns_absolute_path():
     """sys.executable is bulletproof on macOS / Linux / Windows."""
     cmd = setup_cmd.detect_python_command()
     from pathlib import Path
+
     assert Path(cmd).is_absolute()
 
 
 # --- run_setup end-to-end (through orchestrator with mocked target) ---
 
 
-def _patch_detect_to_tmp_adapter(monkeypatch, tmp_path, base_adapter_cls=clients.ClaudeDesktopAdapter):
+def _patch_detect_to_tmp_adapter(
+    monkeypatch, tmp_path, base_adapter_cls=clients.ClaudeDesktopAdapter
+):
     """Create a tmp-path adapter and make detect_installed return it."""
     target = tmp_path / "config.json"
 
@@ -166,6 +172,7 @@ def test_run_setup_yes_writes_config_end_to_end(tmp_path, monkeypatch):
     assert rc == 0
     assert target.exists()
     import json
+
     written = json.loads(target.read_text(encoding="utf-8"))
     assert clients.ENTRY_NAME in written["mcpServers"]
 
@@ -174,6 +181,7 @@ def test_run_setup_yes_preserves_existing_keys_end_to_end(tmp_path, monkeypatch)
     """--yes against an existing config: preserves preferences + telemetry top-level keys."""
     target = _patch_detect_to_tmp_adapter(monkeypatch, tmp_path)
     import json
+
     target.write_text(
         json.dumps({"preferences": {"theme": "dark"}, "telemetry": False}),
         encoding="utf-8",

@@ -1,4 +1,5 @@
 """Tests for v0.6 export renderers (markdown / json / text)."""
+
 from __future__ import annotations
 
 import json

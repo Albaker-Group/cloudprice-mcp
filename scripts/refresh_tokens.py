@@ -19,6 +19,7 @@ Partial-refresh policy:
 Usage:
     python scripts/refresh_tokens.py [--dry-run] [--providers bedrock,...]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -70,7 +71,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument(
-        "--providers", default=",".join(ALL_PROVIDERS),
+        "--providers",
+        default=",".join(ALL_PROVIDERS),
         help=f"Comma-separated subset of {ALL_PROVIDERS}. Default: all.",
     )
     parser.add_argument("--output-summary", type=Path, default=None)
@@ -140,8 +142,12 @@ def _refresh_provider(provider: str, catalog: dict, summary: TokenRefreshSummary
             continue  # fetcher returned something we didn't ask for; skip
         mi, pi = positions[model_id]
         old_entry = catalog["models"][mi]["providers"][pi]
-        for field in ("input_per_1m_usd", "output_per_1m_usd",
-                      "cache_read_per_1m_usd", "cache_write_per_1m_usd"):
+        for field in (
+            "input_per_1m_usd",
+            "output_per_1m_usd",
+            "cache_read_per_1m_usd",
+            "cache_write_per_1m_usd",
+        ):
             old_val = old_entry.get(field)
             new_val = new_entry.get(field)
             if old_val is not None and new_val is not None:

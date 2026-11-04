@@ -17,6 +17,7 @@ Partial-refresh policy:
     still written so the history is dense. The PR description names which
     clouds were refreshed.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -67,15 +68,19 @@ class RefreshSummary:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument(
-        "--dry-run", action="store_true",
+        "--dry-run",
+        action="store_true",
         help="Fetch + diff but do not write any files. Prints what would change.",
     )
     parser.add_argument(
-        "--clouds", default=",".join(ALL_CLOUDS),
+        "--clouds",
+        default=",".join(ALL_CLOUDS),
         help=f"Comma-separated subset of {ALL_CLOUDS} to refresh. Default: all.",
     )
     parser.add_argument(
-        "--output-summary", type=Path, default=None,
+        "--output-summary",
+        type=Path,
+        default=None,
         help="Optional path to write a markdown summary (used by GH Actions for the PR body).",
     )
     args = parser.parse_args(argv)

@@ -15,6 +15,7 @@ macOS / Linux: no-op. The pip-install location (~/.local/bin or /usr/local/bin) 
 typically already on PATH, and modifying shell rc files is too invasive to do
 silently.
 """
+
 from __future__ import annotations
 
 import os
@@ -59,9 +60,8 @@ def is_on_current_path(directory: Path) -> bool:
 def _read_user_path() -> str:
     """Read the user's persistent PATH from HKCU\\Environment. Returns '' if missing."""
     import winreg
-    with winreg.OpenKey(
-        winreg.HKEY_CURRENT_USER, "Environment", 0, winreg.KEY_READ
-    ) as key:
+
+    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment", 0, winreg.KEY_READ) as key:
         try:
             value, _type = winreg.QueryValueEx(key, "Path")
             return value
@@ -72,9 +72,8 @@ def _read_user_path() -> str:
 def _write_user_path(value: str) -> None:
     """Write HKCU\\Environment\\Path. Uses REG_EXPAND_SZ so %VARS% expand correctly."""
     import winreg
-    with winreg.OpenKey(
-        winreg.HKEY_CURRENT_USER, "Environment", 0, winreg.KEY_ALL_ACCESS
-    ) as key:
+
+    with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment", 0, winreg.KEY_ALL_ACCESS) as key:
         winreg.SetValueEx(key, "Path", 0, winreg.REG_EXPAND_SZ, value)
 
 
@@ -86,6 +85,7 @@ def _broadcast_environment_change() -> None:
     """
     import ctypes
     from ctypes import wintypes
+
     HWND_BROADCAST = 0xFFFF
     WM_SETTINGCHANGE = 0x001A
     SMTO_ABORTIFHUNG = 0x0002

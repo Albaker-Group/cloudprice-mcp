@@ -11,6 +11,7 @@ have the canonical columns) and at the value level for a couple of must-be-
 correct cases (ListCost > 0 for paid SKUs; ProviderName mapped to the
 FOCUS canonical strings).
 """
+
 from __future__ import annotations
 
 import csv
@@ -37,14 +38,37 @@ def setup_function():
 
 
 REQUIRED_COLUMNS = {
-    "ProviderName", "PublisherName", "ServiceName", "ServiceCategory",
-    "RegionId", "SkuId", "ChargeCategory", "ChargeClass", "ChargeFrequency",
-    "ChargeDescription", "PricingCategory", "PricingQuantity", "PricingUnit",
-    "ConsumedQuantity", "ConsumedUnit", "ListUnitPrice", "ListCost",
-    "ContractedUnitPrice", "ContractedCost", "EffectiveCost", "BilledCost",
-    "BillingCurrency", "BillingPeriodStart", "BillingPeriodEnd",
-    "ChargePeriodStart", "ChargePeriodEnd",
-    "BillingAccountId", "BillingAccountName", "ResourceId", "ResourceName", "Tags",
+    "ProviderName",
+    "PublisherName",
+    "ServiceName",
+    "ServiceCategory",
+    "RegionId",
+    "SkuId",
+    "ChargeCategory",
+    "ChargeClass",
+    "ChargeFrequency",
+    "ChargeDescription",
+    "PricingCategory",
+    "PricingQuantity",
+    "PricingUnit",
+    "ConsumedQuantity",
+    "ConsumedUnit",
+    "ListUnitPrice",
+    "ListCost",
+    "ContractedUnitPrice",
+    "ContractedCost",
+    "EffectiveCost",
+    "BilledCost",
+    "BillingCurrency",
+    "BillingPeriodStart",
+    "BillingPeriodEnd",
+    "ChargePeriodStart",
+    "ChargePeriodEnd",
+    "BillingAccountId",
+    "BillingAccountName",
+    "ResourceId",
+    "ResourceName",
+    "Tags",
 }
 
 
@@ -52,10 +76,12 @@ REQUIRED_COLUMNS = {
 
 
 def _basic_workload():
-    return parse_dict({
-        "source_cloud": "aws",
-        "compute": [{"name": "web", "vcpus": 4, "memory_gb": 16, "quantity": 6}],
-    })
+    return parse_dict(
+        {
+            "source_cloud": "aws",
+            "compute": [{"name": "web", "vcpus": 4, "memory_gb": 16, "quantity": 6}],
+        }
+    )
 
 
 def test_compute_workload_returns_focus_envelope():
@@ -75,7 +101,9 @@ def test_compute_workload_row_has_all_required_focus_columns():
 
 def test_compute_workload_emits_one_row_per_cloud_plus_source():
     out = export_focus(
-        "compute_workload", catalog=load_catalog(), inventory=_basic_workload(),
+        "compute_workload",
+        catalog=load_catalog(),
+        inventory=_basic_workload(),
         targets=["azure", "oci"],
     )
     providers = [r["ProviderName"] for r in out["rows"]]
@@ -149,8 +177,10 @@ def test_token_pricing_without_volumes_uses_per_1m_output_pricing():
 
 def test_token_pricing_with_volumes_uses_blended_unit():
     out = export_focus(
-        "token_pricing", model_id="claude-3-haiku",
-        monthly_input_tokens=10_000_000, monthly_output_tokens=2_000_000,
+        "token_pricing",
+        model_id="claude-3-haiku",
+        monthly_input_tokens=10_000_000,
+        monthly_output_tokens=2_000_000,
     )
     for row in out["rows"]:
         assert "blended" in row["PricingUnit"]
@@ -186,8 +216,10 @@ def test_extended_lookup_dispatches_through(monkeypatch):
 
 def test_csv_output_has_header_and_data_rows():
     out = export_focus(
-        "token_pricing", model_id="claude-3-haiku",
-        monthly_input_tokens=10_000_000, monthly_output_tokens=2_000_000,
+        "token_pricing",
+        model_id="claude-3-haiku",
+        monthly_input_tokens=10_000_000,
+        monthly_output_tokens=2_000_000,
         format="csv",
     )
     assert "csv" in out
@@ -218,7 +250,8 @@ def test_default_billing_period_is_current_month():
 
 def test_custom_billing_period_honored():
     out = export_focus(
-        "token_pricing", model_id="claude-3-haiku",
+        "token_pricing",
+        model_id="claude-3-haiku",
         billing_period_start="2026-03-01",
     )
     assert out["billing_period_start"] == "2026-03-01"
@@ -227,8 +260,7 @@ def test_custom_billing_period_honored():
 
 def test_invalid_billing_period_raises():
     with pytest.raises(ValueError, match="ISO date"):
-        export_focus("token_pricing", model_id="claude-3-haiku",
-                     billing_period_start="not-a-date")
+        export_focus("token_pricing", model_id="claude-3-haiku", billing_period_start="not-a-date")
 
 
 def test_next_month_start_wraps_december():

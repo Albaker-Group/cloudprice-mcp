@@ -17,6 +17,7 @@ def setup_function():
 
 # --- single match ---
 
+
 def test_best_match_meets_or_exceeds_spec():
     catalog = load_catalog()
     match = best_match(catalog, "aws", vcpus=4, memory_gb=16)
@@ -40,15 +41,13 @@ def test_cheapest_picked_when_two_equally_match():
     catalog = load_catalog()
     matches = compare_all_clouds(catalog, vcpus=2, memory_gb=4)
     aws_match = next(m for m in matches if m.cloud == "aws")
-    aws_candidates = [
-        i for i in catalog.by_cloud("aws")
-        if i.vcpus >= 2 and i.memory_gb >= 4
-    ]
+    aws_candidates = [i for i in catalog.by_cloud("aws") if i.vcpus >= 2 and i.memory_gb >= 4]
     cheapest_eligible = min(aws_candidates, key=lambda i: i.hourly_usd)
     assert aws_match.instance.sku == cheapest_eligible.sku
 
 
 # --- bulk compute ---
+
 
 def test_bulk_compute_aggregates_correctly():
     catalog = load_catalog()
@@ -72,10 +71,16 @@ def test_bulk_compute_aggregates_correctly():
 
 def test_bulk_compute_quantity_multiplies_total():
     catalog = load_catalog()
-    one = bulk_compare_compute(catalog, [ComputeRequest(name="x", vcpus=4, memory_gb=16, quantity=1)])
-    five = bulk_compare_compute(catalog, [ComputeRequest(name="x", vcpus=4, memory_gb=16, quantity=5)])
+    one = bulk_compare_compute(
+        catalog, [ComputeRequest(name="x", vcpus=4, memory_gb=16, quantity=1)]
+    )
+    five = bulk_compare_compute(
+        catalog, [ComputeRequest(name="x", vcpus=4, memory_gb=16, quantity=5)]
+    )
     for cloud in ("aws", "azure", "gcp"):
-        assert round(five["totals_by_cloud"][cloud], 2) == round(one["totals_by_cloud"][cloud] * 5, 2)
+        assert round(five["totals_by_cloud"][cloud], 2) == round(
+            one["totals_by_cloud"][cloud] * 5, 2
+        )
 
 
 def test_bulk_compute_part_time_hours_scale_cost():
@@ -93,18 +98,14 @@ def test_bulk_compute_part_time_hours_scale_cost():
 
 def test_bulk_compute_picks_cheapest_cloud():
     catalog = load_catalog()
-    result = bulk_compare_compute(
-        catalog, [ComputeRequest(name="x", vcpus=4, memory_gb=16)]
-    )
+    result = bulk_compare_compute(catalog, [ComputeRequest(name="x", vcpus=4, memory_gb=16)])
     totals = result["totals_by_cloud"]
     assert result["cheapest_cloud"] == min(totals, key=lambda c: totals[c])
 
 
 def test_bulk_compute_includes_os_disk_when_specified():
     catalog = load_catalog()
-    no_disk = bulk_compare_compute(
-        catalog, [ComputeRequest(name="x", vcpus=4, memory_gb=16)]
-    )
+    no_disk = bulk_compare_compute(catalog, [ComputeRequest(name="x", vcpus=4, memory_gb=16)])
     with_disk = bulk_compare_compute(
         catalog,
         [ComputeRequest(name="x", vcpus=4, memory_gb=16, os_disk_gb=100, os_disk_type="ssd")],
@@ -118,6 +119,7 @@ def test_bulk_compute_includes_os_disk_when_specified():
 
 
 # --- bulk storage ---
+
 
 def test_bulk_storage_uses_per_gb_pricing():
     catalog = load_catalog()
@@ -144,9 +146,7 @@ def test_bulk_storage_ssd_is_more_expensive_than_hdd():
 
 def test_bulk_storage_charges_snapshots_v021():
     catalog = load_catalog()
-    no_snap = bulk_compare_storage(
-        catalog, [StorageRequest(name="vol", capacity_gb=100)]
-    )
+    no_snap = bulk_compare_storage(catalog, [StorageRequest(name="vol", capacity_gb=100)])
     with_snap = bulk_compare_storage(
         catalog, [StorageRequest(name="vol", capacity_gb=100, snapshot_count=5)]
     )
@@ -222,6 +222,7 @@ def test_summary_includes_annual_savings():
 
 
 # --- combined workload ---
+
 
 def test_compare_workload_sums_compute_plus_storage():
     catalog = load_catalog()

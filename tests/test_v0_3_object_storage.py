@@ -98,7 +98,6 @@ def test_quantity_multiplies_total():
     )
     for cloud in ("aws", "azure", "gcp", "oci"):
         if one["totals_by_cloud"][cloud] > 0:
-            assert (
-                round(five["totals_by_cloud"][cloud], 2)
-                == round(one["totals_by_cloud"][cloud] * 5, 2)
+            assert round(five["totals_by_cloud"][cloud], 2) == round(
+                one["totals_by_cloud"][cloud] * 5, 2
             )

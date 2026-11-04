@@ -10,6 +10,7 @@ Two test surfaces:
 The lookup tests patch the module cache directly with a small fixture so we
 don't depend on the bundled real catalog (which drifts as LiteLLM updates).
 """
+
 from __future__ import annotations
 
 import pytest
@@ -22,13 +23,48 @@ from scripts.refresh_extended_catalog import _transform
 
 def test_transform_filters_to_chat_completion_responses_modes():
     raw = {
-        "sample_spec": {"mode": "chat", "input_cost_per_token": 1e-6, "output_cost_per_token": 2e-6, "litellm_provider": "x"},
-        "good-chat":   {"mode": "chat",       "input_cost_per_token": 1e-6, "output_cost_per_token": 2e-6, "litellm_provider": "openai"},
-        "good-comp":   {"mode": "completion", "input_cost_per_token": 1e-6, "output_cost_per_token": 2e-6, "litellm_provider": "openai"},
-        "good-resp":   {"mode": "responses",  "input_cost_per_token": 1e-6, "output_cost_per_token": 2e-6, "litellm_provider": "openai"},
-        "skip-image":  {"mode": "image_generation", "input_cost_per_token": 1e-6, "output_cost_per_token": 2e-6, "litellm_provider": "openai"},
-        "skip-embed":  {"mode": "embedding",        "input_cost_per_token": 1e-6, "output_cost_per_token": 2e-6, "litellm_provider": "openai"},
-        "skip-audio":  {"mode": "audio_transcription", "input_cost_per_token": 1e-6, "output_cost_per_token": 2e-6, "litellm_provider": "openai"},
+        "sample_spec": {
+            "mode": "chat",
+            "input_cost_per_token": 1e-6,
+            "output_cost_per_token": 2e-6,
+            "litellm_provider": "x",
+        },
+        "good-chat": {
+            "mode": "chat",
+            "input_cost_per_token": 1e-6,
+            "output_cost_per_token": 2e-6,
+            "litellm_provider": "openai",
+        },
+        "good-comp": {
+            "mode": "completion",
+            "input_cost_per_token": 1e-6,
+            "output_cost_per_token": 2e-6,
+            "litellm_provider": "openai",
+        },
+        "good-resp": {
+            "mode": "responses",
+            "input_cost_per_token": 1e-6,
+            "output_cost_per_token": 2e-6,
+            "litellm_provider": "openai",
+        },
+        "skip-image": {
+            "mode": "image_generation",
+            "input_cost_per_token": 1e-6,
+            "output_cost_per_token": 2e-6,
+            "litellm_provider": "openai",
+        },
+        "skip-embed": {
+            "mode": "embedding",
+            "input_cost_per_token": 1e-6,
+            "output_cost_per_token": 2e-6,
+            "litellm_provider": "openai",
+        },
+        "skip-audio": {
+            "mode": "audio_transcription",
+            "input_cost_per_token": 1e-6,
+            "output_cost_per_token": 2e-6,
+            "litellm_provider": "openai",
+        },
     }
     rows = _transform(raw)
     ids = {r["litellm_id"] for r in rows}
@@ -39,8 +75,18 @@ def test_transform_filters_to_chat_completion_responses_modes():
 def test_transform_drops_entries_with_missing_prices():
     raw = {
         "no-prices": {"mode": "chat", "litellm_provider": "openai"},  # no costs
-        "null-in":   {"mode": "chat", "input_cost_per_token": None, "output_cost_per_token": 2e-6, "litellm_provider": "openai"},
-        "ok":        {"mode": "chat", "input_cost_per_token": 1e-6, "output_cost_per_token": 2e-6, "litellm_provider": "openai"},
+        "null-in": {
+            "mode": "chat",
+            "input_cost_per_token": None,
+            "output_cost_per_token": 2e-6,
+            "litellm_provider": "openai",
+        },
+        "ok": {
+            "mode": "chat",
+            "input_cost_per_token": 1e-6,
+            "output_cost_per_token": 2e-6,
+            "litellm_provider": "openai",
+        },
     }
     rows = _transform(raw)
     assert [r["litellm_id"] for r in rows] == ["ok"]
@@ -48,7 +94,12 @@ def test_transform_drops_entries_with_missing_prices():
 
 def test_transform_converts_per_token_to_per_1m():
     raw = {
-        "ok": {"mode": "chat", "input_cost_per_token": 2.5e-7, "output_cost_per_token": 1.25e-6, "litellm_provider": "anthropic"},
+        "ok": {
+            "mode": "chat",
+            "input_cost_per_token": 2.5e-7,
+            "output_cost_per_token": 1.25e-6,
+            "litellm_provider": "anthropic",
+        },
     }
     rows = _transform(raw)
     # 2.5e-7 USD/token * 1_000_000 = 0.25 USD/1M
@@ -58,10 +109,30 @@ def test_transform_converts_per_token_to_per_1m():
 
 def test_transform_normalizes_verbose_provider_names():
     raw = {
-        "claude-bedrock": {"mode": "chat", "input_cost_per_token": 1e-6, "output_cost_per_token": 2e-6, "litellm_provider": "bedrock_converse"},
-        "claude-vertex":  {"mode": "chat", "input_cost_per_token": 1e-6, "output_cost_per_token": 2e-6, "litellm_provider": "vertex_ai-anthropic_models"},
-        "gpt-azure":      {"mode": "chat", "input_cost_per_token": 1e-6, "output_cost_per_token": 2e-6, "litellm_provider": "azure"},
-        "gemini-direct":  {"mode": "chat", "input_cost_per_token": 1e-6, "output_cost_per_token": 2e-6, "litellm_provider": "gemini"},
+        "claude-bedrock": {
+            "mode": "chat",
+            "input_cost_per_token": 1e-6,
+            "output_cost_per_token": 2e-6,
+            "litellm_provider": "bedrock_converse",
+        },
+        "claude-vertex": {
+            "mode": "chat",
+            "input_cost_per_token": 1e-6,
+            "output_cost_per_token": 2e-6,
+            "litellm_provider": "vertex_ai-anthropic_models",
+        },
+        "gpt-azure": {
+            "mode": "chat",
+            "input_cost_per_token": 1e-6,
+            "output_cost_per_token": 2e-6,
+            "litellm_provider": "azure",
+        },
+        "gemini-direct": {
+            "mode": "chat",
+            "input_cost_per_token": 1e-6,
+            "output_cost_per_token": 2e-6,
+            "litellm_provider": "gemini",
+        },
     }
     rows = {r["litellm_id"]: r for r in _transform(raw)}
     assert rows["claude-bedrock"]["provider"] == "bedrock"
@@ -76,7 +147,8 @@ def test_transform_propagates_optional_fields():
     raw = {
         "rich": {
             "mode": "chat",
-            "input_cost_per_token": 1e-6, "output_cost_per_token": 2e-6,
+            "input_cost_per_token": 1e-6,
+            "output_cost_per_token": 2e-6,
             "cache_read_input_token_cost": 1e-7,
             "cache_creation_input_token_cost": 3e-6,
             "max_input_tokens": 200000,
@@ -97,9 +169,24 @@ def test_transform_propagates_optional_fields():
 
 def test_transform_stable_sort_by_provider_then_id():
     raw = {
-        "z-model": {"mode": "chat", "input_cost_per_token": 1e-6, "output_cost_per_token": 2e-6, "litellm_provider": "openai"},
-        "a-model": {"mode": "chat", "input_cost_per_token": 1e-6, "output_cost_per_token": 2e-6, "litellm_provider": "anthropic"},
-        "m-model": {"mode": "chat", "input_cost_per_token": 1e-6, "output_cost_per_token": 2e-6, "litellm_provider": "openai"},
+        "z-model": {
+            "mode": "chat",
+            "input_cost_per_token": 1e-6,
+            "output_cost_per_token": 2e-6,
+            "litellm_provider": "openai",
+        },
+        "a-model": {
+            "mode": "chat",
+            "input_cost_per_token": 1e-6,
+            "output_cost_per_token": 2e-6,
+            "litellm_provider": "anthropic",
+        },
+        "m-model": {
+            "mode": "chat",
+            "input_cost_per_token": 1e-6,
+            "output_cost_per_token": 2e-6,
+            "litellm_provider": "openai",
+        },
     }
     rows = _transform(raw)
     assert [r["litellm_id"] for r in rows] == ["a-model", "m-model", "z-model"]
@@ -116,24 +203,60 @@ def _install_fixture_catalog(monkeypatch):
         "as_of": "2026-05-23",
         "sources_loaded": ["litellm", "openrouter"],
         "models": [
-            {"model_id": "claude-3-haiku-20240307", "source": "litellm",
-             "provider": "anthropic", "mode": "chat",
-             "input_per_1m_usd": 0.25, "output_per_1m_usd": 1.25, "context_window_tokens": 200000},
-            {"model_id": "bedrock/us-east-1/anthropic.claude-3-haiku-20240307-v1:0",
-             "source": "litellm", "provider": "bedrock", "mode": "chat",
-             "input_per_1m_usd": 0.25, "output_per_1m_usd": 1.25, "context_window_tokens": 200000},
-            {"model_id": "together_ai/meta-llama/Llama-3.1-70B-Instruct",
-             "source": "litellm", "provider": "together_ai", "mode": "chat",
-             "input_per_1m_usd": 0.88, "output_per_1m_usd": 0.88, "context_window_tokens": 128000},
-            {"model_id": "groq/llama-3.1-70b-versatile",
-             "source": "litellm", "provider": "groq", "mode": "chat",
-             "input_per_1m_usd": 0.59, "output_per_1m_usd": 0.79, "context_window_tokens": 32768},
-            {"model_id": "fireworks_ai/llama-v3p1-70b-instruct",
-             "source": "litellm", "provider": "fireworks_ai", "mode": "chat",
-             "input_per_1m_usd": 0.90, "output_per_1m_usd": 0.90, "context_window_tokens": 128000},
-            {"model_id": "anthropic/claude-3-haiku",
-             "source": "openrouter", "provider": "openrouter", "mode": "chat",
-             "input_per_1m_usd": 0.30, "output_per_1m_usd": 1.50, "context_window_tokens": 200000},
+            {
+                "model_id": "claude-3-haiku-20240307",
+                "source": "litellm",
+                "provider": "anthropic",
+                "mode": "chat",
+                "input_per_1m_usd": 0.25,
+                "output_per_1m_usd": 1.25,
+                "context_window_tokens": 200000,
+            },
+            {
+                "model_id": "bedrock/us-east-1/anthropic.claude-3-haiku-20240307-v1:0",
+                "source": "litellm",
+                "provider": "bedrock",
+                "mode": "chat",
+                "input_per_1m_usd": 0.25,
+                "output_per_1m_usd": 1.25,
+                "context_window_tokens": 200000,
+            },
+            {
+                "model_id": "together_ai/meta-llama/Llama-3.1-70B-Instruct",
+                "source": "litellm",
+                "provider": "together_ai",
+                "mode": "chat",
+                "input_per_1m_usd": 0.88,
+                "output_per_1m_usd": 0.88,
+                "context_window_tokens": 128000,
+            },
+            {
+                "model_id": "groq/llama-3.1-70b-versatile",
+                "source": "litellm",
+                "provider": "groq",
+                "mode": "chat",
+                "input_per_1m_usd": 0.59,
+                "output_per_1m_usd": 0.79,
+                "context_window_tokens": 32768,
+            },
+            {
+                "model_id": "fireworks_ai/llama-v3p1-70b-instruct",
+                "source": "litellm",
+                "provider": "fireworks_ai",
+                "mode": "chat",
+                "input_per_1m_usd": 0.90,
+                "output_per_1m_usd": 0.90,
+                "context_window_tokens": 128000,
+            },
+            {
+                "model_id": "anthropic/claude-3-haiku",
+                "source": "openrouter",
+                "provider": "openrouter",
+                "mode": "chat",
+                "input_per_1m_usd": 0.30,
+                "output_per_1m_usd": 1.50,
+                "context_window_tokens": 200000,
+            },
         ],
     }
     monkeypatch.setattr(extended_tokens, "_cache", catalog)

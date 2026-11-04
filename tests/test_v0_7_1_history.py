@@ -5,6 +5,7 @@ tests inject additional fake snapshots into the package's prices directory
 via a tmp_path + monkeypatch trick so we can exercise multi-point timeseries
 behavior without waiting for real refreshes.
 """
+
 from __future__ import annotations
 
 import json
@@ -116,13 +117,17 @@ def synthetic_snapshots(monkeypatch, tmp_path):
     class _FakeFiles:
         def __init__(self, root: Path):
             self.root = root
+
         def iterdir(self):
             return self.root.iterdir()
+
         def joinpath(self, name: str):
             return self.root / name
 
     fake_resources_files = lambda _pkg: _FakeFiles(snap_dir)
-    monkeypatch.setattr(history, "resources", type("R", (), {"files": staticmethod(fake_resources_files)}))
+    monkeypatch.setattr(
+        history, "resources", type("R", (), {"files": staticmethod(fake_resources_files)})
+    )
     return snap_dir
 
 
@@ -161,9 +166,9 @@ def test_all_changes_excludes_unchanged_skus(synthetic_snapshots, tmp_path):
     snap_dir = tmp_path / "prices"
     for date_str in ("2026-01-01", "2026-03-01", "2026-05-01"):
         cat = json.loads((snap_dir / f"{date_str}.json").read_text())
-        cat["aws"]["instances"].append({
-            "sku": "flat.large", "vcpus": 2, "memory_gb": 8, "hourly_usd": 0.10
-        })
+        cat["aws"]["instances"].append(
+            {"sku": "flat.large", "vcpus": 2, "memory_gb": 8, "hourly_usd": 0.10}
+        )
         (snap_dir / f"{date_str}.json").write_text(json.dumps(cat))
     changes = all_changes_since("2026-01-01")
     skus_changed = {sku for _, sku, _, _ in changes}
@@ -172,13 +177,19 @@ def test_all_changes_excludes_unchanged_skus(synthetic_snapshots, tmp_path):
 
 def test_pricepoint_to_dict():
     p = PricePoint(
-        as_of="2026-05-12", cloud="aws", sku="m5.xlarge",
-        region="us-east-1", hourly_usd=0.192,
+        as_of="2026-05-12",
+        cloud="aws",
+        sku="m5.xlarge",
+        region="us-east-1",
+        hourly_usd=0.192,
     )
     d = p.to_dict()
     assert d == {
-        "as_of": "2026-05-12", "cloud": "aws", "sku": "m5.xlarge",
-        "region": "us-east-1", "hourly_usd": 0.192,
+        "as_of": "2026-05-12",
+        "cloud": "aws",
+        "sku": "m5.xlarge",
+        "region": "us-east-1",
+        "hourly_usd": 0.192,
     }
 
 

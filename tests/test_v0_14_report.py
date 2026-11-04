@@ -1,4 +1,5 @@
 """Tests for v0.14.0 generate_decision_report — CFO-grade markdown reports."""
+
 from __future__ import annotations
 
 from cloudprice_mcp import __version__
@@ -12,19 +13,23 @@ def setup_function():
 
 
 def _basic_inv():
-    return parse_dict({
-        "source_cloud": "aws",
-        "compute": [{"name": "web", "vcpus": 4, "memory_gb": 16, "quantity": 6}],
-    })
+    return parse_dict(
+        {
+            "source_cloud": "aws",
+            "compute": [{"name": "web", "vcpus": 4, "memory_gb": 16, "quantity": 6}],
+        }
+    )
 
 
 def _full_inv():
-    return parse_dict({
-        "source_cloud": "aws",
-        "compute": [{"name": "web", "vcpus": 4, "memory_gb": 16, "quantity": 6}],
-        "object_storage": [{"name": "hot", "capacity_gb": 10240, "tier": "hot"}],
-        "egress": [{"name": "internet", "gb_per_month": 51200, "direction": "out_to_internet"}],
-    })
+    return parse_dict(
+        {
+            "source_cloud": "aws",
+            "compute": [{"name": "web", "vcpus": 4, "memory_gb": 16, "quantity": 6}],
+            "object_storage": [{"name": "hot", "capacity_gb": 10240, "tier": "hot"}],
+            "egress": [{"name": "internet", "gb_per_month": 51200, "direction": "out_to_internet"}],
+        }
+    )
 
 
 # --- Shape ---
@@ -86,7 +91,7 @@ def test_carbon_section_only_when_included():
 def test_workload_block_mentions_compute():
     r = generate_decision_report(load_catalog(), _full_inv())
     md = r["markdown"]
-    assert "web" in md       # compute name
+    assert "web" in md  # compute name
     assert "4 vCPU" in md
     assert "16.0 GB" in md or "16 GB" in md
 
@@ -107,7 +112,9 @@ def test_audit_block_includes_version_and_catalog_date():
 
 def test_audit_struct_includes_metadata():
     cat = load_catalog()
-    r = generate_decision_report(cat, _basic_inv(), requester="ali@example.com", include_carbon=False)
+    r = generate_decision_report(
+        cat, _basic_inv(), requester="ali@example.com", include_carbon=False
+    )
     audit = r["audit"]
     assert audit["cloudprice_mcp_version"] == __version__
     assert audit["catalog_as_of"] == cat.as_of

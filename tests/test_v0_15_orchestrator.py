@@ -8,6 +8,7 @@ Verifies that:
     for that provider is preserved.
   - Diffs are computed by comparing old vs new for each price field.
 """
+
 from __future__ import annotations
 
 import sys
@@ -26,7 +27,7 @@ def _toy_catalog() -> dict:
                 "model_id": "claude-3-haiku",
                 "providers": [
                     {"provider": "anthropic", "input_per_1m_usd": 0.25, "output_per_1m_usd": 1.25},
-                    {"provider": "bedrock",   "input_per_1m_usd": 0.25, "output_per_1m_usd": 1.25},
+                    {"provider": "bedrock", "input_per_1m_usd": 0.25, "output_per_1m_usd": 1.25},
                 ],
             },
             {
@@ -78,13 +79,17 @@ def test_collects_only_target_provider_entries(monkeypatch):
 
 
 def test_splices_returned_entries_back_into_catalog(monkeypatch):
-    _install_fake_fetcher(monkeypatch, "bedrock", {
-        "claude-3-haiku": {
-            "provider": "bedrock",
-            "input_per_1m_usd": 0.20,   # was 0.25, dropped 20%
-            "output_per_1m_usd": 1.00,  # was 1.25
+    _install_fake_fetcher(
+        monkeypatch,
+        "bedrock",
+        {
+            "claude-3-haiku": {
+                "provider": "bedrock",
+                "input_per_1m_usd": 0.20,  # was 0.25, dropped 20%
+                "output_per_1m_usd": 1.00,  # was 1.25
+            },
         },
-    })
+    )
 
     catalog = _toy_catalog()
     summary = refresh_tokens.TokenRefreshSummary()
@@ -105,13 +110,17 @@ def test_splices_returned_entries_back_into_catalog(monkeypatch):
 def test_models_not_returned_keep_old_prices(monkeypatch):
     """If the fetcher returns claude-3-haiku but not llama-3.1-8b, the
     llama row in the catalog must be left exactly as it was."""
-    _install_fake_fetcher(monkeypatch, "bedrock", {
-        "claude-3-haiku": {
-            "provider": "bedrock",
-            "input_per_1m_usd": 0.20,
-            "output_per_1m_usd": 1.00,
+    _install_fake_fetcher(
+        monkeypatch,
+        "bedrock",
+        {
+            "claude-3-haiku": {
+                "provider": "bedrock",
+                "input_per_1m_usd": 0.20,
+                "output_per_1m_usd": 1.00,
+            },
         },
-    })
+    )
 
     catalog = _toy_catalog()
     summary = refresh_tokens.TokenRefreshSummary()
@@ -131,7 +140,7 @@ def test_provider_fetcher_failure_preserves_catalog(monkeypatch):
     catalog = _toy_catalog()
     before = {
         "claude_input": catalog["models"][0]["providers"][1]["input_per_1m_usd"],
-        "llama_input":  catalog["models"][1]["providers"][0]["input_per_1m_usd"],
+        "llama_input": catalog["models"][1]["providers"][0]["input_per_1m_usd"],
     }
 
     summary = refresh_tokens.TokenRefreshSummary()
@@ -162,13 +171,17 @@ def test_provider_with_no_known_models_is_skipped():
 
 
 def test_summary_records_per_field_diffs(monkeypatch):
-    _install_fake_fetcher(monkeypatch, "bedrock", {
-        "claude-3-haiku": {
-            "provider": "bedrock",
-            "input_per_1m_usd": 0.20,
-            "output_per_1m_usd": 1.00,
+    _install_fake_fetcher(
+        monkeypatch,
+        "bedrock",
+        {
+            "claude-3-haiku": {
+                "provider": "bedrock",
+                "input_per_1m_usd": 0.20,
+                "output_per_1m_usd": 1.00,
+            },
         },
-    })
+    )
 
     catalog = _toy_catalog()
     summary = refresh_tokens.TokenRefreshSummary()
@@ -182,13 +195,17 @@ def test_summary_records_per_field_diffs(monkeypatch):
 
 def test_summary_skips_zero_change(monkeypatch):
     """If a price comes back identical, it should NOT appear in the diff."""
-    _install_fake_fetcher(monkeypatch, "bedrock", {
-        "claude-3-haiku": {
-            "provider": "bedrock",
-            "input_per_1m_usd": 0.25,   # identical
-            "output_per_1m_usd": 1.25,  # identical
+    _install_fake_fetcher(
+        monkeypatch,
+        "bedrock",
+        {
+            "claude-3-haiku": {
+                "provider": "bedrock",
+                "input_per_1m_usd": 0.25,  # identical
+                "output_per_1m_usd": 1.25,  # identical
+            },
         },
-    })
+    )
 
     catalog = _toy_catalog()
     summary = refresh_tokens.TokenRefreshSummary()
@@ -199,11 +216,17 @@ def test_summary_skips_zero_change(monkeypatch):
 
 
 def test_markdown_summary_has_useful_sections(monkeypatch):
-    _install_fake_fetcher(monkeypatch, "bedrock", {
-        "claude-3-haiku": {
-            "provider": "bedrock", "input_per_1m_usd": 0.20, "output_per_1m_usd": 1.00,
+    _install_fake_fetcher(
+        monkeypatch,
+        "bedrock",
+        {
+            "claude-3-haiku": {
+                "provider": "bedrock",
+                "input_per_1m_usd": 0.20,
+                "output_per_1m_usd": 1.00,
+            },
         },
-    })
+    )
 
     catalog = _toy_catalog()
     summary = refresh_tokens.TokenRefreshSummary()

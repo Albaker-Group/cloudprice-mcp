@@ -64,8 +64,7 @@ def _lookup(cloud: Cloud, sku_field: str, sku: str) -> dict:
     instance = catalog.find(cloud, sku)
     if instance is None:
         return _err(
-            f"Unknown {cloud.upper()} {sku_field} '{sku}'. "
-            f"Available: {', '.join(list_skus(cloud))}"
+            f"Unknown {cloud.upper()} {sku_field} '{sku}'. Available: {', '.join(list_skus(cloud))}"
         )
     return _ok({"as_of": catalog.as_of, **instance.to_dict()})
 
@@ -101,7 +100,9 @@ def _build_storage_requests(items: list[dict[str, Any]]) -> list[StorageRequest]
             tier=item.get("tier"),
             group=item.get("group"),
             iops=int(item["iops"]) if item.get("iops") is not None else None,
-            throughput_mbs=float(item["throughput_mbs"]) if item.get("throughput_mbs") is not None else None,
+            throughput_mbs=float(item["throughput_mbs"])
+            if item.get("throughput_mbs") is not None
+            else None,
             snapshot_count=int(item.get("snapshot_count", 0)),
             snapshot_incremental_factor=float(item.get("snapshot_incremental_factor", 1.0)),
         )
@@ -288,6 +289,7 @@ def _handle_find_egress_arbitrage(catalog, args):
 # Tool name → handler dispatch table. Adding a new tool = add one entry.
 def _handle_get_price_history(catalog, args):
     from .history import history_window
+
     cloud = args.get("cloud")
     sku = args.get("sku")
     since = args.get("since")
@@ -410,7 +412,10 @@ def _handle_compare_gpu_workload(catalog, args):
     targets = args.get("targets")
     try:
         result = compare_gpu_workload(
-            catalog, gpu_type=gpu_type, gpu_count=gpu_count, targets=targets,
+            catalog,
+            gpu_type=gpu_type,
+            gpu_count=gpu_count,
+            targets=targets,
         )
     except ValueError as e:
         return _err(f"compare_gpu_workload: {e}")
@@ -424,7 +429,11 @@ def _handle_compare_carbon_footprint(catalog, args):
     targets = args.get("targets")
     try:
         result = compare_carbon_footprint(
-            catalog, vcpus=vcpus, memory_gb=memory_gb, quantity=quantity, targets=targets,
+            catalog,
+            vcpus=vcpus,
+            memory_gb=memory_gb,
+            quantity=quantity,
+            targets=targets,
         )
     except ValueError as e:
         return _err(f"compare_carbon_footprint: {e}")
@@ -447,6 +456,7 @@ def _handle_watch_workload(catalog, args):
 
 def _handle_list_tracked_skus(catalog, args):
     from .history import list_snapshot_dates, load_history
+
     cloud = args.get("cloud")
     since = args.get("since")
     snapshots = list_snapshot_dates()
@@ -462,22 +472,30 @@ def _handle_list_tracked_skus(catalog, args):
         pts_sorted = sorted(pts, key=lambda x: x.as_of)
         latest = pts_sorted[-1]
         oldest = pts_sorted[0]
-        change_pct = ((latest.hourly_usd - oldest.hourly_usd) / oldest.hourly_usd * 100) if oldest.hourly_usd > 0 and len(pts_sorted) > 1 else 0.0
-        skus.append({
-            "cloud": c,
-            "sku": sku,
-            "region": latest.region,
-            "data_points": len(pts_sorted),
-            "latest_hourly_usd": latest.hourly_usd,
-            "latest_as_of": latest.as_of,
-            "total_change_pct": round(change_pct, 2),
-        })
+        change_pct = (
+            ((latest.hourly_usd - oldest.hourly_usd) / oldest.hourly_usd * 100)
+            if oldest.hourly_usd > 0 and len(pts_sorted) > 1
+            else 0.0
+        )
+        skus.append(
+            {
+                "cloud": c,
+                "sku": sku,
+                "region": latest.region,
+                "data_points": len(pts_sorted),
+                "latest_hourly_usd": latest.hourly_usd,
+                "latest_as_of": latest.as_of,
+                "total_change_pct": round(change_pct, 2),
+            }
+        )
 
-    return _ok({
-        "snapshots": snapshots,
-        "filters": {"cloud": cloud, "since": since},
-        "skus": skus,
-    })
+    return _ok(
+        {
+            "snapshots": snapshots,
+            "filters": {"cloud": cloud, "since": since},
+            "skus": skus,
+        }
+    )
 
 
 _TOOL_HANDLERS = {

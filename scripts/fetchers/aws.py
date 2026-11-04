@@ -10,6 +10,7 @@ This is a script-only dependency: boto3 is NOT in the package's runtime deps
 (would bloat the wheel by ~80 MB for users who don't refresh). The refresh
 workflow installs boto3 separately. If boto3 is missing we raise a clear error.
 """
+
 from __future__ import annotations
 
 import json
@@ -129,9 +130,7 @@ def _lookup_one(client, instance_type: str) -> float:
 
     price_list = resp.get("PriceList") or []
     if not price_list:
-        raise MissingPriceError(
-            f"AWS: no on-demand Linux price for {instance_type} in {_LOCATION}"
-        )
+        raise MissingPriceError(f"AWS: no on-demand Linux price for {instance_type} in {_LOCATION}")
 
     for raw in price_list:
         product = json.loads(raw)

@@ -13,6 +13,7 @@ Why this matters:
     - Nobody publishes raw multi-cloud price history as open data.
     - We do, as a side effect of how the auto-refresh persists snapshots.
 """
+
 from __future__ import annotations
 
 import json
@@ -28,7 +29,8 @@ DATA_PACKAGE = "cloudprice_mcp.data.prices"
 @dataclass(frozen=True)
 class PricePoint:
     """One observation: SKU price at a specific catalog `as_of` date."""
-    as_of: str        # ISO 8601 date string, e.g. "2026-05-12"
+
+    as_of: str  # ISO 8601 date string, e.g. "2026-05-12"
     cloud: Cloud
     sku: str
     region: str
@@ -48,10 +50,11 @@ class PricePoint:
 class HistoryWindow:
     """A SKU's price timeseries with summary stats — what you'd want to
     show in a release-notes bullet or a LinkedIn post."""
+
     cloud: Cloud
     sku: str
     region: str
-    points: tuple[PricePoint, ...]   # sorted oldest-to-newest
+    points: tuple[PricePoint, ...]  # sorted oldest-to-newest
 
     @property
     def earliest(self) -> PricePoint:

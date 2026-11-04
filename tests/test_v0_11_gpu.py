@@ -1,4 +1,5 @@
 """Tests for v0.11.0 compare_gpu_workload — cross-cloud GPU pricing."""
+
 from __future__ import annotations
 
 import pytest
@@ -149,11 +150,31 @@ def test_honest_gaps_include_spot_and_provisioning_disclosure():
 def test_synthetic_catalog_ranks_by_hourly_then_gpu_count():
     """Tie-break: when two SKUs have same hourly, prefer smaller gpu_count
     (less over-provisioning)."""
-    cat = _make_catalog([
-        Instance(cloud="aws", sku="big-cheap", vcpus=96, memory_gb=1000, hourly_usd=10.0,
-                 region="us-east-1", gpu_type="A100", gpu_count=8, gpu_memory_gb_each=40),
-        Instance(cloud="aws", sku="small-cheap", vcpus=12, memory_gb=64, hourly_usd=10.0,
-                 region="us-east-1", gpu_type="A100", gpu_count=2, gpu_memory_gb_each=40),
-    ])
+    cat = _make_catalog(
+        [
+            Instance(
+                cloud="aws",
+                sku="big-cheap",
+                vcpus=96,
+                memory_gb=1000,
+                hourly_usd=10.0,
+                region="us-east-1",
+                gpu_type="A100",
+                gpu_count=8,
+                gpu_memory_gb_each=40,
+            ),
+            Instance(
+                cloud="aws",
+                sku="small-cheap",
+                vcpus=12,
+                memory_gb=64,
+                hourly_usd=10.0,
+                region="us-east-1",
+                gpu_type="A100",
+                gpu_count=2,
+                gpu_memory_gb_each=40,
+            ),
+        ]
+    )
     r = compare_gpu_workload(cat, gpu_type="A100", gpu_count=1, targets=["aws"])
     assert r["per_cloud"][0]["sku"] == "small-cheap"

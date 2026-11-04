@@ -1,4 +1,5 @@
 """Tests for v0.5.1 multi-client adapter layer."""
+
 from __future__ import annotations
 
 import json
@@ -51,9 +52,7 @@ def test_claude_merge_into_empty():
     adapter = ClaudeDesktopAdapter()
     config = adapter.merge_entry(None, "python", ["-m", "cloudprice_mcp.server"])
     assert config == {
-        "mcpServers": {
-            ENTRY_NAME: {"command": "python", "args": ["-m", "cloudprice_mcp.server"]}
-        }
+        "mcpServers": {ENTRY_NAME: {"command": "python", "args": ["-m", "cloudprice_mcp.server"]}}
     }
 
 
@@ -179,7 +178,11 @@ def test_existing_matches_true_when_identical():
     adapter = CopilotAdapter()
     existing = {
         "servers": {
-            ENTRY_NAME: {"type": "stdio", "command": "python", "args": ["-m", "cloudprice_mcp.server"]}
+            ENTRY_NAME: {
+                "type": "stdio",
+                "command": "python",
+                "args": ["-m", "cloudprice_mcp.server"],
+            }
         }
     }
     assert adapter.existing_matches(existing, "python", ["-m", "cloudprice_mcp.server"])
@@ -189,7 +192,11 @@ def test_existing_matches_false_when_command_differs():
     adapter = CopilotAdapter()
     existing = {
         "servers": {
-            ENTRY_NAME: {"type": "stdio", "command": "OTHER", "args": ["-m", "cloudprice_mcp.server"]}
+            ENTRY_NAME: {
+                "type": "stdio",
+                "command": "OTHER",
+                "args": ["-m", "cloudprice_mcp.server"],
+            }
         }
     }
     assert not adapter.existing_matches(existing, "python", ["-m", "cloudprice_mcp.server"])
@@ -219,9 +226,15 @@ def test_plan_action_force_overrides_skip():
     adapter = ClaudeDesktopAdapter()
     existing = {"mcpServers": {ENTRY_NAME: {"command": "python", "args": []}}}
     # Without force, identical → skip
-    assert adapter.plan_action(existing, "python", [], force=False, dry_run=False) == clients.ACTION_SKIPPED_IDENTICAL
+    assert (
+        adapter.plan_action(existing, "python", [], force=False, dry_run=False)
+        == clients.ACTION_SKIPPED_IDENTICAL
+    )
     # With force, refresh anyway
-    assert adapter.plan_action(existing, "python", [], force=True, dry_run=False) == clients.ACTION_REFRESHED
+    assert (
+        adapter.plan_action(existing, "python", [], force=True, dry_run=False)
+        == clients.ACTION_REFRESHED
+    )
 
 
 def test_plan_action_dry_run_uses_would_prefix():

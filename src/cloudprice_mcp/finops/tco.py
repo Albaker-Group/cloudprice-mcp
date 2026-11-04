@@ -23,6 +23,7 @@ Out of scope (deferred):
 - Discount-rate / NPV math (cumulative dollars, not present value)
 - License costs / labor costs / migration project costs
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -48,6 +49,7 @@ class GrowthAssumptions:
 
     A value of 0.20 means +20% YoY (each year's cost is 1.2× the previous year).
     """
+
     compute_pct_yoy: float = 0.0
     storage_pct_yoy: float = 0.0
     egress_pct_yoy: float = 0.0
@@ -81,9 +83,7 @@ def compare_total_cost_of_ownership(
         cumulative TCO, ranking, sensitivity analysis.
     """
     if inventory.is_empty():
-        raise ValueError(
-            "compare_total_cost_of_ownership: inventory has no workload items."
-        )
+        raise ValueError("compare_total_cost_of_ownership: inventory has no workload items.")
     if horizon_years < 1:
         raise ValueError(
             f"compare_total_cost_of_ownership: horizon_years must be >= 1, got {horizon_years}."
@@ -185,17 +185,17 @@ def _project_growth(
             database_year = sections["database"] * compute_mult * MONTHS_PER_YEAR
             egress_year = sections["egress"] * egress_mult * MONTHS_PER_YEAR
 
-            total_year = (
-                compute_storage_year + object_storage_year + database_year + egress_year
+            total_year = compute_storage_year + object_storage_year + database_year + egress_year
+            years.append(
+                {
+                    "year": year_idx + 1,
+                    "compute_storage_usd": round(compute_storage_year, 2),
+                    "object_storage_usd": round(object_storage_year, 2),
+                    "database_usd": round(database_year, 2),
+                    "egress_usd": round(egress_year, 2),
+                    "total_usd": round(total_year, 2),
+                }
             )
-            years.append({
-                "year": year_idx + 1,
-                "compute_storage_usd": round(compute_storage_year, 2),
-                "object_storage_usd": round(object_storage_year, 2),
-                "database_usd": round(database_year, 2),
-                "egress_usd": round(egress_year, 2),
-                "total_usd": round(total_year, 2),
-            })
         per_cloud[cloud] = years
     return per_cloud
 
@@ -285,9 +285,7 @@ def _build_headline(
         return "No clouds evaluated."
     cheapest = ranking[0]
     if len(ranking) == 1:
-        return (
-            f"{cheapest.upper()}: ${cumulative[cheapest]:,.0f} over {horizon_years} years."
-        )
+        return f"{cheapest.upper()}: ${cumulative[cheapest]:,.0f} over {horizon_years} years."
     runner_up = ranking[1]
     savings = cumulative[runner_up] - cumulative[cheapest]
     if savings > 0:

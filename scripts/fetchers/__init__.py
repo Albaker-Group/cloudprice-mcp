@@ -16,4 +16,5 @@ We never half-refresh. If any SKU is missing in the upstream API the fetcher
 raises and the orchestrator skips writing the snapshot — better to keep the
 last-known catalog than commit a partial one.
 """
+
 from __future__ import annotations

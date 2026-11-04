@@ -1,4 +1,5 @@
 """Tests for v0.6 caveats library."""
+
 from __future__ import annotations
 
 from cloudprice_mcp import caveats
@@ -45,9 +46,9 @@ def test_load_caveats_is_cached():
 
 
 def test_source_equals_target_triggers_block_caveat():
-    inv = WorkloadInventory(source_cloud="aws", compute=[
-        ComputeItem(name="x", vcpus=2, memory_gb=4)
-    ])
+    inv = WorkloadInventory(
+        source_cloud="aws", compute=[ComputeItem(name="x", vcpus=2, memory_gb=4)]
+    )
     triggered = evaluate(inv, target_cloud="aws")
     ids = {c.id for c in triggered}
     assert "source_equals_target" in ids
@@ -56,9 +57,9 @@ def test_source_equals_target_triggers_block_caveat():
 
 
 def test_source_not_equal_target_no_block():
-    inv = WorkloadInventory(source_cloud="aws", compute=[
-        ComputeItem(name="x", vcpus=2, memory_gb=4)
-    ])
+    inv = WorkloadInventory(
+        source_cloud="aws", compute=[ComputeItem(name="x", vcpus=2, memory_gb=4)]
+    )
     triggered = evaluate(inv, target_cloud="oci")
     blockers = [c for c in triggered if c.severity == "block"]
     assert blockers == []
@@ -158,9 +159,7 @@ def test_low_egress_does_not_trigger_dx_caveat():
 def test_inter_region_egress_does_not_count_toward_internet_threshold():
     inv = WorkloadInventory(
         source_cloud="aws",
-        egress=[EgressItem(
-            name="repl", gb_per_month=200_000, direction="inter_region"
-        )],
+        egress=[EgressItem(name="repl", gb_per_month=200_000, direction="inter_region")],
     )
     triggered = evaluate(inv, target_cloud="azure")
     ids = {c.id for c in triggered}
@@ -172,7 +171,8 @@ def test_inter_region_egress_does_not_count_toward_internet_threshold():
 
 def test_multi_az_triggers_info_caveat():
     inv = WorkloadInventory(
-        source_cloud="aws", multi_az=True,
+        source_cloud="aws",
+        multi_az=True,
         compute=[ComputeItem(name="x", vcpus=2, memory_gb=4)],
     )
     triggered = evaluate(inv, target_cloud="azure")
@@ -182,7 +182,8 @@ def test_multi_az_triggers_info_caveat():
 
 def test_multi_az_off_does_not_trigger():
     inv = WorkloadInventory(
-        source_cloud="aws", multi_az=False,
+        source_cloud="aws",
+        multi_az=False,
         compute=[ComputeItem(name="x", vcpus=2, memory_gb=4)],
     )
     triggered = evaluate(inv, target_cloud="azure")
@@ -229,7 +230,7 @@ def test_evaluate_returns_caveats_sorted_by_severity():
     inv = WorkloadInventory(
         source_cloud="aws",
         commitment="3yr_partial_upfront",  # info caveat
-        multi_az=True,                      # info caveat
+        multi_az=True,  # info caveat
         compute=[ComputeItem(name="x", vcpus=2, memory_gb=4)],
         egress=[EgressItem(name="cdn", gb_per_month=200_000)],  # info caveat
     )
@@ -299,9 +300,9 @@ def test_evaluate_skips_unknown_trigger_id_gracefully(monkeypatch):
     )
     real = load_caveats()
     monkeypatch.setattr(caveats, "_caveat_cache", real + [fake])
-    inv = WorkloadInventory(source_cloud="aws", compute=[
-        ComputeItem(name="x", vcpus=2, memory_gb=4)
-    ])
+    inv = WorkloadInventory(
+        source_cloud="aws", compute=[ComputeItem(name="x", vcpus=2, memory_gb=4)]
+    )
     # Should not raise
     triggered = evaluate(inv, target_cloud="azure")
     assert "future_caveat" not in {c.id for c in triggered}

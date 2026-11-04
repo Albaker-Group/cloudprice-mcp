@@ -35,6 +35,7 @@ Example full YAML:
       - { name: internet, gb_per_month: 5000 }
       - { name: replica, gb_per_month: 2000, direction: inter_region }
 """
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
@@ -48,7 +49,14 @@ import yaml
 DiskType = Literal["ssd", "hdd"]
 ObjectTier = Literal["hot", "cool", "archive"]
 EgressDirection = Literal["out_to_internet", "inter_region"]
-Commitment = Literal["none", "1yr_no_upfront", "1yr_all_upfront", "3yr_no_upfront", "3yr_partial_upfront", "3yr_all_upfront"]
+Commitment = Literal[
+    "none",
+    "1yr_no_upfront",
+    "1yr_all_upfront",
+    "3yr_no_upfront",
+    "3yr_partial_upfront",
+    "3yr_all_upfront",
+]
 DBEngine = Literal["postgres"]  # MySQL / SQL Server / Oracle DB are deferred to later versions
 
 VALID_DISK_TYPES = {"ssd", "hdd"}
@@ -164,9 +172,7 @@ def parse_yaml(text: str) -> WorkloadInventory:
     if raw is None:
         raise InventoryError("Inventory YAML is empty.")
     if not isinstance(raw, dict):
-        raise InventoryError(
-            f"Inventory YAML must be a mapping (dict), got {type(raw).__name__}."
-        )
+        raise InventoryError(f"Inventory YAML must be a mapping (dict), got {type(raw).__name__}.")
 
     return parse_dict(raw)
 
@@ -274,9 +280,7 @@ def _parse_object_storage(item: dict, ctx: str) -> ObjectStorageItem:
     return ObjectStorageItem(
         name=str(item["name"]),
         capacity_gb=_validate_pos_number(item["capacity_gb"], context=f"{ctx}.capacity_gb"),
-        tier=_validate_choice(
-            item.get("tier", "hot"), VALID_OBJECT_TIERS, context=f"{ctx}.tier"
-        ),
+        tier=_validate_choice(item.get("tier", "hot"), VALID_OBJECT_TIERS, context=f"{ctx}.tier"),
         quantity=_validate_pos_int(item.get("quantity", 1), context=f"{ctx}.quantity"),
     )
 
@@ -287,9 +291,7 @@ def _parse_database(item: dict, ctx: str) -> DatabaseItem:
         name=str(item["name"]),
         vcpus=_validate_pos_int(item["vcpus"], context=f"{ctx}.vcpus"),
         memory_gb=_validate_pos_number(item["memory_gb"], context=f"{ctx}.memory_gb"),
-        storage_gb=_validate_nonneg_number(
-            item.get("storage_gb", 0), context=f"{ctx}.storage_gb"
-        ),
+        storage_gb=_validate_nonneg_number(item.get("storage_gb", 0), context=f"{ctx}.storage_gb"),
         engine=_validate_choice(
             item.get("engine", "postgres"), VALID_DB_ENGINES, context=f"{ctx}.engine"
         ),
@@ -301,9 +303,7 @@ def _parse_egress(item: dict, ctx: str) -> EgressItem:
     _require_keys(item, {"name", "gb_per_month"}, ctx)
     return EgressItem(
         name=str(item["name"]),
-        gb_per_month=_validate_nonneg_number(
-            item["gb_per_month"], context=f"{ctx}.gb_per_month"
-        ),
+        gb_per_month=_validate_nonneg_number(item["gb_per_month"], context=f"{ctx}.gb_per_month"),
         direction=_validate_choice(
             item.get("direction", "out_to_internet"),
             VALID_EGRESS_DIRECTIONS,
@@ -319,15 +319,11 @@ def _parse_list(raw: Any, parser, section: str) -> list:
     if raw is None:
         return []
     if not isinstance(raw, list):
-        raise InventoryError(
-            f"{section} must be a list, got {type(raw).__name__}"
-        )
+        raise InventoryError(f"{section} must be a list, got {type(raw).__name__}")
     out = []
     for i, item in enumerate(raw):
         if not isinstance(item, dict):
-            raise InventoryError(
-                f"{section}[{i}] must be a mapping, got {type(item).__name__}"
-            )
+            raise InventoryError(f"{section}[{i}] must be a mapping, got {type(item).__name__}")
         out.append(parser(item, ctx=f"{section}[{i}]"))
     return out
 
@@ -335,71 +331,53 @@ def _parse_list(raw: Any, parser, section: str) -> list:
 def _require_keys(item: dict, required: set[str], ctx: str) -> None:
     missing = required - set(item.keys())
     if missing:
-        raise InventoryError(
-            f"{ctx} is missing required field(s): {', '.join(sorted(missing))}"
-        )
+        raise InventoryError(f"{ctx} is missing required field(s): {', '.join(sorted(missing))}")
 
 
 def _validate_cloud(value: Any, context: str) -> str:
     if not isinstance(value, str) or value.lower() not in {"aws", "azure", "gcp", "oci"}:
-        raise InventoryError(
-            f"{context} must be one of aws / azure / gcp / oci, got {value!r}"
-        )
+        raise InventoryError(f"{context} must be one of aws / azure / gcp / oci, got {value!r}")
     return value.lower()
 
 
 def _validate_choice(value: Any, choices: set[str], context: str) -> str:
     if not isinstance(value, str) or value not in choices:
         choices_list = ", ".join(sorted(choices))
-        raise InventoryError(
-            f"{context} must be one of [{choices_list}], got {value!r}"
-        )
+        raise InventoryError(f"{context} must be one of [{choices_list}], got {value!r}")
     return value
 
 
 def _validate_pos_int(value: Any, context: str) -> int:
     if not isinstance(value, int) or isinstance(value, bool) or value < 1:
-        raise InventoryError(
-            f"{context} must be a positive integer (>= 1), got {value!r}"
-        )
+        raise InventoryError(f"{context} must be a positive integer (>= 1), got {value!r}")
     return value
 
 
 def _validate_nonneg_int(value: Any, context: str) -> int:
     if not isinstance(value, int) or isinstance(value, bool) or value < 0:
-        raise InventoryError(
-            f"{context} must be a non-negative integer (>= 0), got {value!r}"
-        )
+        raise InventoryError(f"{context} must be a non-negative integer (>= 0), got {value!r}")
     return value
 
 
 def _validate_pos_number(value: Any, context: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0:
-        raise InventoryError(
-            f"{context} must be a positive number (> 0), got {value!r}"
-        )
+        raise InventoryError(f"{context} must be a positive number (> 0), got {value!r}")
     return float(value)
 
 
 def _validate_nonneg_number(value: Any, context: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
-        raise InventoryError(
-            f"{context} must be a non-negative number (>= 0), got {value!r}"
-        )
+        raise InventoryError(f"{context} must be a non-negative number (>= 0), got {value!r}")
     return float(value)
 
 
 def _validate_unit_interval(value: Any, context: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0 <= value <= 1:
-        raise InventoryError(
-            f"{context} must be a number in [0.0, 1.0], got {value!r}"
-        )
+        raise InventoryError(f"{context} must be a number in [0.0, 1.0], got {value!r}")
     return float(value)
 
 
 def _validate_bool(value: Any, context: str) -> bool:
     if not isinstance(value, bool):
-        raise InventoryError(
-            f"{context} must be a boolean (true/false), got {value!r}"
-        )
+        raise InventoryError(f"{context} must be a boolean (true/false), got {value!r}")
     return value

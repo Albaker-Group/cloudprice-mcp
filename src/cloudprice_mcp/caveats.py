@@ -18,6 +18,7 @@ Block-severity caveats prevent a target from being recommended in `assess_migrat
 ranking. Warn-severity caveats flag a real risk. Info-severity caveats are
 context for the user but don't change recommendations.
 """
+
 from __future__ import annotations
 
 import json
@@ -65,12 +66,8 @@ def _commitment_is_3yr(inv: WorkloadInventory, _target: str, _ctx: dict) -> bool
     return inv.commitment.startswith("3yr_")
 
 
-def _internet_egress_over_100tb_per_month(
-    inv: WorkloadInventory, _target: str, _ctx: dict
-) -> bool:
-    total_internet = sum(
-        e.gb_per_month for e in inv.egress if e.direction == "out_to_internet"
-    )
+def _internet_egress_over_100tb_per_month(inv: WorkloadInventory, _target: str, _ctx: dict) -> bool:
+    total_internet = sum(e.gb_per_month for e in inv.egress if e.direction == "out_to_internet")
     return total_internet > 100_000  # 100 TB in GB
 
 

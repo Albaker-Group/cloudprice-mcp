@@ -1,5 +1,6 @@
 """Tests for v0.13.0 detect_price_anomalies — statistical anomaly detection
 on the bundled price-history dataset."""
+
 from __future__ import annotations
 
 import json
@@ -109,8 +110,12 @@ def six_snapshots(monkeypatch, tmp_path):
 
     # 5 weeks of stable pricing for spike.large, then a 30% jump in week 6
     for date_str, price in [
-        ("2026-03-01", 0.10), ("2026-03-08", 0.10), ("2026-03-15", 0.10),
-        ("2026-03-22", 0.10), ("2026-03-29", 0.10), ("2026-04-05", 0.13),
+        ("2026-03-01", 0.10),
+        ("2026-03-08", 0.10),
+        ("2026-03-15", 0.10),
+        ("2026-03-22", 0.10),
+        ("2026-03-29", 0.10),
+        ("2026-04-05", 0.13),
     ]:
         write(date_str, price)
 
@@ -118,13 +123,17 @@ def six_snapshots(monkeypatch, tmp_path):
     class _FakeFiles:
         def __init__(self, root: Path):
             self.root = root
+
         def iterdir(self):
             return self.root.iterdir()
+
         def joinpath(self, name: str):
             return self.root / name
 
     fake_resources_files = lambda _pkg: _FakeFiles(snap_dir)
-    monkeypatch.setattr(history, "resources", type("R", (), {"files": staticmethod(fake_resources_files)}))
+    monkeypatch.setattr(
+        history, "resources", type("R", (), {"files": staticmethod(fake_resources_files)})
+    )
     return snap_dir
 
 

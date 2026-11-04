@@ -28,7 +28,10 @@ _FINOPS_COMPUTE_ITEM_SCHEMA = {
         "os_disk_type": {"type": "string", "enum": ["ssd", "hdd"], "default": "ssd"},
         "snapshot_count": {"type": "integer", "minimum": 0, "default": 0},
         "snapshot_incremental_factor": {
-            "type": "number", "minimum": 0, "maximum": 1, "default": 1.0,
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 1.0,
             "description": "1.0 = upper-bound, 0.3 = typical real-world incremental, 0.0 = exclude.",
         },
     },
@@ -45,7 +48,10 @@ _FINOPS_STORAGE_ITEM_SCHEMA = {
         "quantity": {"type": "integer", "minimum": 1, "default": 1},
         "snapshot_count": {"type": "integer", "minimum": 0, "default": 0},
         "snapshot_incremental_factor": {
-            "type": "number", "minimum": 0, "maximum": 1, "default": 1.0,
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 1.0,
         },
     },
     "required": ["name", "capacity_gb"],
@@ -102,7 +108,9 @@ _FINOPS_ONE_TIME_SCHEMA = {
 }
 
 
-def _finops_inventory_properties(*, include_source_cloud: bool = True, include_commitment: bool = True) -> dict:
+def _finops_inventory_properties(
+    *, include_source_cloud: bool = True, include_commitment: bool = True
+) -> dict:
     """Build the shared inventory properties dict reused across FinOps tool schemas."""
     props: dict = {
         "compute": {"type": "array", "items": _FINOPS_COMPUTE_ITEM_SCHEMA, "default": []},
@@ -136,16 +144,24 @@ _COMPUTE_ITEM_SCHEMA = {
         "memory_gb": {"type": "number", "minimum": 0.5},
         "quantity": {"type": "integer", "minimum": 1, "default": 1},
         "hours_per_month": {"type": "integer", "minimum": 1, "default": HOURS_PER_MONTH},
-        "tier": {"type": ["string", "null"], "description": "Optional grouping label (e.g. Web/App/DB)"},
+        "tier": {
+            "type": ["string", "null"],
+            "description": "Optional grouping label (e.g. Web/App/DB)",
+        },
         "group": {"type": ["string", "null"], "description": "Optional sub-grouping label"},
         "os_disk_gb": {"type": ["number", "null"], "minimum": 0},
         "os_disk_type": {"type": "string", "enum": ["ssd", "hdd"], "default": "ssd"},
         "os_disk_snapshot_count": {
-            "type": "integer", "minimum": 0, "default": 0,
+            "type": "integer",
+            "minimum": 0,
+            "default": 0,
             "description": "Number of OS-disk snapshots retained. Each priced at the cloud's snapshot per-GB rate × disk size × instance quantity.",
         },
         "os_disk_snapshot_incremental_factor": {
-            "type": "number", "minimum": 0, "maximum": 1, "default": 1.0,
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 1.0,
             "description": "Multiplier on OS-disk snapshot upper-bound cost. 1.0 = full, 0.3 = typical incremental, 0.0 = exclude. Defaults to 1.0.",
         },
     },
@@ -156,8 +172,15 @@ _COMPUTE_ITEM_SCHEMA = {
 _EGRESS_ITEM_SCHEMA = {
     "type": "object",
     "properties": {
-        "name": {"type": "string", "description": "Friendly label, e.g. 'api-egress' or 'cdn-bandwidth'"},
-        "gb_per_month": {"type": "number", "minimum": 0, "description": "Data transfer volume in GB/month"},
+        "name": {
+            "type": "string",
+            "description": "Friendly label, e.g. 'api-egress' or 'cdn-bandwidth'",
+        },
+        "gb_per_month": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Data transfer volume in GB/month",
+        },
         "direction": {
             "type": "string",
             "enum": ["out_to_internet", "inter_region"],
@@ -174,7 +197,10 @@ _EGRESS_ITEM_SCHEMA = {
 _OBJECT_STORAGE_ITEM_SCHEMA = {
     "type": "object",
     "properties": {
-        "name": {"type": "string", "description": "Friendly label for this bucket/container, e.g. 'app-uploads'"},
+        "name": {
+            "type": "string",
+            "description": "Friendly label for this bucket/container, e.g. 'app-uploads'",
+        },
         "capacity_gb": {"type": "number", "minimum": 1},
         "tier": {
             "type": "string",
@@ -193,13 +219,24 @@ _OBJECT_STORAGE_ITEM_SCHEMA = {
 _POSTGRES_ITEM_SCHEMA = {
     "type": "object",
     "properties": {
-        "name": {"type": "string", "description": "Friendly label for this database, e.g. 'orders-prod'"},
+        "name": {
+            "type": "string",
+            "description": "Friendly label for this database, e.g. 'orders-prod'",
+        },
         "vcpus": {"type": "integer", "minimum": 1},
         "memory_gb": {"type": "number", "minimum": 0.5},
-        "storage_gb": {"type": "number", "minimum": 0, "default": 0, "description": "Persistent storage size in GB"},
+        "storage_gb": {
+            "type": "number",
+            "minimum": 0,
+            "default": 0,
+            "description": "Persistent storage size in GB",
+        },
         "quantity": {"type": "integer", "minimum": 1, "default": 1},
         "hours_per_month": {"type": "integer", "minimum": 1, "default": HOURS_PER_MONTH},
-        "tier": {"type": ["string", "null"], "description": "Optional grouping label (e.g. Prod/Stage/Dev)"},
+        "tier": {
+            "type": ["string", "null"],
+            "description": "Optional grouping label (e.g. Prod/Stage/Dev)",
+        },
     },
     "required": ["name", "vcpus", "memory_gb"],
     "additionalProperties": False,
@@ -209,15 +246,31 @@ _POSTGRES_ITEM_SCHEMA = {
 _STORAGE_ITEM_SCHEMA = {
     "type": "object",
     "properties": {
-        "name": {"type": "string", "description": "Friendly label for this volume, e.g. 'db-data-1'"},
+        "name": {
+            "type": "string",
+            "description": "Friendly label for this volume, e.g. 'db-data-1'",
+        },
         "capacity_gb": {"type": "number", "minimum": 1},
         "disk_type": {"type": "string", "enum": ["ssd", "hdd"], "default": "ssd"},
         "quantity": {"type": "integer", "minimum": 1, "default": 1},
         "tier": {"type": ["string", "null"]},
         "group": {"type": ["string", "null"]},
-        "iops": {"type": ["integer", "null"], "minimum": 0, "description": "Carried as metadata; not used for SKU matching in v0.2"},
-        "throughput_mbs": {"type": ["number", "null"], "minimum": 0, "description": "Carried as metadata; not used for SKU matching in v0.2"},
-        "snapshot_count": {"type": "integer", "minimum": 0, "default": 0, "description": "Number of snapshots retained. Priced at the cloud's snapshot per-GB rate × capacity × volume quantity."},
+        "iops": {
+            "type": ["integer", "null"],
+            "minimum": 0,
+            "description": "Carried as metadata; not used for SKU matching in v0.2",
+        },
+        "throughput_mbs": {
+            "type": ["number", "null"],
+            "minimum": 0,
+            "description": "Carried as metadata; not used for SKU matching in v0.2",
+        },
+        "snapshot_count": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0,
+            "description": "Number of snapshots retained. Priced at the cloud's snapshot per-GB rate × capacity × volume quantity.",
+        },
         "snapshot_incremental_factor": {
             "type": "number",
             "minimum": 0,
@@ -529,14 +582,17 @@ async def list_tools() -> list[Tool]:
                 "properties": {
                     **_finops_inventory_properties(include_source_cloud=False),
                     "horizon_years": {
-                        "type": "integer", "minimum": 1, "default": 3,
+                        "type": "integer",
+                        "minimum": 1,
+                        "default": 3,
                         "description": "Years to project (default 3 — FinOps standard).",
                     },
                     "growth": {
                         "type": "object",
                         "properties": {
                             "compute_pct_yoy": {
-                                "type": "number", "default": 0.0,
+                                "type": "number",
+                                "default": 0.0,
                                 "description": "+0.20 means +20% YoY compute growth.",
                             },
                             "storage_pct_yoy": {"type": "number", "default": 0.0},
@@ -601,7 +657,10 @@ async def list_tools() -> list[Tool]:
                 "type": "object",
                 "properties": {
                     "cloud": {"type": "string", "enum": ["aws", "azure", "gcp", "oci"]},
-                    "sku": {"type": "string", "description": "Instance type / SKU name, e.g. m5.xlarge, D2s_v5, e2-standard-2, VM.Standard.E5.Flex.1OCPU"},
+                    "sku": {
+                        "type": "string",
+                        "description": "Instance type / SKU name, e.g. m5.xlarge, D2s_v5, e2-standard-2, VM.Standard.E5.Flex.1OCPU",
+                    },
                     "since": {
                         "type": ["string", "null"],
                         "description": "Optional ISO date (YYYY-MM-DD); restricts to snapshots on or after this date.",
@@ -660,7 +719,10 @@ async def list_tools() -> list[Tool]:
                         "description": "Optional list of target clouds to compare against the source.",
                     },
                     "include_carbon": {"type": "boolean", "default": True},
-                    "requester": {"type": "string", "description": "Optional name/email for the audit trail."},
+                    "requester": {
+                        "type": "string",
+                        "description": "Optional name/email for the audit trail.",
+                    },
                 },
                 "required": ["source_cloud"],
                 "additionalProperties": False,
@@ -684,10 +746,25 @@ async def list_tools() -> list[Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "since": {"type": "string", "description": "ISO date — restrict to snapshots on or after this date. Optional."},
-                    "cloud": {"type": "string", "enum": ["aws", "azure", "gcp", "oci"], "description": "Filter to one cloud. Optional."},
-                    "sensitivity": {"type": "string", "enum": ["strict", "moderate", "permissive"], "default": "moderate"},
-                    "method": {"type": "string", "enum": ["percent_change", "z_score", "auto"], "default": "auto"},
+                    "since": {
+                        "type": "string",
+                        "description": "ISO date — restrict to snapshots on or after this date. Optional.",
+                    },
+                    "cloud": {
+                        "type": "string",
+                        "enum": ["aws", "azure", "gcp", "oci"],
+                        "description": "Filter to one cloud. Optional.",
+                    },
+                    "sensitivity": {
+                        "type": "string",
+                        "enum": ["strict", "moderate", "permissive"],
+                        "default": "moderate",
+                    },
+                    "method": {
+                        "type": "string",
+                        "enum": ["percent_change", "z_score", "auto"],
+                        "default": "auto",
+                    },
                     "limit": {"type": "integer", "minimum": 1, "default": 25},
                 },
                 "additionalProperties": False,
@@ -723,10 +800,19 @@ async def list_tools() -> list[Tool]:
                     },
                     "providers": {
                         "type": "array",
-                        "items": {"type": "string", "enum": [
-                            "anthropic", "openai", "google", "deepseek", "mistral",
-                            "bedrock", "vertex", "azure_openai",
-                        ]},
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "anthropic",
+                                "openai",
+                                "google",
+                                "deepseek",
+                                "mistral",
+                                "bedrock",
+                                "vertex",
+                                "azure_openai",
+                            ],
+                        },
                         "description": "Optional list of providers to include.",
                     },
                     "monthly_input_tokens": {
@@ -789,7 +875,10 @@ async def list_tools() -> list[Tool]:
                         "items": {"type": "string", "enum": ["aws", "azure", "gcp", "oci"]},
                     },
                     # token_pricing args
-                    "model_family": {"type": "string", "enum": ["claude", "gpt", "gemini", "llama", "mistral", "deepseek"]},
+                    "model_family": {
+                        "type": "string",
+                        "enum": ["claude", "gpt", "gemini", "llama", "mistral", "deepseek"],
+                    },
                     "model_id": {"type": "string"},
                     "providers": {"type": "array", "items": {"type": "string"}},
                     "monthly_input_tokens": {"type": "integer", "minimum": 0},

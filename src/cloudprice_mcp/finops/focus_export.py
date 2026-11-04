@@ -31,6 +31,7 @@ Supported query_kind values:
 
 Output format: "json" (default) or "csv".
 """
+
 from __future__ import annotations
 
 import csv
@@ -116,13 +117,24 @@ def export_focus(
         rows = _from_compute_workload(catalog, inventory, targets, period_start, period_end)
     elif query_kind == "token_pricing":
         rows = _from_token_pricing(
-            model_family, model_id, providers,
-            monthly_input_tokens, monthly_output_tokens, period_start, period_end,
+            model_family,
+            model_id,
+            providers,
+            monthly_input_tokens,
+            monthly_output_tokens,
+            period_start,
+            period_end,
         )
     elif query_kind == "extended_model_lookup":
         rows = _from_extended_lookup(
-            query, provider, mode, source,
-            monthly_input_tokens, monthly_output_tokens, period_start, period_end,
+            query,
+            provider,
+            mode,
+            source,
+            monthly_input_tokens,
+            monthly_output_tokens,
+            period_start,
+            period_end,
         )
     else:
         raise ValueError(
@@ -176,47 +188,58 @@ def _from_compute_workload(
         monthly = t.get("monthly_usd")
         if monthly is None:
             continue
-        rows.append(_focus_row(
-            provider_key=cloud,
-            service_name=f"{_PROVIDER_NAME.get(cloud, cloud).upper()} compute workload",
-            service_category="Compute",
-            sku_id=f"workload:{inventory.source_cloud}->{cloud}",
-            region_id=t.get("region", "default"),
-            pricing_quantity=_HOURS_PER_MONTH,
-            pricing_unit="Hour",
-            list_unit_price=round(monthly / _HOURS_PER_MONTH, 8),
-            list_cost=monthly,
-            period_start=period_start,
-            period_end=period_end,
-            charge_description=(
-                f"Migration assessment: {inventory.source_cloud} -> {cloud} monthly run-rate"
-            ),
-        ))
+        rows.append(
+            _focus_row(
+                provider_key=cloud,
+                service_name=f"{_PROVIDER_NAME.get(cloud, cloud).upper()} compute workload",
+                service_category="Compute",
+                sku_id=f"workload:{inventory.source_cloud}->{cloud}",
+                region_id=t.get("region", "default"),
+                pricing_quantity=_HOURS_PER_MONTH,
+                pricing_unit="Hour",
+                list_unit_price=round(monthly / _HOURS_PER_MONTH, 8),
+                list_cost=monthly,
+                period_start=period_start,
+                period_end=period_end,
+                charge_description=(
+                    f"Migration assessment: {inventory.source_cloud} -> {cloud} monthly run-rate"
+                ),
+            )
+        )
     if source_cloud and assessment.get("source_monthly_usd") is not None:
-        rows.insert(0, _focus_row(
-            provider_key=source_cloud,
-            service_name=f"{_PROVIDER_NAME.get(source_cloud, source_cloud).upper()} compute workload",
-            service_category="Compute",
-            sku_id=f"workload:{source_cloud}:current",
-            region_id="default",
-            pricing_quantity=_HOURS_PER_MONTH,
-            pricing_unit="Hour",
-            list_unit_price=round(assessment["source_monthly_usd"] / _HOURS_PER_MONTH, 8),
-            list_cost=assessment["source_monthly_usd"],
-            period_start=period_start,
-            period_end=period_end,
-            charge_description=f"Current source cloud baseline ({source_cloud})",
-        ))
+        rows.insert(
+            0,
+            _focus_row(
+                provider_key=source_cloud,
+                service_name=f"{_PROVIDER_NAME.get(source_cloud, source_cloud).upper()} compute workload",
+                service_category="Compute",
+                sku_id=f"workload:{source_cloud}:current",
+                region_id="default",
+                pricing_quantity=_HOURS_PER_MONTH,
+                pricing_unit="Hour",
+                list_unit_price=round(assessment["source_monthly_usd"] / _HOURS_PER_MONTH, 8),
+                list_cost=assessment["source_monthly_usd"],
+                period_start=period_start,
+                period_end=period_end,
+                charge_description=f"Current source cloud baseline ({source_cloud})",
+            ),
+        )
     return rows
 
 
 def _from_token_pricing(
-    model_family, model_id, providers,
-    monthly_input_tokens, monthly_output_tokens,
-    period_start, period_end,
+    model_family,
+    model_id,
+    providers,
+    monthly_input_tokens,
+    monthly_output_tokens,
+    period_start,
+    period_end,
 ) -> list[dict[str, Any]]:
     result = compare_token_pricing(
-        model_family=model_family, model_id=model_id, providers=providers,
+        model_family=model_family,
+        model_id=model_id,
+        providers=providers,
         monthly_input_tokens=monthly_input_tokens,
         monthly_output_tokens=monthly_output_tokens,
     )
@@ -227,12 +250,20 @@ def _from_token_pricing(
 
 
 def _from_extended_lookup(
-    query, provider, mode, source,
-    monthly_input_tokens, monthly_output_tokens,
-    period_start, period_end,
+    query,
+    provider,
+    mode,
+    source,
+    monthly_input_tokens,
+    monthly_output_tokens,
+    period_start,
+    period_end,
 ) -> list[dict[str, Any]]:
     result = lookup_extended_model_pricing(
-        query=query, provider=provider, mode=mode, source=source,
+        query=query,
+        provider=provider,
+        mode=mode,
+        source=source,
         monthly_input_tokens=monthly_input_tokens,
         monthly_output_tokens=monthly_output_tokens,
         limit=1000,  # FOCUS export should be comprehensive; downstream filters as needed
@@ -247,11 +278,18 @@ def _from_extended_lookup(
 
 
 def _focus_row(
-    *, provider_key: str, service_name: str, service_category: str,
-    sku_id: str, region_id: str,
-    pricing_quantity: float, pricing_unit: str,
-    list_unit_price: float, list_cost: float,
-    period_start: dt.date, period_end: dt.date,
+    *,
+    provider_key: str,
+    service_name: str,
+    service_category: str,
+    sku_id: str,
+    region_id: str,
+    pricing_quantity: float,
+    pricing_unit: str,
+    list_unit_price: float,
+    list_cost: float,
+    period_start: dt.date,
+    period_end: dt.date,
     charge_description: str,
     charge_category: str = "Usage",
     charge_frequency: str = "Recurring",
@@ -299,8 +337,11 @@ def _focus_row(
 
 
 def _token_row(
-    src: dict, period_start: dt.date, period_end: dt.date,
-    monthly_input_tokens: int | None, monthly_output_tokens: int | None,
+    src: dict,
+    period_start: dt.date,
+    period_end: dt.date,
+    monthly_input_tokens: int | None,
+    monthly_output_tokens: int | None,
 ) -> dict[str, Any]:
     """Convert one compare_token_pricing / lookup row to a FOCUS row.
 
@@ -316,7 +357,9 @@ def _token_row(
     if monthly_input_tokens is not None and monthly_output_tokens is not None:
         list_cost = src.get("monthly_total_usd")
         if list_cost is None:
-            list_cost = (monthly_input_tokens * in_rate + monthly_output_tokens * out_rate) / 1_000_000
+            list_cost = (
+                monthly_input_tokens * in_rate + monthly_output_tokens * out_rate
+            ) / 1_000_000
         pricing_qty = (monthly_input_tokens + monthly_output_tokens) / 1_000_000
         unit = "1M tokens (blended in+out)"
         unit_price = round(list_cost / pricing_qty, 6) if pricing_qty else 0.0
@@ -331,9 +374,7 @@ def _token_row(
         pricing_qty = 1.0
         unit = "1M output tokens"
         unit_price = out_rate
-        description = (
-            f"{model_id_value} via {provider_key}: list rate per 1M output tokens"
-        )
+        description = f"{model_id_value} via {provider_key}: list rate per 1M output tokens"
 
     return _focus_row(
         provider_key=provider_key,

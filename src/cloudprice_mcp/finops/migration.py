@@ -15,6 +15,7 @@ This is an orchestrator over the existing per-section comparators in compare.py:
 
 No new pricing data — pure orchestration on top of v0.5's catalog.
 """
+
 from __future__ import annotations
 
 from typing import Literal
@@ -71,14 +72,10 @@ def assess_migration(
             "(e.g. 'aws' / 'azure' / 'gcp' / 'oci')."
         )
     if inventory.is_empty():
-        raise ValueError(
-            "assess_migration: inventory has no workload items — nothing to assess."
-        )
+        raise ValueError("assess_migration: inventory has no workload items — nothing to assess.")
 
     source = inventory.source_cloud
-    target_clouds: list[Cloud] = list(targets) if targets else [
-        c for c in CLOUDS if c != source
-    ]
+    target_clouds: list[Cloud] = list(targets) if targets else [c for c in CLOUDS if c != source]
     if not target_clouds:
         raise ValueError(
             "assess_migration: no target clouds to evaluate (source equals all known clouds?)."
@@ -107,9 +104,7 @@ def assess_migration(
         else:
             payback_months = None
 
-        triggered = evaluate_caveats(
-            inventory, target, ctx={"target_monthly": target_monthly}
-        )
+        triggered = evaluate_caveats(inventory, target, ctx={"target_monthly": target_monthly})
 
         per_target[target] = {
             "monthly_usd": round(target_monthly, 2),
@@ -122,9 +117,7 @@ def assess_migration(
         }
 
     # 4. Ranking — exclude blocked targets
-    rankable = [
-        (name, t) for name, t in per_target.items() if not t["blockers"]
-    ]
+    rankable = [(name, t) for name, t in per_target.items() if not t["blockers"]]
     rankable.sort(key=lambda x: x[1]["three_year_total_usd"])
     ranking = [name for name, _ in rankable]
     recommended = ranking[0] if ranking else None
@@ -154,9 +147,7 @@ def assess_migration(
 # --- Total cost computation ---
 
 
-def _total_monthly_for_cloud(
-    catalog: PriceCatalog, inv: WorkloadInventory, cloud: Cloud
-) -> float:
+def _total_monthly_for_cloud(catalog: PriceCatalog, inv: WorkloadInventory, cloud: Cloud) -> float:
     """Sum monthly cost on `cloud` across every workload section.
 
     Reuses the existing per-section comparators by extracting just this cloud's
@@ -172,9 +163,7 @@ def _total_monthly_for_cloud(
     )
 
 
-def _compute_storage_cost(
-    catalog: PriceCatalog, inv: WorkloadInventory, cloud: Cloud
-) -> float:
+def _compute_storage_cost(catalog: PriceCatalog, inv: WorkloadInventory, cloud: Cloud) -> float:
     if not (inv.compute or inv.storage):
         return 0.0
     commitment = _COMMITMENT_TO_V05_TIER.get(inv.commitment, "none")
@@ -194,9 +183,7 @@ def _compute_storage_cost(
     return 0.0
 
 
-def _object_storage_cost(
-    catalog: PriceCatalog, inv: WorkloadInventory, cloud: Cloud
-) -> float:
+def _object_storage_cost(catalog: PriceCatalog, inv: WorkloadInventory, cloud: Cloud) -> float:
     if not inv.object_storage:
         return 0.0
     reqs = [_object_to_request(o) for o in inv.object_storage]
@@ -204,9 +191,7 @@ def _object_storage_cost(
     return result["totals_by_cloud"].get(cloud, 0)
 
 
-def _database_cost(
-    catalog: PriceCatalog, inv: WorkloadInventory, cloud: Cloud
-) -> float:
+def _database_cost(catalog: PriceCatalog, inv: WorkloadInventory, cloud: Cloud) -> float:
     if not inv.databases:
         return 0.0
     reqs = [_database_to_postgres_request(d) for d in inv.databases]
@@ -214,9 +199,7 @@ def _database_cost(
     return result["totals_by_cloud"].get(cloud, 0)
 
 
-def _internet_egress_cost(
-    catalog: PriceCatalog, inv: WorkloadInventory, cloud: Cloud
-) -> float:
+def _internet_egress_cost(catalog: PriceCatalog, inv: WorkloadInventory, cloud: Cloud) -> float:
     internet = [e for e in inv.egress if e.direction == "out_to_internet"]
     if not internet:
         return 0.0
@@ -225,9 +208,7 @@ def _internet_egress_cost(
     return result["totals_by_cloud"].get(cloud, 0)
 
 
-def _inter_region_egress_cost(
-    catalog: PriceCatalog, inv: WorkloadInventory, cloud: Cloud
-) -> float:
+def _inter_region_egress_cost(catalog: PriceCatalog, inv: WorkloadInventory, cloud: Cloud) -> float:
     inter_region = [e for e in inv.egress if e.direction == "inter_region"]
     if not inter_region:
         return 0.0

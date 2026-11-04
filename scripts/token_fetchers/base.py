@@ -1,4 +1,5 @@
 """Shared types + errors for token-price fetchers."""
+
 from __future__ import annotations
 
 from typing import Protocol, TypedDict
@@ -6,6 +7,7 @@ from typing import Protocol, TypedDict
 
 class TokenProviderEntry(TypedDict, total=False):
     """One (model_id, provider) price row in the catalog."""
+
     provider: str
     input_per_1m_usd: float
     output_per_1m_usd: float

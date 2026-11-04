@@ -16,6 +16,7 @@ Returns ranked rows (cheapest output cost first) with provenance always
 tagged `source: "litellm"` so callers know it's community-maintained, not
 vendor-verified.
 """
+
 from __future__ import annotations
 
 import json
@@ -47,11 +48,13 @@ def _load_catalog() -> dict[str, Any]:
     litellm_blob = _read_optional(_LITELLM_FILE)
     if litellm_blob:
         for row in litellm_blob.get("models", []):
-            models.append({
-                **row,
-                "model_id": row.get("litellm_id"),
-                "source": "litellm",
-            })
+            models.append(
+                {
+                    **row,
+                    "model_id": row.get("litellm_id"),
+                    "source": "litellm",
+                }
+            )
         if litellm_blob.get("as_of"):
             as_of_dates.append(litellm_blob["as_of"])
         sources_loaded.append("litellm")
@@ -59,11 +62,13 @@ def _load_catalog() -> dict[str, Any]:
     openrouter_blob = _read_optional(_OPENROUTER_FILE)
     if openrouter_blob:
         for row in openrouter_blob.get("models", []):
-            models.append({
-                **row,
-                "model_id": row.get("openrouter_id"),
-                "source": "openrouter",
-            })
+            models.append(
+                {
+                    **row,
+                    "model_id": row.get("openrouter_id"),
+                    "source": "openrouter",
+                }
+            )
         if openrouter_blob.get("as_of"):
             as_of_dates.append(openrouter_blob["as_of"])
         sources_loaded.append("openrouter")
@@ -145,13 +150,17 @@ def lookup_extended_model_pricing(
 
     return {
         "kind": "extended_model_pricing_lookup",
-        "title": _build_title(query, provider, mode, source,
-                              monthly_input_tokens, monthly_output_tokens),
+        "title": _build_title(
+            query, provider, mode, source, monthly_input_tokens, monthly_output_tokens
+        ),
         "headline": _build_headline(rows, ranked_by, total_match, limit),
         "as_of": catalog.get("as_of"),
         "sources_loaded": catalog.get("sources_loaded", []),
         "filters": {
-            "query": query, "provider": provider, "mode": mode, "source": source,
+            "query": query,
+            "provider": provider,
+            "mode": mode,
+            "source": source,
             "max_context_tokens": max_context_tokens,
             "monthly_input_tokens": monthly_input_tokens,
             "monthly_output_tokens": monthly_output_tokens,
@@ -162,9 +171,13 @@ def lookup_extended_model_pricing(
         "returned_rows": len(rows),
         "rows": rows,
         "recommended": (
-            {"model_id": rows[0]["model_id"], "provider": rows[0]["provider"],
-             "source": rows[0]["source"]}
-            if rows else None
+            {
+                "model_id": rows[0]["model_id"],
+                "provider": rows[0]["provider"],
+                "source": rows[0]["source"],
+            }
+            if rows
+            else None
         ),
         "honest_gaps": _honest_gaps(),
     }
@@ -201,13 +214,15 @@ def _enrich_row(row: dict, in_tokens: int | None, out_tokens: int | None) -> dic
     output_rate = enriched["output_per_1m_usd"]
     input_rate = enriched["input_per_1m_usd"]
     enriched["blended_per_1m_usd_3to1_out_to_in"] = round(
-        (output_rate * 3 + input_rate) / 4, 4,
+        (output_rate * 3 + input_rate) / 4,
+        4,
     )
     if in_tokens is not None and out_tokens is not None:
         enriched["monthly_input_usd"] = round(in_tokens / 1_000_000 * input_rate, 2)
         enriched["monthly_output_usd"] = round(out_tokens / 1_000_000 * output_rate, 2)
         enriched["monthly_total_usd"] = round(
-            enriched["monthly_input_usd"] + enriched["monthly_output_usd"], 2,
+            enriched["monthly_input_usd"] + enriched["monthly_output_usd"],
+            2,
         )
     return enriched
 

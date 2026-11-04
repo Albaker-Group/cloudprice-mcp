@@ -24,6 +24,7 @@ Filter policy:
 Run:
     python scripts/refresh_extended_catalog.py [--dry-run]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -38,8 +39,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 OUTPUT_FILE = REPO_ROOT / "src" / "cloudprice_mcp" / "data" / "llm_catalog_extended.json"
 
 LITELLM_URL = (
-    "https://raw.githubusercontent.com/BerriAI/litellm/main/"
-    "model_prices_and_context_window.json"
+    "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json"
 )
 
 # Modes we ingest in v0.16.0. The rest (image_generation, embedding, audio_*,
@@ -69,8 +69,11 @@ PROVIDER_NORMALIZATION = {
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--source-url", default=LITELLM_URL,
-                        help="Override URL (useful for tests against a local mirror).")
+    parser.add_argument(
+        "--source-url",
+        default=LITELLM_URL,
+        help="Override URL (useful for tests against a local mirror).",
+    )
     args = parser.parse_args(argv)
 
     raw = _download(args.source_url)
@@ -97,8 +100,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"=== DRY RUN — {len(rows)} models would be written ===")
         print("Sample (first 5):")
         for r in rows[:5]:
-            print(f"  {r['litellm_id']:60s} provider={r['provider']:18s} "
-                  f"in=${r['input_per_1m_usd']:.4f} out=${r['output_per_1m_usd']:.4f}")
+            print(
+                f"  {r['litellm_id']:60s} provider={r['provider']:18s} "
+                f"in=${r['input_per_1m_usd']:.4f} out=${r['output_per_1m_usd']:.4f}"
+            )
         return 0
 
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -175,8 +180,12 @@ def _attach_context(row: dict, attrs: dict) -> None:
 
 
 def _attach_capability_flags(row: dict, attrs: dict) -> None:
-    for flag in ("supports_vision", "supports_function_calling",
-                 "supports_prompt_caching", "supports_response_schema"):
+    for flag in (
+        "supports_vision",
+        "supports_function_calling",
+        "supports_prompt_caching",
+        "supports_response_schema",
+    ):
         if attrs.get(flag):
             row[flag] = True
 

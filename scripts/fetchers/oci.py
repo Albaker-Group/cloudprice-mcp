@@ -15,6 +15,7 @@ SKU names encode the OCPU count, e.g.:
     VM.Standard.A2.Flex.1OCPU  -> family=A2, ocpu=1
     VM.Standard.A1.Flex.AlwaysFree -> family=A1 (free tier, always $0)
 """
+
 from __future__ import annotations
 
 import re

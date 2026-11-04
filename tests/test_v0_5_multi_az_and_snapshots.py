@@ -1,4 +1,5 @@
 """Tests for v0.5 multi-AZ multiplier + snapshot incremental factor."""
+
 from __future__ import annotations
 
 from cloudprice_mcp.compare import (
@@ -16,6 +17,7 @@ def setup_function():
 
 
 # --- Multi-AZ multiplier ---
+
 
 def test_multi_az_doubles_compute_totals():
     catalog = load_catalog()
@@ -38,8 +40,7 @@ def test_multi_az_does_not_double_storage():
     for cloud in ("aws", "azure", "gcp", "oci"):
         # Storage stays at 1x even with multi_az=True
         assert (
-            base["storage"]["totals_by_cloud"][cloud]
-            == multi["storage"]["totals_by_cloud"][cloud]
+            base["storage"]["totals_by_cloud"][cloud] == multi["storage"]["totals_by_cloud"][cloud]
         )
 
 
@@ -75,6 +76,7 @@ def test_multi_az_combines_correctly_with_commitment():
 
 
 # --- Snapshot incremental factor ---
+
 
 def test_snapshot_incremental_factor_default_is_upper_bound():
     catalog = load_catalog()

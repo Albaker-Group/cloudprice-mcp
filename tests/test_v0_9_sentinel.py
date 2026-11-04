@@ -5,6 +5,7 @@ Stateless drift sensor. Tests cover the three modes:
   2. Drift detection (baseline passed, prices unchanged + prices moved)
   3. Workload-spec change (hash mismatch returns fresh baseline)
 """
+
 from __future__ import annotations
 
 import pytest
@@ -39,12 +40,14 @@ def _other_inventory() -> dict:
 
 def test_no_baseline_returns_watch_baseline_kind():
     from cloudprice_mcp.pricing import load_catalog
+
     result = watch_workload(load_catalog(), parse_dict(_basic_inventory()))
     assert result["kind"] == "watch_baseline"
 
 
 def test_initial_baseline_has_per_cloud_costs():
     from cloudprice_mcp.pricing import load_catalog
+
     result = watch_workload(load_catalog(), parse_dict(_basic_inventory()))
     pc = result["per_cloud_monthly_usd"]
     assert set(pc.keys()) == {"aws", "azure", "gcp", "oci"}
@@ -55,6 +58,7 @@ def test_initial_baseline_has_per_cloud_costs():
 
 def test_initial_baseline_includes_workload_hash():
     from cloudprice_mcp.pricing import load_catalog
+
     result = watch_workload(load_catalog(), parse_dict(_basic_inventory()))
     h = result["baseline"]["workload_hash"]
     assert isinstance(h, str) and len(h) == 16
@@ -62,6 +66,7 @@ def test_initial_baseline_includes_workload_hash():
 
 def test_workload_hash_is_deterministic():
     from cloudprice_mcp.pricing import load_catalog
+
     cat = load_catalog()
     r1 = watch_workload(cat, parse_dict(_basic_inventory()))
     r2 = watch_workload(cat, parse_dict(_basic_inventory()))
@@ -70,6 +75,7 @@ def test_workload_hash_is_deterministic():
 
 def test_different_workloads_have_different_hashes():
     from cloudprice_mcp.pricing import load_catalog
+
     cat = load_catalog()
     r1 = watch_workload(cat, parse_dict(_basic_inventory()))
     r2 = watch_workload(cat, parse_dict(_other_inventory()))
@@ -81,6 +87,7 @@ def test_different_workloads_have_different_hashes():
 
 def test_no_drift_when_catalog_unchanged():
     from cloudprice_mcp.pricing import load_catalog
+
     cat = load_catalog()
     inv = parse_dict(_basic_inventory())
     baseline_resp = watch_workload(cat, inv)
@@ -94,6 +101,7 @@ def test_no_drift_when_catalog_unchanged():
 def test_drift_triggers_alert_above_threshold():
     """Simulate drift by passing a half-priced baseline — current cost is 2x baseline."""
     from cloudprice_mcp.pricing import load_catalog
+
     cat = load_catalog()
     inv = parse_dict(_basic_inventory())
     baseline_resp = watch_workload(cat, inv)
@@ -111,6 +119,7 @@ def test_drift_triggers_alert_above_threshold():
 def test_drift_under_threshold_does_not_alert():
     """Simulate 2% drift while threshold is 5% — should NOT alert."""
     from cloudprice_mcp.pricing import load_catalog
+
     cat = load_catalog()
     inv = parse_dict(_basic_inventory())
     baseline_resp = watch_workload(cat, inv)
@@ -125,6 +134,7 @@ def test_drift_under_threshold_does_not_alert():
 
 def test_per_cloud_drift_breakdown():
     from cloudprice_mcp.pricing import load_catalog
+
     cat = load_catalog()
     inv = parse_dict(_basic_inventory())
     baseline_resp = watch_workload(cat, inv)
@@ -141,6 +151,7 @@ def test_drift_report_includes_sku_attribution():
     """The bundled history dataset has 2 dated snapshots — sku_attribution
     should surface the OCI -72.78% correction even on a fresh baseline."""
     from cloudprice_mcp.pricing import load_catalog
+
     cat = load_catalog()
     inv = parse_dict(_basic_inventory())
     # Use a stale "as_of" so the helper walks history before that date.
@@ -163,6 +174,7 @@ def test_drift_report_includes_sku_attribution():
 
 def test_workload_change_returns_fresh_baseline():
     from cloudprice_mcp.pricing import load_catalog
+
     cat = load_catalog()
     inv1 = parse_dict(_basic_inventory())
     baseline_resp = watch_workload(cat, inv1)

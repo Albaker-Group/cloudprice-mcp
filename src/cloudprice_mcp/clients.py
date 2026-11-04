@@ -12,6 +12,7 @@ Tier 1 (verified, smoke-tested): Claude Desktop, GitHub Copilot
 Tier 2 (documented, format confirmed): Cursor, Windsurf, Cline
 Tier 3 (best-effort, may need manual tweak): Continue, Zed
 """
+
 from __future__ import annotations
 
 import json
@@ -330,13 +331,7 @@ class ClineAdapter(ClientAdapter):
     SETTINGS_FILE = "cline_mcp_settings.json"
 
     def config_path(self) -> Path:
-        return (
-            _vscode_user_dir()
-            / "globalStorage"
-            / self.EXT_ID
-            / "settings"
-            / self.SETTINGS_FILE
-        )
+        return _vscode_user_dir() / "globalStorage" / self.EXT_ID / "settings" / self.SETTINGS_FILE
 
     def is_installed(self) -> bool:
         # Cline writes globalStorage only after the extension has run at least once.

@@ -15,6 +15,7 @@ def setup_function():
 
 # --- OCI as 4th cloud ---
 
+
 def test_oci_is_in_clouds_tuple():
     assert "oci" in CLOUDS
     assert len(CLOUDS) == 4
@@ -49,6 +50,7 @@ def test_compare_clouds_returns_4_clouds():
 
 
 # --- Postgres (v0.3 preview) ---
+
 
 def test_postgres_skus_loaded_per_cloud():
     catalog = load_catalog()

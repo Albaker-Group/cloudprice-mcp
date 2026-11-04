@@ -16,6 +16,7 @@ OCI usually wins on H100 / A100 at scale (their BM.GPU.H100.8 = $10/GPU/hr
 vs AWS p5.48xlarge = ~$12.29/GPU/hr) — a real moat for AI training workloads
 that no commercial FinOps tool I've seen surfaces openly.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -56,7 +57,8 @@ def compare_gpu_workload(
 
     for cloud in clouds:
         candidates = [
-            inst for inst in catalog.by_cloud(cloud)
+            inst
+            for inst in catalog.by_cloud(cloud)
             if inst.gpu_count > 0
             and inst.gpu_type
             and inst.gpu_type.upper() == needle
@@ -69,26 +71,33 @@ def compare_gpu_workload(
         # (less over-provisioning).
         cheapest = min(candidates, key=lambda i: (i.hourly_usd, i.gpu_count))
         over_provisioned = cheapest.gpu_count > gpu_count
-        prorated_hourly_for_requested = round(
-            cheapest.hourly_usd_per_gpu * gpu_count, 4,  # type: ignore[operator]
-        ) if cheapest.hourly_usd_per_gpu is not None else None
+        prorated_hourly_for_requested = (
+            round(
+                cheapest.hourly_usd_per_gpu * gpu_count,
+                4,  # type: ignore[operator]
+            )
+            if cheapest.hourly_usd_per_gpu is not None
+            else None
+        )
 
-        per_cloud.append({
-            "cloud": cheapest.cloud,
-            "sku": cheapest.sku,
-            "region": cheapest.region,
-            "gpu_type": cheapest.gpu_type,
-            "gpu_count_in_sku": cheapest.gpu_count,
-            "gpu_count_requested": gpu_count,
-            "gpu_memory_gb_each": cheapest.gpu_memory_gb_each,
-            "vcpus": cheapest.vcpus,
-            "memory_gb": cheapest.memory_gb,
-            "hourly_usd": cheapest.hourly_usd,
-            "monthly_usd": cheapest.monthly_usd,
-            "hourly_usd_per_gpu": cheapest.hourly_usd_per_gpu,
-            "prorated_hourly_for_requested": prorated_hourly_for_requested,
-            "over_provisioned": over_provisioned,
-        })
+        per_cloud.append(
+            {
+                "cloud": cheapest.cloud,
+                "sku": cheapest.sku,
+                "region": cheapest.region,
+                "gpu_type": cheapest.gpu_type,
+                "gpu_count_in_sku": cheapest.gpu_count,
+                "gpu_count_requested": gpu_count,
+                "gpu_memory_gb_each": cheapest.gpu_memory_gb_each,
+                "vcpus": cheapest.vcpus,
+                "memory_gb": cheapest.memory_gb,
+                "hourly_usd": cheapest.hourly_usd,
+                "monthly_usd": cheapest.monthly_usd,
+                "hourly_usd_per_gpu": cheapest.hourly_usd_per_gpu,
+                "prorated_hourly_for_requested": prorated_hourly_for_requested,
+                "over_provisioned": over_provisioned,
+            }
+        )
 
     per_cloud.sort(key=lambda row: row["hourly_usd"])
     ranking = [r["cloud"] for r in per_cloud]
@@ -121,7 +130,9 @@ def _build_headline(
     no_match: list[str],
 ) -> str:
     if not per_cloud:
-        return f"No cloud in the catalog publishes an {gpu_type} SKU with at least {gpu_count} GPU(s)."
+        return (
+            f"No cloud in the catalog publishes an {gpu_type} SKU with at least {gpu_count} GPU(s)."
+        )
 
     cheapest = per_cloud[0]
     msg = (

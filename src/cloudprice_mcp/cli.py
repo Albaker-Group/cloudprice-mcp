@@ -7,6 +7,7 @@ Subcommands:
   cloudprice-mcp setup    auto-configure any installed MCP-compatible client
   cloudprice-mcp doctor   diagnose install / config issues
 """
+
 from __future__ import annotations
 
 import argparse
@@ -41,6 +42,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     # Setup args defined in setup_cmd to keep all flag knowledge in one place.
     from .setup_cmd import add_setup_arguments
+
     add_setup_arguments(p_setup)
 
     sub.add_parser(
@@ -53,6 +55,7 @@ def _build_parser() -> argparse.ArgumentParser:
         help="(Windows) Add Python's Scripts folder to user PATH so `cloudprice-mcp` resolves as a bare shell command. Opt-in.",
     )
     from .fix_path_cmd import add_fix_path_arguments
+
     add_fix_path_arguments(p_fix_path)
 
     p_history = sub.add_parser(
@@ -60,6 +63,7 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Query the bundled multi-cloud price history dataset (v0.7.1+).",
     )
     from .history_cmd import add_history_arguments
+
     add_history_arguments(p_history)
 
     return parser
@@ -78,19 +82,24 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.cmd in (None, "serve"):
         from .server import main as serve_main
+
         serve_main()
         return 0
     if args.cmd == "setup":
         from .setup_cmd import run_setup
+
         return run_setup(args)
     if args.cmd == "doctor":
         from .doctor_cmd import run_doctor
+
         return run_doctor(args)
     if args.cmd == "fix-path":
         from .fix_path_cmd import run_fix_path
+
         return run_fix_path(args)
     if args.cmd == "history":
         from .history_cmd import run_history
+
         return run_history(args)
     parser.print_help()
     return 2
