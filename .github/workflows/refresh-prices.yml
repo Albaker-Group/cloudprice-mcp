@@ -28,6 +28,7 @@ permissions:
   id-token: write   # AWS OIDC
   contents: write   # push the branch with the refreshed prices.json
   pull-requests: write  # open the PR
+  actions: write    # dispatch CI + security checks on the refresh branch
 
 # Don't pile up if a refresh is slow; cancel any in-flight run when a new one starts.
 concurrency:
@@ -176,6 +177,22 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR: ${{ steps.pr.outputs.pull-request-number }}
         run: gh pr merge "$PR" --squash --auto
+
+      # ...and auto-merge alone did not fix it either. GitHub holds pull_request
+      # runs on a PR opened by github-actions[bot] for manual approval, so from
+      # 2026-10-04 to 2026-11-01 the required checks sat at "action_required",
+      # the PR never merged, and each Sunday's force-push threw away the
+      # previous week's snapshot. A workflow_dispatch started with GITHUB_TOKEN
+      # is not held, and its check runs land on the branch head commit, which
+      # is what branch protection reads.
+      - name: Run the required checks on the refresh branch
+        if: steps.pr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh workflow run security.yml --ref auto/refresh-prices
+          gh workflow run ci.yml --ref auto/refresh-prices
 
       - name: Dry-run summary
         if: steps.changes.outputs.changed == 'true' && inputs.dry_run == true
