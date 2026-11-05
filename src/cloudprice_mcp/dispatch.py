@@ -626,6 +626,21 @@ def _handle_llm_price_changes(catalog, args):
     return _ok(result)
 
 
+def _handle_model_retirements(catalog, args):
+    from .finops.model_retirements import model_retirements
+
+    try:
+        result = model_retirements(
+            within_days=int(args.get("within_days", 180)),
+            provider=args.get("provider"),
+            model=args.get("model"),
+            top_n=int(args.get("top_n", 50)),
+        )
+    except ValueError as e:
+        return _err(f"model_retirements: {e}")
+    return _ok(result)
+
+
 def _handle_compare_gpu_workload(catalog, args):
     gpu_type = args.get("gpu_type", "")
     gpu_count = int(args.get("gpu_count", 1))
@@ -749,6 +764,7 @@ _TOOL_HANDLERS = {
     "compare_token_pricing": _handle_compare_token_pricing,
     "lookup_extended_model_pricing": _handle_lookup_extended_model_pricing,
     "llm_price_changes": _handle_llm_price_changes,
+    "model_retirements": _handle_model_retirements,
     "estimate_agent_cost": _handle_estimate_agent_cost,
     "compare_llm_vs_selfhost": _handle_compare_llm_vs_selfhost,
     "analyze_bill": _handle_analyze_bill,

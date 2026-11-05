@@ -1360,6 +1360,49 @@ async def list_tools() -> list[Tool]:
             },
         ),
         Tool(
+            name="model_retirements",
+            description=(
+                "Which LLMs providers are retiring: models whose retirement date "
+                "(from LiteLLM's feed, refreshed weekly) falls within the window, "
+                "across Bedrock, Azure OpenAI / AI Foundry, Vertex AI, OpenAI, "
+                "Anthropic and others, plus those retired in the last 90 days. For "
+                "each: the date, days left, and the newest same-family model on the "
+                "same provider that is not retiring, with its list price change. Use "
+                "for: 'which of our models are being retired', 'is Claude 3.5 Sonnet "
+                "on Bedrock going away', 'what replaces gpt-4o on Azure'. "
+                "analyze_ai_spend and review_agentcore flag retiring models on your "
+                "bill and in your deployment automatically."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "within_days": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 1095,
+                        "default": 180,
+                        "description": "Look this many days ahead.",
+                    },
+                    "provider": {
+                        "type": "string",
+                        "description": "Catalogue provider, e.g. 'bedrock', 'azure_openai', 'vertex', 'openai'.",
+                    },
+                    "model": {
+                        "type": "string",
+                        "description": "A model name to check, e.g. 'claude 3.5 sonnet' or 'gpt-4o'.",
+                    },
+                    "top_n": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 200,
+                        "default": 50,
+                        "description": "How many models to return, soonest first.",
+                    },
+                },
+                "additionalProperties": False,
+            },
+        ),
+        Tool(
             name="llm_price_changes",
             description=(
                 "What changed in LLM token pricing between two weeks: models that "

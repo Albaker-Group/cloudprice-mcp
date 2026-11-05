@@ -50,7 +50,7 @@ pip install cloudprice-mcp
 cloudprice-mcp setup
 ```
 
-Restart the client and the **37 tools** appear. Problems? `cloudprice-mcp doctor`
+Restart the client and the **38 tools** appear. Problems? `cloudprice-mcp doctor`
 says what is wrong; [INSTALL.md](INSTALL.md) has per-client steps for Windows,
 macOS and Linux. Python 3.10+.
 
@@ -86,6 +86,10 @@ What's new in each release: **[CHANGELOG.md](CHANGELOG.md)**.
 
 > *"What changed in LLM pricing this week — anything cheaper on Bedrock or
 > Groq?"* → `llm_price_changes` (weekly archive of ~3,600 model/provider prices)
+
+> *"Which models on Bedrock and Azure OpenAI retire in the next six months,
+> and what replaces them?"* → `model_retirements` (also flagged automatically
+> by `analyze_ai_spend` and `review_agentcore`)
 
 > *"How has OCI E5.Flex pricing moved since May?"* → `get_price_history`
 
@@ -172,7 +176,7 @@ never repeats them, but keep the file out of git and delete it when you are done
 
 ## Tools
 
-**37 tools**, grouped by job. Full descriptions and arguments:
+**38 tools**, grouped by job. Full descriptions and arguments:
 **[docs/TOOLS.md](docs/TOOLS.md)** (generated from the server, so it is always
 current).
 
@@ -183,7 +187,7 @@ current).
 | FinOps decisions | `assess_migration`, `optimize_commitment`, `compare_total_cost_of_ownership`, `find_egress_arbitrage`, `generate_decision_report` |
 | Spot, GPU, carbon | `compare_spot`, `compare_gpu_workload`, `compare_carbon_footprint` |
 | Price history | `get_price_history`, `list_tracked_skus`, `detect_price_anomalies`, `watch_workload` |
-| AI / LLM costs | `estimate_agent_cost`, `compare_llm_vs_selfhost`, `compare_token_pricing`, `lookup_extended_model_pricing`, `llm_price_changes` |
+| AI / LLM costs | `estimate_agent_cost`, `compare_llm_vs_selfhost`, `compare_token_pricing`, `lookup_extended_model_pricing`, `llm_price_changes`, `model_retirements` |
 | Your actual bill (local only) | `analyze_bill`, `find_commitment_gaps`, `detect_bill_anomalies`, `analyze_cost_allocation`, `forecast_spend`, `calculate_unit_cost`, `reprice_bill`, `analyze_ai_spend` |
 | Review a deployment (local only) | `review_agentcore` |
 | Export | `export_focus` |
@@ -208,7 +212,7 @@ list prices and the weekly price archive.
 | Cloud sustainability | `compare_carbon_footprint` |
 | Forecasting | `forecast_spend` |
 | Unit economics | `calculate_unit_cost` |
-| FinOps for AI | `analyze_ai_spend` (your spend), `review_agentcore` (your agent), `estimate_agent_cost`, `compare_token_pricing`, `llm_price_changes` |
+| FinOps for AI | `analyze_ai_spend` (your spend), `review_agentcore` (your agent), `model_retirements`, `estimate_agent_cost`, `compare_token_pricing`, `llm_price_changes` |
 
 ### Example: `compare_workload` input
 

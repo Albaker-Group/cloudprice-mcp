@@ -30,6 +30,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -85,13 +86,15 @@ def main(argv: list[str] | None = None) -> int:
         "license": "MIT (from BerriAI/litellm)",
         "currency": "USD",
         "schema_version": 1,
+        "retirements_as_of": dt.date.today().isoformat(),
         "notes": (
             "Auto-ingested from LiteLLM's public price feed. Models filtered to "
             "chat/completion/responses modes. Prices normalized from per-token to "
             "per-1M tokens. Provider names normalized where LiteLLM uses verbose IDs "
             "(e.g., 'vertex_ai-anthropic_models' -> 'vertex'). For curated, vetted "
             "pricing on the most-popular 19 models see token_prices.json + the "
-            "compare_token_pricing tool."
+            "compare_token_pricing tool. `retires_on` is LiteLLM's deprecation_date: "
+            "the day the provider retires the model."
         ),
         "model_count": len(rows),
         "models": rows,
@@ -158,7 +161,15 @@ def _build_row(litellm_id: str, attrs) -> dict | None:
     _attach_cache_rates(row, attrs)
     _attach_context(row, attrs)
     _attach_capability_flags(row, attrs)
+    _attach_retirement(row, attrs)
     return row
+
+
+def _attach_retirement(row: dict, attrs: dict) -> None:
+    """LiteLLM's `deprecation_date`: the day the provider retires the model."""
+    retires = attrs.get("deprecation_date")
+    if isinstance(retires, str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}", retires):
+        row["retires_on"] = retires
 
 
 def _attach_cache_rates(row: dict, attrs: dict) -> None:

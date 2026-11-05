@@ -7,7 +7,7 @@ against coded rules. Each rule is deterministic and cites the AWS page it rests
 on. Given a FOCUS bill as well, it adds what the agent costs split by component,
 and the spend findings from analyze_ai_spend.
 
-  S1-S5 security   C1-C4 cost   O1-O2 operations   SP1-SP2 spend (needs a bill)
+  S1-S5 security   C1-C4 cost   O1-O3 operations   SP1-SP2 spend (needs a bill)
 
 Same privacy rules as the bill tools: files are read locally, nothing is sent
 anywhere, and it is a local-only tool. The only plan values echoed back are the
@@ -28,11 +28,13 @@ from .agent_cost import _hosting_prices
 from .bill_ai import _AI_SERVICE, _TEXT_COLUMNS, ai_spend_from_rows
 from .bill_insights import _load, _tag, _tags
 from .focus_ingest import BillError, row_cost
+from .model_retirements import WINDOW_DAYS, Radar
 
 MAX_PLAN_BYTES = 100 * 1024 * 1024
 SEVERITIES = ("high", "medium", "low", "info")
 _GUIDE = "https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/"
 _SECURITY, _COST, _OPS = "Security", "Cost optimization", "Operational excellence"
+_RELIABILITY = "Reliability"
 
 RULES: dict[str, dict[str, str]] = {
     "S1": {
@@ -119,6 +121,14 @@ RULES: dict[str, dict[str, str]] = {
         "fix": "provider default_tags { tags = { app = ..., owner = ... } }, then activate "
         "them as cost allocation tags in Billing",
         "doc": "https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html",
+    },
+    "O3": {
+        "title": "Agent calls a model that is retiring",
+        "severity": "medium",
+        "pillar": _RELIABILITY,
+        "fix": "move model_id to the replacement in the detail (or another current model), "
+        "run your evals on it, then deploy",
+        "doc": "https://docs.aws.amazon.com/bedrock/latest/userguide/model-lifecycle.html",
     },
     "SP1": {
         "title": "Little of the prompt is served from cache",
@@ -357,6 +367,62 @@ def _check_compute(r: dict[str, Any], gb_hour: float) -> list[dict[str, Any]]:
     return out
 
 
+# Where a Harness names its model, and the catalogue providers that serve it.
+_MODEL_CONFIGS = (
+    ("bedrock_model_config", ("bedrock", "bedrock_converse")),
+    ("openai_model_config", ("openai",)),
+    ("gemini_model_config", ("google", "vertex")),
+    ("litellm_model_config", ()),
+)
+_MODEL_VARIABLE = re.compile(r"MODEL", re.I)
+
+
+def _check_models(r: dict[str, Any], radar: Radar) -> list[dict[str, Any]]:
+    """O3: a Harness model block, or a Runtime MODEL* variable, naming a retiring model.
+
+    A variable's value is shown only when it matched a catalogue model ID.
+    """
+    values = r.get("values") or {}
+    named: list[tuple[str, str, tuple[str, ...]]] = []
+    for config, providers in _MODEL_CONFIGS:
+        model_id = _block(values, "model", config).get("model_id")
+        if isinstance(model_id, str) and model_id:
+            named.append((f"model.{config}.model_id", model_id, providers))
+    env = values.get("environment_variables")
+    for name, value in sorted(env.items() if isinstance(env, dict) else []):
+        if _MODEL_VARIABLE.search(name) and isinstance(value, str) and value:
+            named.append((f"environment_variables.{name}", value, ("bedrock", "bedrock_converse")))
+    out = []
+    for attribute, model_id, providers in named:
+        info = radar.lookup(model_id, providers)
+        if info is None and providers:
+            info = radar.lookup(model_id)
+        if not info or info["days_left"] is None or info["days_left"] > WINDOW_DAYS:
+            continue
+        days = info["days_left"]
+        when = (
+            f"retired on {info['retires_on']}, so calls to it fail"
+            if days < 0
+            else f"retires on {info['retires_on']}, in {days} days"
+        )
+        swap = info["replacement"]
+        if swap:
+            change = swap["price_change_pct"]
+            price = f" ({change:+.0f}% list price)" if change is not None else ""
+            when += f". Newest same-family model on {info['provider']}: {swap['model_id']}{price}"
+        out.append(
+            _finding(
+                "O3",
+                r["address"],
+                f"{model_id} {when}.",
+                attribute=attribute,
+                value=model_id,
+                severity="high" if days <= 30 else "medium" if days <= 90 else "low",
+            )
+        )
+    return out
+
+
 def _check_gateway(r: dict[str, Any]) -> list[dict[str, Any]]:
     address, values = r["address"], r.get("values") or {}
     out = []
@@ -468,11 +534,13 @@ def review_agentcore(
     *,
     models: list[dict[str, Any]] | None = None,
     archive: list[tuple[str, dict[str, list[Any]]]] | None = None,
+    today: date | None = None,
 ) -> dict[str, Any]:
-    """`models` and `archive` default to the bundled LLM catalogue and price archive."""
+    """`models`, `archive` and `today` default to the bundled catalogue, archive and date."""
     plan = read_plan(plan_path)
     skip_list = _skip_list(skips)
     gb_hour = float(_hosting_prices()["agentcore_runtime_v1"]["gb_hour"])
+    radar = Radar(models, today)
 
     findings: list[dict[str, Any]] = []
     not_checked: list[str] = []
@@ -482,7 +550,7 @@ def review_agentcore(
         kind, values = str(r.get("type", "")), r.get("values") or {}
         r.setdefault("address", kind)
         if kind in (_RUNTIME, _HARNESS):
-            findings += _check_compute(r, gb_hour)
+            findings += _check_compute(r, gb_hour) + _check_models(r, radar)
         elif kind == _GATEWAY:
             findings += _check_gateway(r)
         elif kind in _IAM:
