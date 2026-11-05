@@ -54,6 +54,8 @@ Restart the client and the **37 tools** appear. Problems? `cloudprice-mcp doctor
 says what is wrong; [INSTALL.md](INSTALL.md) has per-client steps for Windows,
 macOS and Linux. Python 3.10+.
 
+What's new in each release: **[CHANGELOG.md](CHANGELOG.md)**.
+
 ## Things to ask
 
 > *"I run 6× t3.2xlarge on AWS. On-demand vs 1-year Savings Plan vs 3-year RI —
@@ -113,6 +115,60 @@ macOS and Linux. Python 3.10+.
 
 Every answer carries the catalogue date and an `honest_gaps` list of what the
 tool does not model, so the AI can tell you where the number stops being exact.
+
+## Use it on your own bill and deployment
+
+Nine tools read files on your machine: your cloud bill (a FOCUS export) and
+your AgentCore deployment (Terraform JSON). The file never leaves your machine;
+only the tool's summary goes back to your AI assistant. Hosted deployments of
+this server cannot call these tools at all.
+
+**1. Download your bill as a FOCUS CSV.** Every major cloud exports it:
+
+| Cloud | Where | Guide |
+|---|---|---|
+| AWS | Billing and Cost Management → **Data Exports** → Create → a **FOCUS** export, CSV → download from the S3 bucket | [AWS](https://docs.aws.amazon.com/cur/latest/userguide/dataexports-create-standard.html) |
+| Azure | Cost Management → **Exports** → Create → **Cost and usage details (FOCUS)**, CSV → download from the storage account. Big exports arrive in parts; analyse one part or join them first | [Azure](https://learn.microsoft.com/en-us/azure/cost-management-billing/costs/tutorial-improved-exports) |
+| GCP | Billing → **FOCUS export to BigQuery** → query the month you want → save the result as CSV | [GCP](https://docs.cloud.google.com/billing/docs/how-to/export-data-bigquery-focus-setup) |
+| OCI | Billing → **Cost and Usage Reports** → FOCUS reports → Download | [OCI](https://docs.oracle.com/en-us/iaas/Content/Billing/Tasks/download-cost-usage-report.htm) |
+
+`.csv` and `.csv.gz` up to 500 MB are read.
+
+**2. Ask, with the file path in the question:**
+
+> *"Here's our bill: ~/Downloads/focus-2026-10.csv. Where is the money going,
+> what would it cost on the other clouds, and what are we spending on AI?"*
+
+| Question | Tool |
+|---|---|
+| Where does the money go? | `analyze_bill` |
+| Are we under-committed? What are idle commitments costing? | `find_commitment_gaps` |
+| What spiked, and since when? | `detect_bill_anomalies` |
+| How much spend is missing our `team` tag? | `analyze_cost_allocation` |
+| What will this month cost? Cost per customer? | `forecast_spend`, `calculate_unit_cost` |
+| What would our compute cost on the other clouds? | `reprice_bill` |
+| What do our AI models cost, and are we paying list price? | `analyze_ai_spend` |
+
+**3. Review an AgentCore deployment** (Terraform):
+
+```bash
+terraform plan -out=tfplan
+terraform show -json tfplan > plan.json
+```
+
+> *"Review our AgentCore deployment in ~/plan.json. Our bill is
+> ~/Downloads/focus.csv and the agent is tagged agent=support."*
+
+You get findings ranked by severity: public network, unauthenticated
+gateways, model permissions, secrets in environment variables, idle-session
+cost, missing alarms and tags, and with the bill, what the agent costs and
+what caching would save. Each one names the resource, the Terraform fix and the
+AWS page behind the rule. To accept a finding on purpose, say so: *"skip S1 on
+aws_bedrockagentcore_agent_runtime.demo, it is a public demo"*. It is then
+listed as skipped, with your reason.
+
+`plan.json` holds every value Terraform knows, secrets included. The review
+never repeats them, but keep the file out of git and delete it when you are done.
 
 ## Tools
 
