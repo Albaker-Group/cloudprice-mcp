@@ -582,6 +582,27 @@ def _handle_compare_llm_vs_selfhost(catalog, args):
     return _ok(result)
 
 
+def _handle_compare_agent_platforms(catalog, args):
+    from .finops.agent_platforms import compare_agent_platforms
+
+    try:
+        result = compare_agent_platforms(
+            runs_per_month=int(args.get("runs_per_month", 10_000)),
+            run_seconds=float(args.get("run_seconds", 30)),
+            active_cpu_share=float(args.get("active_cpu_share", 0.2)),
+            vcpu=float(args.get("vcpu", 1)),
+            memory_gb=float(args.get("memory_gb", 2)),
+            tool_calls_per_run=int(args.get("tool_calls_per_run", 5)),
+            memory_retrievals_per_run=int(args.get("memory_retrievals_per_run", 0)),
+            model=args.get("model"),
+            input_tokens_per_run=args.get("input_tokens_per_run"),
+            output_tokens_per_run=args.get("output_tokens_per_run"),
+        )
+    except (TypeError, ValueError) as e:
+        return _err(f"compare_agent_platforms: {e}")
+    return _ok(result)
+
+
 def _handle_estimate_agent_cost(catalog, args):
     from .finops.agent_cost import estimate_agent_cost
 
@@ -766,6 +787,7 @@ _TOOL_HANDLERS = {
     "llm_price_changes": _handle_llm_price_changes,
     "model_retirements": _handle_model_retirements,
     "estimate_agent_cost": _handle_estimate_agent_cost,
+    "compare_agent_platforms": _handle_compare_agent_platforms,
     "compare_llm_vs_selfhost": _handle_compare_llm_vs_selfhost,
     "analyze_bill": _handle_analyze_bill,
     "find_commitment_gaps": _handle_find_commitment_gaps,
