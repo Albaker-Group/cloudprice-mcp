@@ -4,6 +4,17 @@ What changed for you in each release. Upgrade with `uvx cloudprice-mcp@latest`
 (or `pip install -U cloudprice-mcp`) and restart your MCP client. Releases older
 than 0.20.0 are listed on [GitHub Releases](https://github.com/Albaker-Group/cloudprice-mcp/releases).
 
+## 0.28.0 (2026-11-05)
+
+- **New: `model_retirements`**: which LLMs providers are retiring in the next
+  months (Bedrock, Azure OpenAI and AI Foundry, Vertex AI, OpenAI, Anthropic and
+  more), and for each one the newest model of the same family on the same
+  provider that is not retiring, with its list price change. Dates come from
+  LiteLLM's feed, refreshed weekly; check the provider's own page before planning.
+- **`analyze_ai_spend`** now flags models on your bill that are retiring.
+- **`review_agentcore`** has a new rule, O3: an agent or harness that calls a
+  retiring model.
+
 ## 0.27.0 (2026-11-04)
 
 - **New: `review_agentcore`**, a Well-Architected review of an Amazon Bedrock
