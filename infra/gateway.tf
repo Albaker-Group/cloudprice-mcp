@@ -12,8 +12,10 @@
 # Gateway sees the Lambda as an opaque ARN, so it has to be told which tools
 # live behind it. The schema is generated from the MCP tool definitions by
 #   python gateway_lambda/export_tool_schema.py
-# and referenced from S3 rather than inlined - 25 tools is ~80 KB, which as
-# nested HCL blocks would be thousands of unreadable lines.
+# and referenced from S3 rather than inlined - 30 tools is ~85 KB, which as
+# nested HCL blocks would be thousands of unreadable lines. CI fails when the
+# file is out of date (tests/test_gateway_schema.py), but the live gateway
+# only changes when this directory is applied.
 
 resource "aws_s3_bucket" "artifacts" {
   # Reviewed 2026-11-04; reasons recorded so the decision is visible in review.

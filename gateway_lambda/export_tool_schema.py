@@ -4,7 +4,12 @@ Run:  python gateway_lambda/export_tool_schema.py
 
 Gateway sees a Lambda target as an opaque ARN, so it needs to be told which
 tools live behind it. Those definitions already exist: server.list_tools()
-returns the 25 MCP Tool objects with name, description and inputSchema.
+returns the MCP Tool objects with name, description and inputSchema. The
+local-only tools (they read files on the host) are left out.
+
+tests/test_gateway_schema.py fails when the committed file differs from what
+this script would write, so a new or changed public tool cannot silently miss
+the hosted chat.
 
 Gateway expects a BARE JSON ARRAY for lambda-function-arn targets (the
 {"tools": [...]} wrapper is the mcp-server target format).
@@ -89,13 +94,14 @@ def sanitize(node):
     return out
 
 
-def main() -> int:
+def build_schema() -> list[dict]:
+    """The gateway schema for every public tool, in server order."""
     # Local-only tools read files on the host; the gateway must never offer them.
     from cloudprice_mcp.dispatch import LOCAL_ONLY_TOOLS
 
     tools = [t for t in asyncio.run(server.list_tools()) if t.name not in LOCAL_ONLY_TOOLS]
 
-    schema = [
+    return [
         {
             "name": t.name,
             "description": t.description,
@@ -103,6 +109,10 @@ def main() -> int:
         }
         for t in tools
     ]
+
+
+def main() -> int:
+    schema = build_schema()
 
     OUT.write_text(json.dumps(schema, indent=2), encoding="utf-8")
 
