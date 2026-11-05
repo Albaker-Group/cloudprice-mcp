@@ -34,7 +34,8 @@ locals {
 # ── Policy 1: the allow-list ──────────────────────────────────────────────
 # Every tool here is a pure read-only function over bundled JSON: no writes,
 # no network, no credentials. They are safe to permit as a set. What matters
-# is that this is a SET, not a wildcard - tool 26 will not be on it.
+# is that this is a SET, not a wildcard - a tool missing from the schema is
+# not on it.
 
 resource "aws_bedrockagentcore_policy" "permit_readonly_tools" {
   name             = "permit_readonly_pricing_tools"

@@ -240,7 +240,7 @@
   },
   {
     "name": "compare_object_storage",
-    "description": "Compare object-storage pricing across AWS S3, Azure Blob, GCP Cloud Storage, and OCI Object Storage. Each request specifies capacity_gb and access tier (hot/cool/archive); the tool picks the cheapest SKU per cloud at that tier. OCI offers 20 GB Always Free in the 'hot' tier \u2014 surfaced when capacity fits. NOTE: egress, request, and retrieval costs are not modeled (often the actual hidden killer). v0.3 preview \u2014 placeholder pricing, verify before relying on numbers.",
+    "description": "Compare object-storage pricing across AWS S3, Azure Blob, GCP Cloud Storage, and OCI Object Storage. Each request specifies capacity_gb and access tier (hot/cool/archive); the tool picks the cheapest SKU per cloud at that tier. OCI offers 20 GB Always Free in the 'hot' tier \u2014 surfaced when capacity fits. NOTE: egress, request, and retrieval costs are not modeled (often the actual hidden killer). Prices are hand-entered list prices (as of 2026-05-04), not part of the weekly refresh \u2014 verify against the provider's page before deciding.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -284,7 +284,7 @@
   },
   {
     "name": "compare_postgres_database",
-    "description": "Compare managed PostgreSQL pricing across AWS RDS, Azure Database for PostgreSQL, GCP Cloud SQL, and OCI Database with PostgreSQL. Each request specifies vCPUs, memory, and storage_gb; the tool picks the cheapest matching SKU per cloud and totals compute + storage. v0.3 preview \u2014 pricing is bundled placeholder data; verify against current cloud pricing pages before relying on numbers.",
+    "description": "Compare managed PostgreSQL pricing across AWS RDS, Azure Database for PostgreSQL, GCP Cloud SQL, and OCI Database with PostgreSQL. Each request specifies vCPUs, memory, and storage_gb; the tool picks the cheapest matching SKU per cloud and totals compute + storage. Prices are hand-entered estimates (as of 2026-05-04), not part of the weekly refresh \u2014 verify against the provider's page before deciding.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -1503,6 +1503,262 @@
         "monthly_output_tokens": {
           "type": "integer",
           "description": "Monthly output token volume. Required to get monthly_total_usd in result. (min 0)"
+        }
+      }
+    }
+  },
+  {
+    "name": "compare_llm_vs_selfhost",
+    "description": "Pay per token or rent GPUs and serve the model yourself? Prices a monthly token volume on an LLM API, then the GPU servers needed to serve the same volume on AWS, Azure, GCP and OCI, and the break-even volume. Needs the measured generation throughput of one server (output tokens/second, e.g. from a vLLM benchmark): it decides the answer and is never guessed. Use for: 'should we self-host Llama 3.3 70B instead of paying Together', 'at what volume do H100s beat the DeepSeek API', 'cheapest cloud to serve our open model'. Self-host cost is GPU rental only; see honest_gaps.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "API model ID to price, as in the LLM catalogue, e.g. 'deepseek/deepseek-chat', 'together_ai/meta-llama/Llama-3.3-70B-Instruct-Turbo'."
+        },
+        "api_provider": {
+          "type": "string",
+          "description": "Host for the API price. Default: first-party."
+        },
+        "monthly_input_tokens": {
+          "type": "integer",
+          "description": "(min 0)"
+        },
+        "monthly_output_tokens": {
+          "type": "integer",
+          "description": "(min 0)"
+        },
+        "gpu_type": {
+          "type": "string",
+          "description": "GPU to self-host on: T4, L4, A10, A10G, L40S, V100, A100, H100."
+        },
+        "gpu_count": {
+          "type": "integer",
+          "description": "GPUs per server. (default 1; min 1)"
+        },
+        "output_tokens_per_second": {
+          "type": "number",
+          "description": "Measured aggregate generation throughput of ONE server of this size for this model, across concurrent requests."
+        },
+        "utilization": {
+          "type": "number",
+          "description": "Share of each hour the server is busy. Real traffic is bursty; 0.4-0.7 is typical. (default 0.6; max 1)"
+        },
+        "prefill_speedup": {
+          "type": "number",
+          "description": "How much faster input (prefill) is processed than output is generated. (default 10; min 1)"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "(one of: aws, azure, gcp, oci)"
+          }
+        }
+      },
+      "required": [
+        "model",
+        "gpu_type",
+        "output_tokens_per_second"
+      ]
+    }
+  },
+  {
+    "name": "compare_agent_platforms",
+    "description": "Where to host an AI agent, and what a month of it costs: the same agent priced on Amazon Bedrock AgentCore Runtime, Azure AI Foundry Agent Service (prompt agents and hosted agents), Google Vertex AI Agent Engine, and plain serverless (AWS Lambda, Azure Container Apps). Each platform is split into hosting, tools, memory and model tokens, with the model priced on that cloud's own model service (or marked unavailable), and the busy share of a run below which AgentCore costs less than each alternative. Use for: 'AgentCore vs Foundry vs Vertex for our agent', 'should this agent run on Lambda or AgentCore', 'what will hosting 50,000 agent runs a month cost'. For token counts per run, use estimate_agent_cost first.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "runs_per_month": {
+          "type": "integer",
+          "description": "(default 10000; min 1)"
+        },
+        "run_seconds": {
+          "type": "number",
+          "description": "Wall-clock seconds per run, waiting included. (default 30)"
+        },
+        "active_cpu_share": {
+          "type": "number",
+          "description": "Share of the run the agent is busy, not waiting on the model or tools (0-1]. (default 0.2)"
+        },
+        "vcpu": {
+          "type": "number",
+          "description": "(default 1)"
+        },
+        "memory_gb": {
+          "type": "number",
+          "description": "(default 2)"
+        },
+        "tool_calls_per_run": {
+          "type": "integer",
+          "description": "(default 5; min 0)"
+        },
+        "memory_retrievals_per_run": {
+          "type": "integer",
+          "description": "Long-term memory lookups per run (AgentCore Memory, Agent Engine Memory Bank). (default 0; min 0)"
+        },
+        "model": {
+          "type": "string",
+          "description": "Model to price on each cloud, e.g. 'claude-sonnet-5-5' or 'gpt-5'."
+        },
+        "input_tokens_per_run": {
+          "type": "integer",
+          "description": "Default: estimate_agent_cost's default 8-step run (97,200). (min 0)"
+        },
+        "output_tokens_per_run": {
+          "type": "integer",
+          "description": "Default: estimate_agent_cost's default 8-step run (3,200). (min 0)"
+        }
+      }
+    }
+  },
+  {
+    "name": "estimate_agent_cost",
+    "description": "Estimate what one run of an AI agent costs, and a month of runs. Models what per-call math misses: each agent step re-sends the whole conversation (system prompt, tool definitions, earlier outputs and tool results), so input tokens grow every step. Returns cost per run and per month, the per-step token breakdown, how much of the input is context growth, what prompt caching saves, and the same run priced on other current models (Claude, GPT, Gemini, DeepSeek by default). Use for: 'what will my agent cost at 50k runs a month', 'is Sonnet or Haiku cheaper for this agent', 'how much does caching save', 'budget for an AgentCore / LangGraph / Agents SDK agent'. Defaults describe a typical 8-step tool-using agent; pass measured token counts for a real figure.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "Model ID as in the LLM catalogue, e.g. 'claude-sonnet-5-5', 'gpt-5-mini', 'gemini/gemini-2.5-flash'. Find IDs with lookup_extended_model_pricing."
+        },
+        "provider": {
+          "type": "string",
+          "description": "Host to price on, e.g. 'anthropic', 'bedrock', 'vertex'. Default: the model's first-party provider."
+        },
+        "steps": {
+          "type": "integer",
+          "description": "LLM calls per run, including the final answer. (default 8; min 1)"
+        },
+        "system_prompt_tokens": {
+          "type": "integer",
+          "description": "Tokens in the system prompt. (default 2000; min 0)"
+        },
+        "tool_definition_tokens": {
+          "type": "integer",
+          "description": "Tokens in the tool/function definitions sent with every call. (default 3000; min 0)"
+        },
+        "user_input_tokens": {
+          "type": "integer",
+          "description": "Tokens in the user's request. (default 500; min 0)"
+        },
+        "output_tokens_per_step": {
+          "type": "integer",
+          "description": "Average model output tokens per step. (default 400; min 0)"
+        },
+        "tool_result_tokens_per_step": {
+          "type": "integer",
+          "description": "Average tokens a tool returns per step. (default 1500; min 0)"
+        },
+        "runs_per_month": {
+          "type": "integer",
+          "description": "Agent runs per month. (default 10000; min 0)"
+        },
+        "compare_models": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Model IDs to price the same run on. Default: popular current Claude, GPT, Gemini and DeepSeek models."
+        },
+        "hosting": {
+          "type": "object",
+          "description": "Add hosting to the token cost: prices the run on AgentCore Runtime (+ Gateway, Memory) and on Lambda, and returns full per-run and monthly totals. AgentCore bills CPU only while active; Lambda bills the whole run.",
+          "properties": {
+            "run_seconds": {
+              "type": "number",
+              "description": "Wall-clock seconds per run, including waiting on the model."
+            },
+            "vcpu": {
+              "type": "number",
+              "description": "(default 1)"
+            },
+            "memory_gb": {
+              "type": "number",
+              "description": "(default 2)"
+            },
+            "active_cpu_share": {
+              "type": "number",
+              "description": "Share of the run the CPU is busy; the rest is I/O wait. (default 0.2; max 1)"
+            },
+            "tool_calls_per_run": {
+              "type": "integer",
+              "description": "Gateway tool invocations per run. Default: steps - 1. (min 0)"
+            },
+            "memory_retrievals_per_run": {
+              "type": "integer",
+              "description": "(default 0; min 0)"
+            },
+            "memory_events_per_run": {
+              "type": "integer",
+              "description": "(default 0; min 0)"
+            }
+          },
+          "required": [
+            "run_seconds"
+          ]
+        }
+      },
+      "required": [
+        "model"
+      ]
+    }
+  },
+  {
+    "name": "model_retirements",
+    "description": "Which LLMs providers are retiring: models whose retirement date (from LiteLLM's feed, refreshed weekly) falls within the window, across Bedrock, Azure OpenAI / AI Foundry, Vertex AI, OpenAI, Anthropic and others, plus those retired in the last 90 days. For each: the date, days left, and the newest same-family model on the same provider that is not retiring, with its list price change. Use for: 'which of our models are being retired', 'is Claude 3.5 Sonnet on Bedrock going away', 'what replaces gpt-4o on Azure'. analyze_ai_spend and review_agentcore flag retiring models on your bill and in your deployment automatically.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "within_days": {
+          "type": "integer",
+          "description": "Look this many days ahead. (default 180; min 1; max 1095)"
+        },
+        "provider": {
+          "type": "string",
+          "description": "Catalogue provider, e.g. 'bedrock', 'azure_openai', 'vertex', 'openai'."
+        },
+        "model": {
+          "type": "string",
+          "description": "A model name to check, e.g. 'claude 3.5 sonnet' or 'gpt-4o'."
+        },
+        "top_n": {
+          "type": "integer",
+          "description": "How many models to return, soonest first. (default 50; min 1; max 200)"
+        }
+      }
+    }
+  },
+  {
+    "name": "llm_price_changes",
+    "description": "What changed in LLM token pricing between two weeks: models that were repriced (with old and new $/1M input and output, and % move), models added, and models removed, across ~3,600 model/provider rows from LiteLLM (direct provider prices) and OpenRouter (routed prices). Backed by a weekly archive kept since 2026-05-23. Use for: 'what got cheaper this week', 'did Anthropic or Bedrock change prices since October', 'new models on Groq this month', 'has Mistral Large's price moved'. Defaults to the latest week vs the week before.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "since": {
+          "type": "string",
+          "description": "ISO date. Compare from the latest archived week on or before this date. Default: the week before 'until'."
+        },
+        "until": {
+          "type": "string",
+          "description": "ISO date. Compare to the latest archived week on or before this date. Default: the latest week."
+        },
+        "source": {
+          "type": "string",
+          "description": "Restrict to one upstream. Default: both. (one of: litellm, openrouter)"
+        },
+        "provider": {
+          "type": "string",
+          "description": "Case-insensitive substring of the provider, e.g. 'bedrock', 'anthropic', 'groq'."
+        },
+        "query": {
+          "type": "string",
+          "description": "Case-insensitive substring of the model ID, e.g. 'claude', 'llama-3.3'."
+        },
+        "limit": {
+          "type": "integer",
+          "description": "(default 25; min 1)"
         }
       }
     }
