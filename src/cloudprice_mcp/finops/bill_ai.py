@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -222,13 +223,14 @@ def analyze_ai_spend(
     *,
     models: list[dict[str, Any]] | None = None,
     archive: list[tuple[str, dict[str, list[Any]]]] | None = None,
+    today: date | None = None,
 ) -> dict[str, Any]:
     """`models` and `archive` default to the bundled LLM catalogue and price archive."""
     if not 1 <= top_n <= 50:
         raise BillError("top_n must be between 1 and 50")
     rows, warnings = _load(file_path)
     return ai_spend_from_rows(
-        rows, warnings, Path(file_path).name, top_n, models=models, archive=archive
+        rows, warnings, Path(file_path).name, top_n, models=models, archive=archive, today=today
     )
 
 
@@ -240,6 +242,7 @@ def ai_spend_from_rows(
     *,
     models: list[dict[str, Any]] | None = None,
     archive: list[tuple[str, dict[str, list[Any]]]] | None = None,
+    today: date | None = None,
 ) -> dict[str, Any]:
     """analyze_ai_spend on rows already read, e.g. narrowed to one agent's tag."""
     if models is None:
@@ -296,6 +299,7 @@ def ai_spend_from_rows(
     tokens = {k: sum(line["tokens"][k] for line in result_lines) for k in TOKEN_TYPES}
     period = {"from": min(days - {""}, default=None), "to": max(days - {""}, default=None)}
     changes = _price_changes(result_lines, archive, period["from"], warnings)
+    retiring = _retirements(result_lines, models, today)
 
     result = {
         "kind": "ai_spend",
@@ -310,6 +314,7 @@ def ai_spend_from_rows(
         },
         "models": result_lines[:top_n],
         "price_changes": changes,
+        "retiring_models": retiring,
         "other_ai_spend": [
             {"service": s, "cost": round(c, 2)}
             for s, c in sorted(other.items(), key=lambda kv: -kv[1])
@@ -410,6 +415,26 @@ def _price_line(
     return out
 
 
+def _retirements(
+    lines: list[dict[str, Any]], models: list[dict[str, Any]], today: date | None
+) -> list[dict[str, Any]]:
+    """Each model line's retirement, if it is within the radar window, soonest first."""
+    from .model_retirements import WINDOW_DAYS, Radar  # it imports this module
+
+    radar = Radar(models, today)
+    out = []
+    for line in lines:
+        info = radar.lookup(
+            line["catalogue_id"] or line["model"], _PROVIDERS_OF.get(line["cloud"], ())
+        )
+        if info and info["days_left"] is not None and info["days_left"] <= WINDOW_DAYS:
+            line["retirement"] = info
+            out.append({"model": line["model"], "cloud": line["cloud"], **info})
+        else:
+            line["retirement"] = None
+    return sorted(out, key=lambda e: e["retires_on"])
+
+
 def _price_changes(
     lines: list[dict[str, Any]],
     archive: list[tuple[str, dict[str, list[Any]]]] | None,
@@ -428,6 +453,8 @@ def _price_changes(
         archive = [
             (d, llm_history.load(d)["sources"].get("litellm", {})) for d in (earlier[-1], dates[-1])
         ]
+    if len(archive) < 2:
+        return []
     (then_date, then), (now_date, now) = archive[0], archive[-1]
     if then_date == now_date:
         return []
@@ -500,4 +527,11 @@ def _headline(r: dict[str, Any]) -> str:
         line += (
             f" {len(r['price_changes'])} of your models changed list price since the bill began."
         )
+    if r["retiring_models"]:
+        first = r["retiring_models"][0]
+        verb = "retired" if first["status"] == "retired" else "retires"
+        line += f" {first['model']} {verb} on {first['retires_on']}"
+        if len(r["retiring_models"]) > 1:
+            line += f" ({len(r['retiring_models'])} of your models retire soon)"
+        line += "."
     return line

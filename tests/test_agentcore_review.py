@@ -285,3 +285,48 @@ def test_review_agentcore_is_local_only(tmp_path):
     assert dispatch.call("review_agentcore", args) == {"error": "Unknown tool: review_agentcore"}
     assert dispatch.call("review_agentcore", args, allow_local=True)["kind"] == "agentcore_review"
     assert "error" in dispatch.call("review_agentcore", {}, allow_local=True)
+
+
+def test_o3_flags_retiring_models_in_config(tmp_path):
+    from tests.test_model_retirements import CATALOGUE, TODAY
+
+    harness = res(
+        "aws_bedrockagentcore_harness.writer",
+        HARNESS,
+        max_iterations=10,
+        max_tokens=60000,
+        timeout_seconds=300,
+        model=[
+            {"bedrock_model_config": [{"model_id": "us.anthropic.claude-3-5-sonnet-20240620-v1:0"}]}
+        ],
+        tags_all={"app": "demo"},
+    )
+    p = plan(
+        harness,
+        runtime={
+            "environment_variables": {
+                "BEDROCK_MODEL_ID": "anthropic.claude-3-7-sonnet-20250219-v1:0",
+                "FALLBACK_MODEL": "anthropic.claude-sonnet-5-5",  # no date: not flagged
+            }
+        },
+    )
+    r = review_agentcore(save(tmp_path, p), models=CATALOGUE, today=TODAY)
+    o3 = [(f["resource"], f["severity"], f["value"]) for f in r["findings"] if f["rule"] == "O3"]
+    assert o3 == [
+        (
+            "aws_bedrockagentcore_harness.writer",
+            "high",
+            "us.anthropic.claude-3-5-sonnet-20240620-v1:0",
+        ),  # 27 days
+        (
+            "aws_bedrockagentcore_agent_runtime.chat",
+            "medium",
+            "anthropic.claude-3-7-sonnet-20250219-v1:0",
+        ),  # 72 days
+    ]
+    harness_o3 = next(f for f in r["findings"] if f["rule"] == "O3")
+    assert harness_o3["detail"] == (
+        "us.anthropic.claude-3-5-sonnet-20240620-v1:0 retires on 2026-12-01, in 27 days. "
+        "Newest same-family model on bedrock: anthropic.claude-sonnet-5-5 (-33% list price)."
+    )
+    assert harness_o3["pillar"] == "Reliability"
