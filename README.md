@@ -50,7 +50,7 @@ pip install cloudprice-mcp
 cloudprice-mcp setup
 ```
 
-Restart the client and the **38 tools** appear. Problems? `cloudprice-mcp doctor`
+Restart the client and the **39 tools** appear. Problems? `cloudprice-mcp doctor`
 says what is wrong; [INSTALL.md](INSTALL.md) has per-client steps for Windows,
 macOS and Linux. Python 3.10+.
 
@@ -83,6 +83,10 @@ What's new in each release: **[CHANGELOG.md](CHANGELOG.md)**.
 > definitions. What does 50,000 runs a month cost on Sonnet vs Haiku, and how
 > much does prompt caching save — and hosted on AgentCore or Lambda?"* →
 > `estimate_agent_cost` (tokens + AgentCore Runtime/Gateway/Memory vs Lambda)
+
+> *"We'll run this agent 50,000 times a month, 30 seconds a run, on Claude
+> Sonnet. AgentCore, Azure Foundry or Vertex Agent Engine, or just Lambda?"* →
+> `compare_agent_platforms` (hosting, tools, memory and tokens on each)
 
 > *"What changed in LLM pricing this week — anything cheaper on Bedrock or
 > Groq?"* → `llm_price_changes` (weekly archive of ~3,600 model/provider prices)
@@ -176,7 +180,7 @@ never repeats them, but keep the file out of git and delete it when you are done
 
 ## Tools
 
-**38 tools**, grouped by job. Full descriptions and arguments:
+**39 tools**, grouped by job. Full descriptions and arguments:
 **[docs/TOOLS.md](docs/TOOLS.md)** (generated from the server, so it is always
 current).
 
@@ -187,7 +191,7 @@ current).
 | FinOps decisions | `assess_migration`, `optimize_commitment`, `compare_total_cost_of_ownership`, `find_egress_arbitrage`, `generate_decision_report` |
 | Spot, GPU, carbon | `compare_spot`, `compare_gpu_workload`, `compare_carbon_footprint` |
 | Price history | `get_price_history`, `list_tracked_skus`, `detect_price_anomalies`, `watch_workload` |
-| AI / LLM costs | `estimate_agent_cost`, `compare_llm_vs_selfhost`, `compare_token_pricing`, `lookup_extended_model_pricing`, `llm_price_changes`, `model_retirements` |
+| AI / LLM costs | `estimate_agent_cost`, `compare_agent_platforms`, `compare_llm_vs_selfhost`, `compare_token_pricing`, `lookup_extended_model_pricing`, `llm_price_changes`, `model_retirements` |
 | Your actual bill (local only) | `analyze_bill`, `find_commitment_gaps`, `detect_bill_anomalies`, `analyze_cost_allocation`, `forecast_spend`, `calculate_unit_cost`, `reprice_bill`, `analyze_ai_spend` |
 | Review a deployment (local only) | `review_agentcore` |
 | Export | `export_focus` |
@@ -206,13 +210,13 @@ list prices and the weekly price archive.
 | Anomaly management | `detect_bill_anomalies` (your spend), `detect_price_anomalies`, `watch_workload` (list prices) |
 | Rate optimization | `find_commitment_gaps` (your spend), `optimize_commitment`, `compare_spot` |
 | Workload optimization | `compare_compute_inventory`, `compare_gpu_workload`, `compare_llm_vs_selfhost` |
-| Planning & estimating | `compare_workload`, `compare_total_cost_of_ownership`, `assess_migration`, `estimate_agent_cost` |
+| Planning & estimating | `compare_workload`, `compare_total_cost_of_ownership`, `assess_migration`, `estimate_agent_cost`, `compare_agent_platforms` |
 | Architecting for cloud | `reprice_bill` (your spend), `review_agentcore` (your config), `find_egress_arbitrage`, `assess_migration` |
 | Benchmarking | `reprice_bill` (your spend), `compare_clouds`, `compare_token_pricing`, `llm_price_changes` |
 | Cloud sustainability | `compare_carbon_footprint` |
 | Forecasting | `forecast_spend` |
 | Unit economics | `calculate_unit_cost` |
-| FinOps for AI | `analyze_ai_spend` (your spend), `review_agentcore` (your agent), `model_retirements`, `estimate_agent_cost`, `compare_token_pricing`, `llm_price_changes` |
+| FinOps for AI | `analyze_ai_spend` (your spend), `review_agentcore` (your agent), `model_retirements`, `estimate_agent_cost`, `compare_agent_platforms`, `compare_token_pricing`, `llm_price_changes` |
 
 ### Example: `compare_workload` input
 

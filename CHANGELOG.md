@@ -4,6 +4,15 @@ What changed for you in each release. Upgrade with `uvx cloudprice-mcp@latest`
 (or `pip install -U cloudprice-mcp`) and restart your MCP client. Releases older
 than 0.20.0 are listed on [GitHub Releases](https://github.com/Albaker-Group/cloudprice-mcp/releases).
 
+## 0.29.0 (2026-11-05)
+
+- **New: `compare_agent_platforms`**: where to host an AI agent and what a
+  month of it costs, on AgentCore Runtime, Azure AI Foundry Agent Service
+  (prompt and hosted agents), Vertex AI Agent Engine, Lambda and Azure
+  Container Apps. Each is split into hosting, tools, memory and model tokens,
+  with the model priced on each cloud's own model service. It also says how
+  busy the agent can be before AgentCore stops being the cheaper host.
+
 ## 0.28.0 (2026-11-05)
 
 - **New: `model_retirements`**: which LLMs providers are retiring in the next

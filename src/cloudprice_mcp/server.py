@@ -1245,6 +1245,62 @@ async def list_tools() -> list[Tool]:
             },
         ),
         Tool(
+            name="compare_agent_platforms",
+            description=(
+                "Where to host an AI agent, and what a month of it costs: the same "
+                "agent priced on Amazon Bedrock AgentCore Runtime, Azure AI Foundry "
+                "Agent Service (prompt agents and hosted agents), Google Vertex AI "
+                "Agent Engine, and plain serverless (AWS Lambda, Azure Container Apps). "
+                "Each platform is split into hosting, tools, memory and model tokens, "
+                "with the model priced on that cloud's own model service (or marked "
+                "unavailable), and the busy share of a run below which AgentCore costs "
+                "less than each alternative. Use for: 'AgentCore vs Foundry vs Vertex "
+                "for our agent', 'should this agent run on Lambda or AgentCore', 'what "
+                "will hosting 50,000 agent runs a month cost'. For token counts per run, "
+                "use estimate_agent_cost first."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "runs_per_month": {"type": "integer", "minimum": 1, "default": 10000},
+                    "run_seconds": {
+                        "type": "number",
+                        "default": 30,
+                        "description": "Wall-clock seconds per run, waiting included.",
+                    },
+                    "active_cpu_share": {
+                        "type": "number",
+                        "default": 0.2,
+                        "description": "Share of the run the agent is busy, not waiting on the model or tools (0-1].",
+                    },
+                    "vcpu": {"type": "number", "default": 1},
+                    "memory_gb": {"type": "number", "default": 2},
+                    "tool_calls_per_run": {"type": "integer", "minimum": 0, "default": 5},
+                    "memory_retrievals_per_run": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "default": 0,
+                        "description": "Long-term memory lookups per run (AgentCore Memory, Agent Engine Memory Bank).",
+                    },
+                    "model": {
+                        "type": "string",
+                        "description": "Model to price on each cloud, e.g. 'claude-sonnet-5-5' or 'gpt-5'.",
+                    },
+                    "input_tokens_per_run": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "description": "Default: estimate_agent_cost's default 8-step run (97,200).",
+                    },
+                    "output_tokens_per_run": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "description": "Default: estimate_agent_cost's default 8-step run (3,200).",
+                    },
+                },
+                "additionalProperties": False,
+            },
+        ),
+        Tool(
             name="estimate_agent_cost",
             description=(
                 "Estimate what one run of an AI agent costs, and a month of runs. "
