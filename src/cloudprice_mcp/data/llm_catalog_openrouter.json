@@ -1,12 +1,12 @@
 {
-  "as_of": "2026-11-04",
+  "as_of": "2026-11-08",
   "source": "openrouter",
   "source_url": "https://openrouter.ai/api/v1/models",
   "license": "OpenRouter public catalog (no redistribution restriction noted, but cite the source).",
   "currency": "USD",
   "schema_version": 1,
   "notes": "Auto-ingested from OpenRouter's public /api/v1/models. Prices reflect OpenRouter's routed rate (includes their margin), NOT the underlying provider's direct retail price. For direct provider pricing on the same model use the litellm-sourced rows in llm_catalog_extended.json.",
-  "model_count": 429,
+  "model_count": 437,
   "models": [
     {
       "openrouter_id": "aion-labs/aion-2.0",
@@ -143,6 +143,7 @@
       "mode": "chat",
       "input_per_1m_usd": 2.5,
       "output_per_1m_usd": 5.0,
+      "cache_read_per_1m_usd": 2.5,
       "context_window_tokens": 32768,
       "max_output_tokens": 4096
     },
@@ -687,10 +688,10 @@
       "provider_underlying": "deepseek",
       "name": "DeepSeek: DeepSeek V3",
       "mode": "chat",
-      "input_per_1m_usd": 0.2574,
-      "output_per_1m_usd": 1.0287,
+      "input_per_1m_usd": 0.32,
+      "output_per_1m_usd": 0.89,
       "context_window_tokens": 163840,
-      "max_output_tokens": 16000
+      "max_output_tokens": 16384
     },
     {
       "openrouter_id": "deepseek/deepseek-chat-v3-0324",
@@ -780,11 +781,23 @@
       "provider_underlying": "deepseek",
       "name": "DeepSeek: DeepSeek V4 Flash 0731",
       "mode": "chat",
-      "input_per_1m_usd": 0.059,
+      "input_per_1m_usd": 0.0434,
       "output_per_1m_usd": 0.3,
       "cache_read_per_1m_usd": 0.035,
       "context_window_tokens": 1048576,
       "max_output_tokens": 943718
+    },
+    {
+      "openrouter_id": "deepseek/deepseek-v4-flash-0731:batch",
+      "provider": "openrouter",
+      "provider_underlying": "deepseek",
+      "name": "DeepSeek: DeepSeek V4 Flash 0731 (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 0.048,
+      "output_per_1m_usd": 0.144,
+      "cache_read_per_1m_usd": 0.012,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 384000
     },
     {
       "openrouter_id": "deepseek/deepseek-v4-flash-vision-exp",
@@ -792,11 +805,11 @@
       "provider_underlying": "deepseek",
       "name": "DeepSeek: DeepSeek V4 Flash Vision Exp",
       "mode": "chat",
-      "input_per_1m_usd": 0.2156,
-      "output_per_1m_usd": 0.6468,
-      "cache_read_per_1m_usd": 0.0069,
+      "input_per_1m_usd": 0.44,
+      "output_per_1m_usd": 1.32,
+      "cache_read_per_1m_usd": 0.014,
       "context_window_tokens": 1048576,
-      "max_output_tokens": 262144
+      "max_output_tokens": 943717
     },
     {
       "openrouter_id": "deepseek/deepseek-v4-pro",
@@ -804,11 +817,11 @@
       "provider_underlying": "deepseek",
       "name": "DeepSeek: DeepSeek V4 Pro 0423",
       "mode": "chat",
-      "input_per_1m_usd": 1.6,
-      "output_per_1m_usd": 3.2,
-      "cache_read_per_1m_usd": 0.135,
+      "input_per_1m_usd": 0.3428,
+      "output_per_1m_usd": 0.6856,
+      "cache_read_per_1m_usd": 0.0286,
       "context_window_tokens": 1048576,
-      "max_output_tokens": 393216
+      "max_output_tokens": 384000
     },
     {
       "openrouter_id": "deepseek/deepseek-v4-pro-0813",
@@ -816,9 +829,9 @@
       "provider_underlying": "deepseek",
       "name": "DeepSeek: DeepSeek V4 Pro 0813",
       "mode": "chat",
-      "input_per_1m_usd": 0.115,
-      "output_per_1m_usd": 4.0,
-      "cache_read_per_1m_usd": 0.11,
+      "input_per_1m_usd": 0.111,
+      "output_per_1m_usd": 4.44,
+      "cache_read_per_1m_usd": 0.097,
       "context_window_tokens": 1048576,
       "max_output_tokens": 943718
     },
@@ -828,8 +841,8 @@
       "provider_underlying": "deepseek",
       "name": "DeepSeek: DeepSeek V4.1 Flash",
       "mode": "chat",
-      "input_per_1m_usd": 0.045,
-      "output_per_1m_usd": 0.5,
+      "input_per_1m_usd": 0.051,
+      "output_per_1m_usd": 0.567,
       "cache_read_per_1m_usd": 0.018,
       "context_window_tokens": 1048576,
       "max_output_tokens": 943718
@@ -840,11 +853,23 @@
       "provider_underlying": "deepseek",
       "name": "DeepSeek: DeepSeek V4.1 Flash 1017",
       "mode": "chat",
-      "input_per_1m_usd": 0.3,
-      "output_per_1m_usd": 1.2,
-      "cache_read_per_1m_usd": 0.006,
+      "input_per_1m_usd": 0.006,
+      "output_per_1m_usd": 0.5,
+      "cache_read_per_1m_usd": 0.005,
       "context_window_tokens": 1048576,
-      "max_output_tokens": 393216
+      "max_output_tokens": 943718
+    },
+    {
+      "openrouter_id": "deepseek/deepseek-v4.1-flash-1017:batch",
+      "provider": "openrouter",
+      "provider_underlying": "deepseek",
+      "name": "DeepSeek: DeepSeek V4.1 Flash 1017 (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 0.011,
+      "output_per_1m_usd": 0.2,
+      "cache_read_per_1m_usd": 0.002,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 943718
     },
     {
       "openrouter_id": "deepseek/deepseek-v4.1-flash:batch",
@@ -852,11 +877,11 @@
       "provider_underlying": "deepseek",
       "name": "DeepSeek: DeepSeek V4.1 Flash (batch)",
       "mode": "chat",
-      "input_per_1m_usd": 0.05,
-      "output_per_1m_usd": 0.15,
-      "cache_read_per_1m_usd": 0.004,
+      "input_per_1m_usd": 0.011,
+      "output_per_1m_usd": 0.2,
+      "cache_read_per_1m_usd": 0.002,
       "context_window_tokens": 1048576,
-      "max_output_tokens": 384000
+      "max_output_tokens": 943718
     },
     {
       "openrouter_id": "elorian/glimpse",
@@ -1271,6 +1296,28 @@
       "max_output_tokens": 58982
     },
     {
+      "openrouter_id": "google/gemini-omni-1.1-flash",
+      "provider": "openrouter",
+      "provider_underlying": "google",
+      "name": "Google: Gemini Omni 1.1 Flash",
+      "mode": "chat",
+      "input_per_1m_usd": 1.5,
+      "output_per_1m_usd": 9.0,
+      "context_window_tokens": 131072,
+      "max_output_tokens": 65536
+    },
+    {
+      "openrouter_id": "google/gemini-omni-1.2-flash",
+      "provider": "openrouter",
+      "provider_underlying": "google",
+      "name": "Google: Gemini Omni 1.2 Flash",
+      "mode": "chat",
+      "input_per_1m_usd": 1.5,
+      "output_per_1m_usd": 9.0,
+      "context_window_tokens": 131072,
+      "max_output_tokens": 65536
+    },
+    {
       "openrouter_id": "google/gemma-2-27b-it",
       "provider": "openrouter",
       "provider_underlying": "google",
@@ -1321,11 +1368,11 @@
       "provider_underlying": "google",
       "name": "Google: Gemma 4 26B A4B ",
       "mode": "chat",
-      "input_per_1m_usd": 0.083,
-      "output_per_1m_usd": 0.248,
-      "cache_read_per_1m_usd": 0.041,
+      "input_per_1m_usd": 0.0675,
+      "output_per_1m_usd": 0.225,
+      "cache_read_per_1m_usd": 0.0375,
       "context_window_tokens": 262144,
-      "max_output_tokens": 32768
+      "max_output_tokens": 235929
     },
     {
       "openrouter_id": "google/gemma-4-31b-it",
@@ -1362,42 +1409,6 @@
       "max_output_tokens": 117964
     },
     {
-      "openrouter_id": "inception/mercury-2",
-      "provider": "openrouter",
-      "provider_underlying": "inception",
-      "name": "Inception: Mercury 2",
-      "mode": "chat",
-      "input_per_1m_usd": 0.25,
-      "output_per_1m_usd": 0.75,
-      "cache_read_per_1m_usd": 0.025,
-      "context_window_tokens": 128000,
-      "max_output_tokens": 50000
-    },
-    {
-      "openrouter_id": "inception/mercury-2.5",
-      "provider": "openrouter",
-      "provider_underlying": "inception",
-      "name": "Inception: Mercury 2.5",
-      "mode": "chat",
-      "input_per_1m_usd": 0.04,
-      "output_per_1m_usd": 0.15,
-      "cache_read_per_1m_usd": 0.004,
-      "context_window_tokens": 260000,
-      "max_output_tokens": 65536
-    },
-    {
-      "openrouter_id": "inception/mercury-3",
-      "provider": "openrouter",
-      "provider_underlying": "inception",
-      "name": "Inception: Mercury 3",
-      "mode": "chat",
-      "input_per_1m_usd": 0.1,
-      "output_per_1m_usd": 0.35,
-      "cache_read_per_1m_usd": 0.01,
-      "context_window_tokens": 1000000,
-      "max_output_tokens": 131072
-    },
-    {
       "openrouter_id": "inclusionai/ling-3.0-flash",
       "provider": "openrouter",
       "provider_underlying": "inclusionai",
@@ -1422,14 +1433,26 @@
       "max_output_tokens": 32768
     },
     {
+      "openrouter_id": "inclusionai/ling-3.0-tiny",
+      "provider": "openrouter",
+      "provider_underlying": "inclusionai",
+      "name": "inclusionAI: Ling 3.0 Tiny",
+      "mode": "chat",
+      "input_per_1m_usd": 0.015,
+      "output_per_1m_usd": 0.045,
+      "cache_read_per_1m_usd": 0.003,
+      "context_window_tokens": 262144,
+      "max_output_tokens": 250000
+    },
+    {
       "openrouter_id": "inclusionai/ling-3.1-flash",
       "provider": "openrouter",
       "provider_underlying": "inclusionai",
       "name": "inclusionAI: Ling 3.1 Flash",
       "mode": "chat",
-      "input_per_1m_usd": 0.075,
-      "output_per_1m_usd": 0.225,
-      "cache_read_per_1m_usd": 0.015,
+      "input_per_1m_usd": 0.045,
+      "output_per_1m_usd": 0.135,
+      "cache_read_per_1m_usd": 0.009,
       "context_window_tokens": 1000000,
       "max_output_tokens": 262144
     },
@@ -1443,7 +1466,7 @@
       "output_per_1m_usd": 0.23,
       "cache_read_per_1m_usd": 0.05,
       "context_window_tokens": 128000,
-      "max_output_tokens": 4096
+      "max_output_tokens": 8192
     },
     {
       "openrouter_id": "inference-net/schematron-v2-turbo",
@@ -1482,6 +1505,18 @@
       "max_output_tokens": 8192
     },
     {
+      "openrouter_id": "liquid/lfm-3-1.7b",
+      "provider": "openrouter",
+      "provider_underlying": "liquid",
+      "name": "LiquidAI: LFM3-1.7B",
+      "mode": "chat",
+      "input_per_1m_usd": 0.08,
+      "output_per_1m_usd": 0.2,
+      "cache_read_per_1m_usd": 0.02,
+      "context_window_tokens": 262144,
+      "max_output_tokens": 8192
+    },
+    {
       "openrouter_id": "mancer/weaver",
       "provider": "openrouter",
       "provider_underlying": "mancer",
@@ -1489,6 +1524,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.4,
       "output_per_1m_usd": 0.75,
+      "cache_read_per_1m_usd": 0.4,
       "context_window_tokens": 8000,
       "max_output_tokens": 6000
     },
@@ -1544,10 +1580,10 @@
       "provider_underlying": "meta-llama",
       "name": "Meta: Llama 3.2 3B Instruct",
       "mode": "chat",
-      "input_per_1m_usd": 0.0509,
-      "output_per_1m_usd": 0.335,
+      "input_per_1m_usd": 0.05,
+      "output_per_1m_usd": 0.33,
       "context_window_tokens": 131072,
-      "max_output_tokens": 72000
+      "max_output_tokens": 117964
     },
     {
       "openrouter_id": "meta-llama/llama-3.3-70b-instruct",
@@ -1555,10 +1591,11 @@
       "provider_underlying": "meta-llama",
       "name": "Meta: Llama 3.3 70B Instruct",
       "mode": "chat",
-      "input_per_1m_usd": 0.1,
-      "output_per_1m_usd": 0.32,
+      "input_per_1m_usd": 0.59,
+      "output_per_1m_usd": 0.79,
+      "cache_read_per_1m_usd": 0.295,
       "context_window_tokens": 131072,
-      "max_output_tokens": 16384
+      "max_output_tokens": 32768
     },
     {
       "openrouter_id": "meta-llama/llama-4-maverick",
@@ -1566,11 +1603,11 @@
       "provider_underlying": "meta-llama",
       "name": "Meta: Llama 4 Maverick",
       "mode": "chat",
-      "input_per_1m_usd": 0.1875,
-      "output_per_1m_usd": 0.6525,
-      "cache_read_per_1m_usd": 0.05,
+      "input_per_1m_usd": 0.35,
+      "output_per_1m_usd": 1.0,
+      "cache_read_per_1m_usd": 0.17,
       "context_window_tokens": 524288,
-      "max_output_tokens": 16384
+      "max_output_tokens": 32768
     },
     {
       "openrouter_id": "meta-llama/llama-4-scout",
@@ -1603,6 +1640,18 @@
       "input_per_1m_usd": 0.3,
       "output_per_1m_usd": 1.2,
       "cache_read_per_1m_usd": 0.04,
+      "context_window_tokens": 131072,
+      "max_output_tokens": 16384
+    },
+    {
+      "openrouter_id": "meta/muse-glimmer-30b:batch",
+      "provider": "openrouter",
+      "provider_underlying": "meta",
+      "name": "Meta: Muse Glimmer 30B (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 0.24,
+      "output_per_1m_usd": 0.96,
+      "cache_read_per_1m_usd": 0.032,
       "context_window_tokens": 131072,
       "max_output_tokens": 16384
     },
@@ -1702,17 +1751,6 @@
       "max_output_tokens": 14745
     },
     {
-      "openrouter_id": "minimax/minimax-01",
-      "provider": "openrouter",
-      "provider_underlying": "minimax",
-      "name": "MiniMax: MiniMax-01",
-      "mode": "chat",
-      "input_per_1m_usd": 0.2,
-      "output_per_1m_usd": 1.1,
-      "context_window_tokens": 1000192,
-      "max_output_tokens": 900172
-    },
-    {
       "openrouter_id": "minimax/minimax-m1",
       "provider": "openrouter",
       "provider_underlying": "minimax",
@@ -1724,51 +1762,16 @@
       "max_output_tokens": 40000
     },
     {
-      "openrouter_id": "minimax/minimax-m2",
-      "provider": "openrouter",
-      "provider_underlying": "minimax",
-      "name": "MiniMax: MiniMax M2",
-      "mode": "chat",
-      "input_per_1m_usd": 0.255,
-      "output_per_1m_usd": 1.02,
-      "context_window_tokens": 204800,
-      "max_output_tokens": 131072
-    },
-    {
-      "openrouter_id": "minimax/minimax-m2-her",
-      "provider": "openrouter",
-      "provider_underlying": "minimax",
-      "name": "MiniMax: MiniMax M2-her",
-      "mode": "chat",
-      "input_per_1m_usd": 0.3,
-      "output_per_1m_usd": 1.2,
-      "cache_read_per_1m_usd": 0.03,
-      "context_window_tokens": 65536,
-      "max_output_tokens": 2048
-    },
-    {
-      "openrouter_id": "minimax/minimax-m2.1",
-      "provider": "openrouter",
-      "provider_underlying": "minimax",
-      "name": "MiniMax: MiniMax M2.1",
-      "mode": "chat",
-      "input_per_1m_usd": 0.3,
-      "output_per_1m_usd": 1.2,
-      "cache_read_per_1m_usd": 0.03,
-      "context_window_tokens": 204800,
-      "max_output_tokens": 131072
-    },
-    {
       "openrouter_id": "minimax/minimax-m2.5",
       "provider": "openrouter",
       "provider_underlying": "minimax",
       "name": "MiniMax: MiniMax M2.5",
       "mode": "chat",
-      "input_per_1m_usd": 0.27,
-      "output_per_1m_usd": 0.95,
-      "cache_read_per_1m_usd": 0.03,
+      "input_per_1m_usd": 0.3,
+      "output_per_1m_usd": 1.2,
+      "cache_read_per_1m_usd": 0.06,
       "context_window_tokens": 204800,
-      "max_output_tokens": 32768
+      "max_output_tokens": 58982
     },
     {
       "openrouter_id": "minimax/minimax-m2.7",
@@ -1776,11 +1779,11 @@
       "provider_underlying": "minimax",
       "name": "MiniMax: MiniMax M2.7",
       "mode": "chat",
-      "input_per_1m_usd": 0.3,
-      "output_per_1m_usd": 1.2,
-      "cache_read_per_1m_usd": 0.06,
+      "input_per_1m_usd": 0.21,
+      "output_per_1m_usd": 0.84,
+      "cache_read_per_1m_usd": 0.042,
       "context_window_tokens": 204800,
-      "max_output_tokens": 131072
+      "max_output_tokens": 176947
     },
     {
       "openrouter_id": "minimax/minimax-m3",
@@ -1805,6 +1808,18 @@
       "cache_read_per_1m_usd": 0.015,
       "context_window_tokens": 1048576,
       "max_output_tokens": 524288
+    },
+    {
+      "openrouter_id": "minimax/minimax-m3:batch",
+      "provider": "openrouter",
+      "provider_underlying": "minimax",
+      "name": "MiniMax: MiniMax M3 (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 0.224,
+      "output_per_1m_usd": 0.88,
+      "cache_read_per_1m_usd": 0.0448,
+      "context_window_tokens": 524288,
+      "max_output_tokens": 512000
     },
     {
       "openrouter_id": "mistralai/codestral-2508",
@@ -2114,11 +2129,11 @@
       "provider_underlying": "moonshotai",
       "name": "MoonshotAI: Kimi K2.5",
       "mode": "chat",
-      "input_per_1m_usd": 0.5,
-      "output_per_1m_usd": 2.5,
-      "cache_read_per_1m_usd": 0.15,
+      "input_per_1m_usd": 0.532,
+      "output_per_1m_usd": 3.325,
+      "cache_read_per_1m_usd": 0.209,
       "context_window_tokens": 262144,
-      "max_output_tokens": 235929
+      "max_output_tokens": 65536
     },
     {
       "openrouter_id": "moonshotai/kimi-k2.6",
@@ -2140,7 +2155,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.6,
       "output_per_1m_usd": 3.5,
-      "cache_read_per_1m_usd": 0.15,
+      "cache_read_per_1m_usd": 0.16,
       "context_window_tokens": 262144,
       "max_output_tokens": 235929
     },
@@ -2174,11 +2189,11 @@
       "provider_underlying": "moonshotai",
       "name": "MoonshotAI: Kimi K3 (batch)",
       "mode": "chat",
-      "input_per_1m_usd": 2.28,
-      "output_per_1m_usd": 11.4,
-      "cache_read_per_1m_usd": 0.228,
+      "input_per_1m_usd": 1.084,
+      "output_per_1m_usd": 6.0,
+      "cache_read_per_1m_usd": 0.267,
       "context_window_tokens": 1048576,
-      "max_output_tokens": 16384
+      "max_output_tokens": 943718
     },
     {
       "openrouter_id": "morph/morph-v3-fast",
@@ -2192,6 +2207,17 @@
       "max_output_tokens": 131072
     },
     {
+      "openrouter_id": "morph/morph-v3-fast:batch",
+      "provider": "openrouter",
+      "provider_underlying": "morph",
+      "name": "Morph: Morph V3 Fast (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 0.4,
+      "output_per_1m_usd": 0.6,
+      "context_window_tokens": 81920,
+      "max_output_tokens": 38000
+    },
+    {
       "openrouter_id": "morph/morph-v3-large",
       "provider": "openrouter",
       "provider_underlying": "morph",
@@ -2199,6 +2225,17 @@
       "mode": "chat",
       "input_per_1m_usd": 0.9,
       "output_per_1m_usd": 1.9,
+      "context_window_tokens": 262144,
+      "max_output_tokens": 131072
+    },
+    {
+      "openrouter_id": "morph/morph-v3-large:batch",
+      "provider": "openrouter",
+      "provider_underlying": "morph",
+      "name": "Morph: Morph V3 Large (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 0.45,
+      "output_per_1m_usd": 0.95,
       "context_window_tokens": 262144,
       "max_output_tokens": 131072
     },
@@ -2256,11 +2293,10 @@
       "provider_underlying": "nvidia",
       "name": "NVIDIA: Nemotron 3 Super",
       "mode": "chat",
-      "input_per_1m_usd": 0.3,
-      "output_per_1m_usd": 2.4,
-      "cache_read_per_1m_usd": 0.15,
+      "input_per_1m_usd": 0.075,
+      "output_per_1m_usd": 0.4,
       "context_window_tokens": 1048576,
-      "max_output_tokens": 262144
+      "max_output_tokens": 16384
     },
     {
       "openrouter_id": "nvidia/nemotron-3-ultra-550b-a55b",
@@ -3384,9 +3420,9 @@
       "provider_underlying": "openai",
       "name": "OpenAI: gpt-oss-120b",
       "mode": "chat",
-      "input_per_1m_usd": 0.025,
-      "output_per_1m_usd": 0.092,
-      "cache_read_per_1m_usd": 0.022,
+      "input_per_1m_usd": 0.15,
+      "output_per_1m_usd": 0.6,
+      "cache_read_per_1m_usd": 0.075,
       "context_window_tokens": 131072,
       "max_output_tokens": 65536
     },
@@ -3683,10 +3719,11 @@
       "provider_underlying": "qwen",
       "name": "Qwen: Qwen3 235B A22B Instruct 2507",
       "mode": "chat",
-      "input_per_1m_usd": 0.09,
-      "output_per_1m_usd": 0.55,
+      "input_per_1m_usd": 0.14,
+      "output_per_1m_usd": 0.8,
+      "cache_read_per_1m_usd": 0.05,
       "context_window_tokens": 262144,
-      "max_output_tokens": 16384
+      "max_output_tokens": 117964
     },
     {
       "openrouter_id": "qwen/qwen3-235b-a22b-thinking-2507",
@@ -3787,11 +3824,10 @@
       "provider_underlying": "qwen",
       "name": "Qwen: Qwen3 Next 80B A3B Instruct",
       "mode": "chat",
-      "input_per_1m_usd": 0.1,
+      "input_per_1m_usd": 0.09,
       "output_per_1m_usd": 1.1,
-      "cache_read_per_1m_usd": 0.07,
       "context_window_tokens": 262144,
-      "max_output_tokens": 235929
+      "max_output_tokens": 16384
     },
     {
       "openrouter_id": "qwen/qwen3-vl-235b-a22b-instruct",
@@ -3936,10 +3972,10 @@
       "provider_underlying": "qwen",
       "name": "Qwen: Qwen3.6 27B",
       "mode": "chat",
-      "input_per_1m_usd": 0.45,
-      "output_per_1m_usd": 2.7,
+      "input_per_1m_usd": 0.32,
+      "output_per_1m_usd": 3.2,
       "context_window_tokens": 262144,
-      "max_output_tokens": 65536
+      "max_output_tokens": 81920
     },
     {
       "openrouter_id": "qwen/qwen3.6-35b-a3b",
@@ -4052,6 +4088,18 @@
       "max_output_tokens": 235929
     },
     {
+      "openrouter_id": "qwen/qwen3.8-27b:batch",
+      "provider": "openrouter",
+      "provider_underlying": "qwen",
+      "name": "Qwen: Qwen3.8 27B (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 0.16,
+      "output_per_1m_usd": 2.0,
+      "cache_read_per_1m_usd": 0.04,
+      "context_window_tokens": 262144,
+      "max_output_tokens": 235929
+    },
+    {
       "openrouter_id": "qwen/qwen3.8-flash",
       "provider": "openrouter",
       "provider_underlying": "qwen",
@@ -4105,11 +4153,11 @@
       "provider_underlying": "reflection",
       "name": "Reflection: Beam 1.0 501B A23B",
       "mode": "chat",
-      "input_per_1m_usd": 0.25,
+      "input_per_1m_usd": 0.3,
       "output_per_1m_usd": 1.0,
-      "cache_read_per_1m_usd": 0.05,
+      "cache_read_per_1m_usd": 0.04,
       "context_window_tokens": 1048576,
-      "max_output_tokens": 131072
+      "max_output_tokens": 943718
     },
     {
       "openrouter_id": "rekaai/reka-edge",
@@ -4154,6 +4202,18 @@
       "output_per_1m_usd": 3.0,
       "context_window_tokens": 256000,
       "max_output_tokens": 128000
+    },
+    {
+      "openrouter_id": "ricursiveai/ripple-65b-preview",
+      "provider": "openrouter",
+      "provider_underlying": "ricursiveai",
+      "name": "Ricursive: Ripple 65B Preview",
+      "mode": "chat",
+      "input_per_1m_usd": 0.2,
+      "output_per_1m_usd": 0.6,
+      "cache_read_per_1m_usd": 0.05,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 131072
     },
     {
       "openrouter_id": "sakana/fugu-max",
@@ -4351,6 +4411,18 @@
       "max_output_tokens": 235929
     },
     {
+      "openrouter_id": "tencent/hy4",
+      "provider": "openrouter",
+      "provider_underlying": "tencent",
+      "name": "Tencent: Hy4",
+      "mode": "chat",
+      "input_per_1m_usd": 0.417,
+      "output_per_1m_usd": 1.2505,
+      "cache_read_per_1m_usd": 0.021,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 65536
+    },
+    {
       "openrouter_id": "tencent/hy4-preview",
       "provider": "openrouter",
       "provider_underlying": "tencent",
@@ -4422,6 +4494,18 @@
       "max_output_tokens": 262144
     },
     {
+      "openrouter_id": "thinkingmachines/inkling-small:batch",
+      "provider": "openrouter",
+      "provider_underlying": "thinkingmachines",
+      "name": "Thinking Machines: Inkling Small (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 0.36,
+      "output_per_1m_usd": 0.96,
+      "cache_read_per_1m_usd": 0.08,
+      "context_window_tokens": 524288,
+      "max_output_tokens": 262144
+    },
+    {
       "openrouter_id": "unbiased/pareto-26.10",
       "provider": "openrouter",
       "provider_underlying": "unbiased",
@@ -4453,6 +4537,7 @@
       "mode": "chat",
       "input_per_1m_usd": 0.35,
       "output_per_1m_usd": 0.65,
+      "cache_read_per_1m_usd": 0.35,
       "context_window_tokens": 6144,
       "max_output_tokens": 5529
     },
@@ -4620,7 +4705,7 @@
       "input_per_1m_usd": 0.4,
       "output_per_1m_usd": 2.0,
       "cache_read_per_1m_usd": 0.08,
-      "context_window_tokens": 1050000,
+      "context_window_tokens": 1000000,
       "max_output_tokens": 65536
     },
     {
@@ -4803,14 +4888,26 @@
       "max_output_tokens": 943718
     },
     {
+      "openrouter_id": "z-ai/glm-5.2:batch",
+      "provider": "openrouter",
+      "provider_underlying": "z-ai",
+      "name": "Z.ai: GLM 5.2 (batch)",
+      "mode": "chat",
+      "input_per_1m_usd": 0.37,
+      "output_per_1m_usd": 1.5,
+      "cache_read_per_1m_usd": 0.125,
+      "context_window_tokens": 1048576,
+      "max_output_tokens": 943718
+    },
+    {
       "openrouter_id": "z-ai/glm-5.3",
       "provider": "openrouter",
       "provider_underlying": "z-ai",
       "name": "Z.ai: GLM 5.3",
       "mode": "chat",
-      "input_per_1m_usd": 0.08,
-      "output_per_1m_usd": 3.6,
-      "cache_read_per_1m_usd": 0.076,
+      "input_per_1m_usd": 0.0699,
+      "output_per_1m_usd": 1.4,
+      "cache_read_per_1m_usd": 0.0689,
       "context_window_tokens": 1048576,
       "max_output_tokens": 943718
     },
@@ -4820,8 +4917,8 @@
       "provider_underlying": "z-ai",
       "name": "Z.ai: GLM 5.3 Flash",
       "mode": "chat",
-      "input_per_1m_usd": 0.0313,
-      "output_per_1m_usd": 0.0846,
+      "input_per_1m_usd": 0.0335,
+      "output_per_1m_usd": 0.083,
       "cache_read_per_1m_usd": 0.03,
       "context_window_tokens": 1048576,
       "max_output_tokens": 131072
@@ -4880,11 +4977,11 @@
       "provider_underlying": "z-ai",
       "name": "Z.ai: GLM 5.3 (batch)",
       "mode": "chat",
-      "input_per_1m_usd": 0.45,
-      "output_per_1m_usd": 2.0,
-      "cache_read_per_1m_usd": 0.1,
+      "input_per_1m_usd": 0.37,
+      "output_per_1m_usd": 1.5,
+      "cache_read_per_1m_usd": 0.125,
       "context_window_tokens": 1048576,
-      "max_output_tokens": 131072
+      "max_output_tokens": 943718
     },
     {
       "openrouter_id": "z-ai/glm-5v-turbo",
@@ -4956,9 +5053,9 @@
       "provider_underlying": "~deepseek",
       "name": "DeepSeek: DeepSeek Flash Latest",
       "mode": "chat",
-      "input_per_1m_usd": 0.0333,
-      "output_per_1m_usd": 0.475,
-      "cache_read_per_1m_usd": 0.0048,
+      "input_per_1m_usd": 0.006,
+      "output_per_1m_usd": 0.5,
+      "cache_read_per_1m_usd": 0.005,
       "context_window_tokens": 1048576,
       "max_output_tokens": 943718
     },
@@ -4968,9 +5065,9 @@
       "provider_underlying": "~deepseek",
       "name": "DeepSeek: DeepSeek Pro Latest",
       "mode": "chat",
-      "input_per_1m_usd": 0.1035,
+      "input_per_1m_usd": 0.0999,
       "output_per_1m_usd": 8.0,
-      "cache_read_per_1m_usd": 0.1,
+      "cache_read_per_1m_usd": 0.0999,
       "context_window_tokens": 1048576,
       "max_output_tokens": 393216
     },
@@ -4980,7 +5077,7 @@
       "provider_underlying": "~deepseek",
       "name": "DeepSeek: DeepSeek V4 Flash Latest",
       "mode": "chat",
-      "input_per_1m_usd": 0.059,
+      "input_per_1m_usd": 0.0434,
       "output_per_1m_usd": 0.3,
       "cache_read_per_1m_usd": 0.035,
       "context_window_tokens": 1048576,
@@ -5018,9 +5115,9 @@
       "provider_underlying": "~moonshotai",
       "name": "MoonshotAI: Kimi Latest",
       "mode": "chat",
-      "input_per_1m_usd": 0.1634,
-      "output_per_1m_usd": 9.7439,
-      "cache_read_per_1m_usd": 0.16,
+      "input_per_1m_usd": 0.1577,
+      "output_per_1m_usd": 10.1366,
+      "cache_read_per_1m_usd": 0.15,
       "context_window_tokens": 1048576,
       "max_output_tokens": 943718
     },
@@ -5118,8 +5215,8 @@
       "provider_underlying": "~z-ai",
       "name": "Z.ai: GLM Flash Latest",
       "mode": "chat",
-      "input_per_1m_usd": 0.0313,
-      "output_per_1m_usd": 0.0846,
+      "input_per_1m_usd": 0.0335,
+      "output_per_1m_usd": 0.083,
       "cache_read_per_1m_usd": 0.03,
       "context_window_tokens": 1048576,
       "max_output_tokens": 131072
