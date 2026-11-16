@@ -32,7 +32,7 @@ dev = [
     "pytest-asyncio>=0.23",
     "pytest-cov>=6.0",
     "pytest-httpx>=0.30",
-    "ruff==0.17.3",  # exact: a new ruff release adds rules and reformats code
+    "ruff==0.17.4",  # exact: a new ruff release adds rules and reformats code
 ]
 
 [project.scripts]
