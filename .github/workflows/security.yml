@@ -73,7 +73,7 @@ jobs:
       # zizmor is static analysis for the workflows themselves: template
       # injection, credential leaks, over-broad permissions, unpinned actions.
       # The CI config is part of the attack surface, not just the app.
-      - uses: zizmorcore/zizmor-action@53290badfa369cb0bf7ad16342cb62c2fa47ac7b # v0.8.0
+      - uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd # v0.8.1
         with:
           # Uploads SARIF to GitHub code scanning, which is what puts findings
           # inline on the diff instead of leaving them as run annotations.
@@ -176,7 +176,7 @@ jobs:
 
       - name: Publish Checkov findings to code scanning
         if: always() && hashFiles('results.sarif') != ''
-        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
           sarif_file: results.sarif
           category: checkov
